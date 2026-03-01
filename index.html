@@ -650,7 +650,24 @@
     </div>
   </div>
   <div class="header-divider"></div>
-  <div class="status-badge">● READY</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div style="position:relative;">
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." style="
+        background:#060d18;
+        border:1px solid var(--border);
+        color:var(--text-bright);
+        font-family:var(--mono);
+        font-size:11px;
+        padding:6px 36px 6px 12px;
+        border-radius:4px;
+        outline:none;
+        width:220px;
+        letter-spacing:1px;
+      " oninput="checkApiKey()" />
+      <span id="apiKeyStatus" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;">🔴</span>
+    </div>
+    <div class="status-badge" id="mainStatus">● READY</div>
+  </div>
 </header>
 
 <!-- Left: Input Panel -->
@@ -854,7 +871,30 @@
   // Set today's date
   document.getElementById('examDate').value = new Date().toISOString().split('T')[0];
 
+  function checkApiKey() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    const status = document.getElementById('apiKeyStatus');
+    const badge = document.getElementById('mainStatus');
+    if (key.startsWith('sk-ant-')) {
+      status.textContent = '🟢';
+      badge.textContent = '● READY';
+      badge.style.color = 'var(--green)';
+      badge.style.borderColor = 'var(--green)';
+    } else {
+      status.textContent = '🔴';
+      badge.textContent = '● NO API KEY';
+      badge.style.color = 'var(--red)';
+      badge.style.borderColor = 'var(--red)';
+    }
+  }
+
   async function generateReport() {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    if (!apiKey.startsWith('sk-ant-')) {
+      alert('상단에 Anthropic API 키를 입력해주세요.\n(https://console.anthropic.com 에서 발급)');
+      return;
+    }
+
     const finding = document.getElementById('findingInput').value.trim();
     if (!finding) {
       alert('Finding을 입력해주세요.');
@@ -918,7 +958,12 @@ Generate a professional radiology report with FINDINGS and IMPRESSION sections.`
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-request-bypass': 'true'
+        },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 1000,
