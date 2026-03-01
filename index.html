@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radiology Report Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f1a;
+    --surface: #0f1829;
+    --surface2: #162035;
+    --border: #1e2e4a;
+    --accent: #00d4ff;
+    --accent2: #0099cc;
+    --text: #c8d8f0;
+    --text-dim: #6a85a8;
+    --text-bright: #e8f4ff;
+    --green: #00e5a0;
+    --orange: #ff8c42;
+    --red: #ff4757;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans KR', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  /* Header */
+  header {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .logo-text {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--text-bright);
+    text-transform: uppercase;
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .header-divider { flex: 1; }
+
+  .status-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+  }
+
+  /* Left Panel - Input */
+  .panel-input {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 69px);
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    background: rgba(0,212,255,0.1);
+    padding: 2px 8px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,212,255,0.2);
+  }
+
+  .panel-title {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-bright);
+  }
+
+  .panel-body {
+    padding: 20px 24px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* Patient Info */
+  .patient-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .field-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-bright);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.08);
+  }
+
+  textarea {
+    resize: vertical;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  select option { background: var(--surface); }
+
+  /* Section dividers */
+  .section-sep {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .section-sep::before, .section-sep::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Finding input */
+  .finding-area {
+    background: #060d18;
+    border: 2px solid var(--accent);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 16px rgba(0,212,255,0.12), inset 0 0 24px rgba(0,212,255,0.03);
+  }
+
+  .finding-label-bar {
+    background: rgba(0,212,255,0.15);
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    border-bottom: 1px solid rgba(0,212,255,0.25);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .finding-label-bar::before {
+    content: '';
+    display: inline-block;
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  .finding-area textarea {
+    border: none;
+    border-radius: 0;
+    min-height: 140px;
+    background: transparent;
+    padding: 14px;
+    font-size: 14px;
+    color: #e0f7ff;
+    line-height: 1.8;
+    caret-color: var(--accent);
+  }
+
+  .finding-area textarea::placeholder {
+    color: rgba(0,212,255,0.3);
+  }
+
+  #clinicalInfo::placeholder {
+    color: rgba(255,140,66,0.3);
+  }
+
+  .finding-area textarea:focus {
+    box-shadow: none;
+    border: none;
+  }
+
+  /* Format options */
+  .format-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .format-option {
+    cursor: pointer;
+    position: relative;
+  }
+
+  .format-option input[type="radio"] { display: none; }
+
+  .format-card {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+    transition: all 0.2s;
+    background: var(--bg);
+  }
+
+  .format-option input:checked + .format-card {
+    border-color: var(--accent);
+    background: rgba(0,212,255,0.08);
+  }
+
+  .format-card-icon {
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+
+  .format-card-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .format-option input:checked + .format-card .format-card-label {
+    color: var(--accent);
+  }
+
+  /* Tone selector */
+  .tone-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .tone-chip {
+    cursor: pointer;
+    position: relative;
+  }
+
+  .tone-chip input[type="radio"] { display: none; }
+
+  .tone-chip-label {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    cursor: pointer;
+    color: var(--text-dim);
+  }
+
+  .tone-chip input:checked + .tone-chip-label {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(0,229,160,0.08);
+  }
+
+  /* Generate button */
+  .generate-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .generate-btn:hover { background: #00b8e0; transform: translateY(-1px); }
+  .generate-btn:active { transform: translateY(0); }
+
+  .generate-btn:disabled {
+    background: var(--border);
+    color: var(--text-dim);
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-loader {
+    display: none;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,0,0,0.3);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Right Panel - Output */
+  .panel-output {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 69px);
+    overflow: hidden;
+  }
+
+  .output-toolbar {
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+  }
+
+  .toolbar-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 5px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .toolbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .toolbar-spacer { flex: 1; }
+
+  .report-meta {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .output-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px;
+  }
+
+  /* Report Document */
+  .report-doc {
+    max-width: 720px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 500px;
+  }
+
+  .report-header {
+    background: var(--surface2);
+    border-bottom: 2px solid var(--accent);
+    padding: 24px 32px 20px;
+  }
+
+  .report-hospital {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .report-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-bright);
+    letter-spacing: 0.5px;
+  }
+
+  .report-info-grid {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  .info-item label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    margin-bottom: 2px;
+  }
+
+  .info-item span {
+    font-size: 12px;
+    color: var(--text-bright);
+    font-weight: 500;
+  }
+
+  .report-body {
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .report-section {}
+
+  .report-section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .report-content {
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .report-content.impression {
+    color: var(--text-bright);
+    font-size: 13px;
+  }
+
+  .report-footer {
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .sign-line {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .sign-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-top: 2px;
+  }
+
+  .report-stamp {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 4px 12px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+  }
+
+  /* Placeholder state */
+  .placeholder-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: var(--text-dim);
+    gap: 12px;
+  }
+
+  .placeholder-icon {
+    font-size: 48px;
+    opacity: 0.3;
+  }
+
+  .placeholder-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    gap: 16px;
+  }
+
+  .loading-ring {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .loading-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Impression numbered list */
+  .impression-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .impression-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-bright);
+  }
+
+  .imp-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    min-width: 20px;
+    padding-top: 2px;
+  }
+
+  .finding-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .finding-bullet {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .finding-dot {
+    color: var(--text-dim);
+    min-width: 10px;
+    margin-top: 2px;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🩻</div>
+    <div>
+      <div class="logo-text">RadReport</div>
+      <div class="logo-sub">AI-ASSISTED RADIOLOGY REPORTING</div>
+    </div>
+  </div>
+  <div class="header-divider"></div>
+  <div class="status-badge">● READY</div>
+</header>
+
+<!-- Left: Input Panel -->
+<div class="panel-input">
+  <div class="panel-header">
+    <span class="panel-num">01</span>
+    <span class="panel-title">Report Input</span>
+  </div>
+  <div class="panel-body">
+
+    <!-- Patient Info -->
+    <div class="section-sep">Exam Info</div>
+    <div class="patient-grid">
+      <div class="field-group">
+        <label>Exam Date</label>
+        <input type="date" id="examDate" />
+      </div>
+      <div class="field-group full">
+        <label>Modality / Body Part</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <select id="modality">
+            <option value="CT">CT</option>
+            <option value="MRI">MRI</option>
+            <option value="X-ray">X-ray (CXR)</option>
+            <option value="Ultrasound">Ultrasound</option>
+            <option value="PET-CT">PET-CT</option>
+            <option value="Mammography">Mammography</option>
+            <option value="Fluoroscopy">Fluoroscopy</option>
+          </select>
+          <select id="bodypart">
+            <optgroup label="— Head / Neck">
+              <option value="Brain">Brain</option>
+              <option value="Neck">Neck</option>
+              <option value="Orbit">Orbit</option>
+              <option value="Temporal Bone">Temporal Bone</option>
+              <option value="Paranasal Sinus">Paranasal Sinus</option>
+            </optgroup>
+            <optgroup label="— Spine">
+              <option value="Cervical Spine (C-spine)">C-spine</option>
+              <option value="Thoracic Spine (T-spine)">T-spine</option>
+              <option value="Lumbar Spine (L-spine)">L-spine</option>
+              <option value="Whole Spine">Whole Spine</option>
+            </optgroup>
+            <optgroup label="— Chest / Abdomen">
+              <option value="Chest">Chest</option>
+              <option value="Abdomen">Abdomen</option>
+              <option value="Pelvis">Pelvis</option>
+              <option value="Abdomen and Pelvis">Abdomen & Pelvis</option>
+            </optgroup>
+            <optgroup label="— Upper Extremity">
+              <option value="Shoulder">Shoulder</option>
+              <option value="Elbow">Elbow</option>
+              <option value="Wrist">Wrist</option>
+              <option value="Hand">Hand</option>
+              <option value="Finger">Finger</option>
+            </optgroup>
+            <optgroup label="— Lower Extremity">
+              <option value="Hip">Hip</option>
+              <option value="Knee">Knee</option>
+              <option value="Ankle">Ankle</option>
+              <option value="Foot">Foot</option>
+              <option value="Toe">Toe</option>
+            </optgroup>
+            <optgroup label="— Other">
+              <option value="Whole Body">Whole Body</option>
+              <option value="Breast">Breast</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+      <div class="field-group full">
+        <label>Clinical Indication</label>
+        <input type="text" id="indication" placeholder="예: R/O pneumonia, f/u after surgery..." />
+      </div>
+    </div>
+
+    <!-- Clinical Information -->
+    <div class="section-sep">Clinical Information</div>
+    <div class="finding-area" style="border-color: var(--orange); box-shadow: 0 0 16px rgba(255,140,66,0.1), inset 0 0 24px rgba(255,140,66,0.02);">
+      <div class="finding-label-bar" style="background: rgba(255,140,66,0.12); border-bottom-color: rgba(255,140,66,0.25); color: var(--orange);">
+        CLINICAL INFO — 증상, 병력, 검사실 소견 등
+      </div>
+      <textarea id="clinicalInfo" rows="4" style="caret-color: var(--orange);" placeholder="예시:
+- 58세 남성, DM type 2 (10년)
+- 우측 발 통증 및 부종 3주
+- CRP 4.2, WBC 11,500
+- 당뇨발 감염 R/O osteomyelitis"></textarea>
+    </div>
+
+    <!-- Finding -->
+    <div class="section-sep">Findings</div>
+    <div class="finding-area">
+      <div class="finding-label-bar">RAW FINDING INPUT — 자유롭게 소견을 입력하세요</div>
+      <textarea id="findingInput" rows="6" placeholder="예시:
+우측 하엽에 3cm 경계가 불분명한 음영이 관찰됨.
+종격동 림프절 종대 없음.
+늑막 삼출 없음.
+심장 크기 정상 범위.
+골성 흉곽 이상 없음."></textarea>
+    </div>
+
+    <!-- Output Format -->
+    <div class="section-sep">Output Format</div>
+    <div class="format-grid">
+      <label class="format-option">
+        <input type="radio" name="format" value="structured" checked />
+        <div class="format-card">
+          <div class="format-card-icon">📋</div>
+          <div class="format-card-label">STRUCTURED</div>
+        </div>
+      </label>
+      <label class="format-option">
+        <input type="radio" name="format" value="narrative" />
+        <div class="format-card">
+          <div class="format-card-icon">📝</div>
+          <div class="format-card-label">NARRATIVE</div>
+        </div>
+      </label>
+      <label class="format-option">
+        <input type="radio" name="format" value="bullet" />
+        <div class="format-card">
+          <div class="format-card-icon">•—</div>
+          <div class="format-card-label">BULLET</div>
+        </div>
+      </label>
+    </div>
+
+    <!-- Tone -->
+    <div>
+      <label style="display:block;margin-bottom:8px;">Report Tone</label>
+      <div class="tone-row">
+        <label class="tone-chip">
+          <input type="radio" name="tone" value="formal" checked />
+          <span class="tone-chip-label">FORMAL</span>
+        </label>
+        <label class="tone-chip">
+          <input type="radio" name="tone" value="concise" />
+          <span class="tone-chip-label">CONCISE</span>
+        </label>
+        <label class="tone-chip">
+          <input type="radio" name="tone" value="detailed" />
+          <span class="tone-chip-label">DETAILED</span>
+        </label>
+        <label class="tone-chip">
+          <input type="radio" name="tone" value="clinical" />
+          <span class="tone-chip-label">CLINICAL</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Radiologist -->
+    <div class="patient-grid">
+      <div class="field-group">
+        <label>Radiologist</label>
+        <input type="text" id="radiologist" placeholder="김영상 (전문의)" />
+      </div>
+      <div class="field-group">
+        <label>Hospital / Dept</label>
+        <input type="text" id="hospital" placeholder="서울대학교병원 영상의학과" />
+      </div>
+    </div>
+
+    <button class="generate-btn" id="generateBtn" onclick="generateReport()">
+      <span class="btn-loader" id="btnLoader"></span>
+      GENERATE REPORT
+    </button>
+
+  </div>
+</div>
+
+<!-- Right: Output Panel -->
+<div class="panel-output">
+  <div class="output-toolbar">
+    <span class="panel-num">02</span>
+    <span class="panel-title" style="font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-bright);">Report Output</span>
+    <div class="toolbar-spacer"></div>
+    <button class="toolbar-btn" onclick="copyReport()">COPY</button>
+    <button class="toolbar-btn" onclick="printReport()">PRINT / PDF</button>
+    <span class="report-meta" id="reportMeta"></span>
+  </div>
+  <div class="output-area" id="outputArea">
+
+    <div class="placeholder-state" id="placeholderState">
+      <div class="placeholder-icon">🩻</div>
+      <div class="placeholder-text">FINDING을 입력하고 GENERATE를 누르세요</div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-ring"></div>
+      <div class="loading-text">GENERATING REPORT...</div>
+    </div>
+
+    <div id="reportDoc" style="display:none;">
+      <!-- Report renders here -->
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Set today's date
+  document.getElementById('examDate').value = new Date().toISOString().split('T')[0];
+
+  async function generateReport() {
+    const finding = document.getElementById('findingInput').value.trim();
+    if (!finding) {
+      alert('Finding을 입력해주세요.');
+      return;
+    }
+
+    const btn = document.getElementById('generateBtn');
+    const loader = document.getElementById('btnLoader');
+
+    btn.disabled = true;
+    loader.style.display = 'inline-block';
+
+    document.getElementById('placeholderState').style.display = 'none';
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('reportDoc').style.display = 'none';
+
+    const format = document.querySelector('input[name="format"]:checked').value;
+    const tone = document.querySelector('input[name="tone"]:checked').value;
+    const modality = document.getElementById('modality').value;
+    const bodypart = document.getElementById('bodypart').value;
+    const indication = document.getElementById('indication').value;
+    const clinicalInfo = document.getElementById('clinicalInfo').value.trim();
+
+    const formatInstructions = {
+      structured: 'Organize the FINDINGS section with clear organ/system subheadings (e.g., Lungs, Heart, Mediastinum). Write the IMPRESSION as a numbered list of key findings.',
+      narrative: 'Write both FINDINGS and IMPRESSION in flowing narrative prose paragraphs, no bullet points.',
+      bullet: 'Write FINDINGS as concise bullet points. Write IMPRESSION as a short numbered list.'
+    };
+
+    const toneInstructions = {
+      formal: 'Use formal, academic radiology language.',
+      concise: 'Be brief and to the point. Use minimal words.',
+      detailed: 'Be thorough and detailed, including normal findings explicitly.',
+      clinical: 'Use standard clinical radiology terminology as used in a teaching hospital.'
+    };
+
+    const systemPrompt = `You are an expert radiologist generating structured radiology reports. 
+Format: ${formatInstructions[format]}
+Tone: ${toneInstructions[tone]}
+Always output TWO clearly labeled sections: FINDINGS and IMPRESSION.
+FINDINGS should organize and polish the raw input findings professionally.
+IMPRESSION must ALWAYS be written as a strict numbered list. Each finding must be on its own separate line starting with its number (1. 2. 3. etc.). Never combine multiple findings into one item. Never write impression as a paragraph. Minimum 2 items, maximum 6 items. Take into account the clinical information provided to arrive at the most clinically relevant conclusions.
+Respond in the SAME language as the input (Korean if Korean input).
+Do not add any preamble or explanation - just the two sections.
+Do not use markdown formatting symbols like **, *, __, _.
+IMPRESSION example format:
+1. Finding one.
+2. Finding two.
+3. Finding three.`;
+
+    const userMsg = `Modality: ${modality}
+Body Part: ${bodypart}
+${indication ? `Clinical Indication: ${indication}` : ''}
+${clinicalInfo ? `Clinical Information: ${clinicalInfo}` : ''}
+
+Raw Findings from radiologist:
+${finding}
+
+Generate a professional radiology report with FINDINGS and IMPRESSION sections.`;
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: userMsg }]
+        })
+      });
+
+      const data = await response.json();
+      const text = data.content.map(c => c.text || '').join('');
+      renderReport(text, format);
+
+    } catch (e) {
+      console.error(e);
+      alert('API 오류가 발생했습니다: ' + e.message);
+    } finally {
+      btn.disabled = false;
+      loader.style.display = 'none';
+      document.getElementById('loadingOverlay').style.display = 'none';
+    }
+  }
+
+  function renderReport(text, format) {
+    // Parse FINDINGS and IMPRESSION from text
+    let findings = '';
+    let impression = '';
+
+    const findMatch = text.match(/FINDINGS?\s*[:\n]([\s\S]*?)(?=IMPRESSION|$)/i);
+    const impMatch = text.match(/IMPRESSION\s*[:\n]([\s\S]*?)$/i);
+
+    if (findMatch) findings = findMatch[1].trim();
+    if (impMatch) impression = impMatch[1].trim();
+
+    if (!findings && !impression) {
+      // Fallback: show raw
+      findings = text;
+      impression = '';
+    }
+
+    // Build info fields
+    const examDate = document.getElementById('examDate').value || '—';
+    const modality = document.getElementById('modality').value;
+    const bodypart = document.getElementById('bodypart').value;
+    const indication = document.getElementById('indication').value || '—';
+    const clinicalInfo = document.getElementById('clinicalInfo').value.trim();
+    const radiologist = document.getElementById('radiologist').value || '—';
+    const hospital = document.getElementById('hospital').value || 'Radiology Department';
+
+    // Strip markdown symbols
+    const stripMd = s => s.replace(/\*\*/g, '').replace(/\*/g, '').replace(/__/g, '').replace(/_/g, '').trim();
+
+    // Format findings content
+    let findingsHtml = '';
+    if (format === 'bullet') {
+      const lines = findings.split('\n').filter(l => l.trim());
+      findingsHtml = '<div class="finding-bullets">' + lines.map(l => {
+        const clean = stripMd(l.replace(/^[-•*]\s*/, ''));
+        return `<div class="finding-bullet"><span class="finding-dot">—</span><span>${clean}</span></div>`;
+      }).join('') + '</div>';
+    } else {
+      findingsHtml = `<div class="report-content">${stripMd(findings)}</div>`;
+    }
+
+    // Format impression content
+
+    let impressionHtml = '';
+    const impLines = impression.split('\n')
+      .map(l => stripMd(l.replace(/^\d+[\.\)]\s*/, '').replace(/^[-•]\s*/, '')).replace(/\n/g, ' '))
+      .filter(l => l.trim().length > 0);
+    if (impLines.length > 0) {
+      impressionHtml = '<ol class="impression-list">' + impLines.map((clean, i) => {
+        return `<li><span class="imp-num">${i+1}.</span><span>${clean.trim()}</span></li>`;
+      }).join('') + '</ol>';
+    } else {
+      impressionHtml = `<div class="report-content impression">${stripMd(impression)}</div>`;
+    }
+
+    const now = new Date().toLocaleString('ko-KR');
+
+    document.getElementById('reportDoc').innerHTML = `
+      <div class="report-doc">
+        <div class="report-header">
+          <div class="report-hospital">${hospital}</div>
+          <div class="report-title">${modality} — ${bodypart}</div>
+          <div class="report-info-grid">
+            <div class="info-item"><label>Exam Date</label><span>${examDate}</span></div>
+          </div>
+        </div>
+        <div class="report-body">
+          ${indication !== '—' ? `<div class="report-section">
+            <div class="report-section-title">Clinical Indication</div>
+            <div class="report-content">${indication}</div>
+          </div>` : ''}
+          ${clinicalInfo ? `<div class="report-section">
+            <div class="report-section-title" style="color:var(--orange);">Clinical Information</div>
+            <div class="report-content" style="white-space:pre-wrap;">${clinicalInfo}</div>
+          </div>` : ''}
+          <div class="report-section">
+            <div class="report-section-title">Findings</div>
+            ${findingsHtml}
+          </div>
+          <div class="report-section">
+            <div class="report-section-title">Impression</div>
+            ${impressionHtml}
+          </div>
+        </div>
+        <div class="report-footer">
+          <div>
+            <div class="sign-line">Interpreted by</div>
+            <div class="sign-name">${radiologist}</div>
+          </div>
+          <div class="sign-line" style="text-align:center;font-size:10px;">${now}</div>
+          <div class="report-stamp">FINAL REPORT</div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('reportDoc').style.display = 'block';
+    document.getElementById('reportMeta').textContent = now;
+  }
+
+  function copyReport() {
+    const doc = document.getElementById('reportDoc');
+    if (!doc || doc.style.display === 'none') return;
+
+    const lines = [];
+
+    const clinicalSections = doc.querySelectorAll('.report-section');
+    clinicalSections.forEach(section => {
+      const titleEl = section.querySelector('.report-section-title');
+      const title = titleEl ? titleEl.textContent.trim() : '';
+      if (!['Findings', 'Impression'].includes(title)) return;
+
+      lines.push(title.toUpperCase() + ':');
+
+      const impList = section.querySelector('.impression-list');
+      if (impList) {
+        impList.querySelectorAll('li').forEach((li, i) => {
+          const txt = li.querySelector('span:last-child');
+          if (txt) lines.push(`${i + 1}. ${txt.textContent.trim()}`);
+        });
+      } else {
+        const bullets = section.querySelectorAll('.finding-bullet');
+        if (bullets.length > 0) {
+          bullets.forEach(b => {
+            const txt = b.querySelector('span:last-child');
+            if (txt) {
+              // Add line break after each period that ends a sentence
+              const content = txt.textContent.trim().replace(/\.\s+/g, '.\n');
+              lines.push(content);
+            }
+          });
+        } else {
+          const content = section.querySelector('.report-content');
+          if (content) {
+            const formatted = content.textContent.trim().replace(/\.\s+/g, '.\n');
+            lines.push(formatted);
+          }
+        }
+      }
+      lines.push('');
+    });
+
+    const text = lines.join('\n').trimEnd();
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text)
+        .then(() => showCopyFeedback())
+        .catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    ta.style.top = '0';
+    ta.style.left = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showCopyFeedback();
+    } catch (e) {
+      alert('복사 실패: 수동으로 선택 후 복사해주세요.');
+    }
+    document.body.removeChild(ta);
+  }
+
+  function showCopyFeedback() {
+    const btn = document.querySelector('.toolbar-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ COPIED';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 2000);
+  }
+
+  function printReport() {
+    const doc = document.getElementById('reportDoc');
+    if (!doc || doc.style.display === 'none') return;
+    const w = window.open('', '_blank');
+    w.document.write(`<html><head><title>Radiology Report</title>
+    <style>
+      body { font-family: sans-serif; padding: 40px; max-width: 700px; margin: auto; color: #111; }
+      h2 { font-size: 20px; margin-bottom: 4px; }
+      .label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-top: 16px; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin-bottom: 8px; }
+      .content { font-size: 13px; line-height: 1.8; }
+      .info-row { display: flex; gap: 40px; margin: 10px 0 4px; font-size: 12px; }
+      footer { margin-top: 40px; border-top: 1px solid #ddd; padding-top: 16px; font-size: 12px; }
+    </style></head><body>${doc.innerHTML}</body></html>`);
+    w.document.close();
+    w.print();
+  }
+
+  // Keyboard shortcut
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generateReport();
+  });
+</script>
+</body>
+</html>
