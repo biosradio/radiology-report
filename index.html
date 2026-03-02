@@ -251,7 +251,9 @@ Tone: ${tone} | Urgency: ${urgency}
 
 Merge Findings and Impression into ONE concise "summary" field (2–4 sentences max).
 The summary describes key observations AND their clinical significance together — no repetition, no separate sections.
-${urgency!=="routine"?`urgency_note: Add a brief urgent clinical note because urgency is ${urgency}.`:`urgency_note: null`}
+${urgency==="critical"||urgency==="urgent"
+  ?`urgency_note: Output ONLY the key diagnosis name(s). No sentences, no explanations, no modifiers. Just diagnosis terms (e.g. "Tension pneumothorax, Aortic dissection" or "긴장성 기흉, 대동맥박리"). Multiple diagnoses separated by comma are allowed.`
+  :`urgency_note: null`}
 recommendation: ${urgency!=="routine"?"Provide a brief follow-up recommendation.":"null"}
 
 Return ONLY raw JSON, no markdown, no code fences:
@@ -280,7 +282,9 @@ Example:
 NEVER combine multiple bullet items on one line.`
   :`For NARRATIVE format, "findings" is a single flowing prose paragraph.`}
 
-${urgency!=="routine"?`urgency_note: Since urgency is ${urgency}, add a brief urgent clinical note string.`:`urgency_note: null`}
+${urgency==="critical"||urgency==="urgent"
+  ?`urgency_note: Output ONLY the key diagnosis name(s). No sentences, no explanations, no modifiers whatsoever. Just diagnosis terms (e.g. "Tension pneumothorax, Aortic dissection" or "긴장성 기흉, 대동맥박리"). Multiple diagnoses separated by comma are allowed.`
+  :`urgency_note: null`}
 recommendation: ${urgency!=="routine"?"Provide a clinical follow-up recommendation string.":"null — omit or set to null"}
 
 Return ONLY a raw JSON object — no markdown, no code fences:
@@ -385,7 +389,7 @@ Generate a professional radiology report as JSON.`;
     }
     if(urgency!=="routine"){
       if(report.urgency_note&&report.urgency_note!=="null")
-        text+=`\n\n⚠ ${urgency.toUpperCase()} NOTE:\n${report.urgency_note}`;
+        text+=`\n\n${urgency.toUpperCase()} NOTE:\n${report.urgency_note}`;
       if(report.recommendation&&report.recommendation!=="null")
         text+=`\n\nRECOMMENDATION:\n${report.recommendation}`;
     }
@@ -747,10 +751,13 @@ Generate a professional radiology report as JSON.`;
                     const colBorder=urgency==="critical"?"rgba(248,113,113,0.3)":urgency==="urgent"?"rgba(251,191,36,0.3)":"rgba(52,211,153,0.3)";
                     return(
                       <div style={{padding:"12px 16px",borderRadius:8,background:colDim,border:`1px solid ${colBorder}`,marginBottom:20}}>
-                        <div style={{fontFamily:mono,fontSize:9,color:col,letterSpacing:2,fontWeight:700,marginBottom:4}}>
-                          ⚠ {urgency.toUpperCase()} NOTE
+                        <div style={{fontFamily:mono,fontSize:9,color:col,letterSpacing:2,fontWeight:700,marginBottom:6}}>
+                          {urgency.toUpperCase()} NOTE
                         </div>
-                        <p style={{color:col,fontSize:13,lineHeight:1.6}}>{report.urgency_note}</p>
+                        {urgency==="critical"||urgency==="urgent"
+                          ?<p style={{color:col,fontSize:16,fontWeight:800,fontFamily:mono,letterSpacing:0.5,lineHeight:1.5}}>{report.urgency_note}</p>
+                          :<p style={{color:col,fontSize:13,lineHeight:1.6}}>{report.urgency_note}</p>
+                        }
                       </div>
                     );
                   })()}
