@@ -58,6 +58,12 @@ const TONE_OPTIONS = [
   {value:"clinical", label:"CLINICAL"},
 ];
 
+const URGENCY_OPTIONS = [
+  {value:"routine",  label:"Routine",  color:"#34d399"},
+  {value:"urgent",   label:"Urgent",   color:"#fbbf24"},
+  {value:"critical", label:"Critical", color:"#f87171"},
+];
+
 const CONTRAST_OPTIONS = {
   CT:  [{value:"non-contrast",label:"Non-Contrast"},{value:"contrast",label:"+ Contrast"},{value:"both",label:"Both Phases"}],
   MRI: [{value:"non-contrast",label:"Non-Contrast"},{value:"gadolinium",label:"+ Gadolinium"}],
@@ -195,6 +201,7 @@ function App(){
   const [finding,      setFinding]     = useState("");
   const [format,       setFormat]      = useState("structured");
   const [tone,         setTone]        = useState("clinical");
+  const [urgency,      setUrgency]     = useState("routine");
   const [lang,         setLang]        = useState("ko");
   const [radiologist,  setRadiologist] = useState("");
   const [hospital,     setHospital]    = useState("");
@@ -240,20 +247,23 @@ function App(){
 
     const xraySystemPrompt=`You are an expert radiologist. Generate a concise X-ray report.
 Language: ${isKo?"Korean (한국어). ALL content in Korean.":"English."}
-Tone: ${tone}
+Tone: ${tone} | Urgency: ${urgency}
 
 Merge Findings and Impression into ONE concise "summary" field (2–4 sentences max).
 The summary describes key observations AND their clinical significance together — no repetition, no separate sections.
+${urgency!=="routine"?`urgency_note: Add a brief urgent clinical note because urgency is ${urgency}.`:`urgency_note: null`}
+recommendation: ${urgency!=="routine"?"Provide a brief follow-up recommendation.":"null"}
 
 Return ONLY raw JSON, no markdown, no code fences:
 {
   "technique": "string",
   "summary": "string",
-  "recommendation": null
+  "urgency_note": ${urgency!=="routine"?'"string"':"null"},
+  "recommendation": ${urgency!=="routine"?'"string"':"null"}
 }`;
 
     const systemPrompt = isXray ? xraySystemPrompt : `You are an expert radiologist assistant. Generate professional radiology reports.
-Format: ${format} | Tone: ${tone}
+Format: ${format} | Tone: ${tone} | Urgency: ${urgency}
 Language: ${langInstr}
 Contrast: ${contrastStr} — reflect accurately in technique (e.g. "CT chest without IV contrast", "CT abdomen with and without IV contrast", "MRI brain with gadolinium enhancement").
 
@@ -270,13 +280,17 @@ Example:
 NEVER combine multiple bullet items on one line.`
   :`For NARRATIVE format, "findings" is a single flowing prose paragraph.`}
 
+${urgency!=="routine"?`urgency_note: Since urgency is ${urgency}, add a brief urgent clinical note string.`:`urgency_note: null`}
+recommendation: ${urgency!=="routine"?"Provide a clinical follow-up recommendation string.":"null — omit or set to null"}
+
 Return ONLY a raw JSON object — no markdown, no code fences:
 {
   "technique": "string",
   "comparison": "string or null",
   "findings": ${format==="structured"?`[{"organ":"...","finding":"..."}]`:'"string"'},
   "impression": ["item 1","item 2"],
-  "recommendation": null
+  "urgency_note": ${urgency!=="routine"?'"string"':"null"},
+  "recommendation": ${urgency!=="routine"?'"string"':"null"}
 }
 "impression" must always be a JSON array of strings.`;
 
@@ -284,6 +298,7 @@ Return ONLY a raw JSON object — no markdown, no code fences:
 Body Part: ${bodypart}
 Exam Date: ${examDate}
 Contrast: ${contrastStr}
+Urgency: ${urgency}
 ${indication?"Clinical Indication: "+indication:""}
 Clinical Information: ${clinicalInfo||"Not provided"}
 ${radiologist?"Radiologist: "+radiologist:""}
@@ -349,21 +364,32 @@ Generate a professional radiology report as JSON.`;
     }finally{
       setLoading(false);
     }
-  },[apiKey,apiOk,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,lang,radiologist,hospital]);
+  },[apiKey,apiOk,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,urgency,lang,radiologist,hospital]);
 
   const getCopyText=()=>{
     if(!report)return"";
-    if(modality==="X-ray") return breakSentences(report.summary||"");
-    let findingsText="";
-    if(Array.isArray(report.findings)){
-      findingsText=report.findings.map(f=>`${f.organ}: ${f.finding}`).join("\n");
+    let text="";
+    if(modality==="X-ray"){
+      text=breakSentences(report.summary||"");
     } else {
-      findingsText=breakSentences(report.findings||"");
+      let findingsText="";
+      if(Array.isArray(report.findings)){
+        findingsText=report.findings.map(f=>`${f.organ}: ${f.finding}`).join("\n");
+      } else {
+        findingsText=breakSentences(report.findings||"");
+      }
+      const imp=Array.isArray(report.impression)
+        ?report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
+        :(report.impression||"");
+      text=`FINDINGS:\n${findingsText}\n\nIMPRESSION:\n${imp}`;
     }
-    const imp=Array.isArray(report.impression)
-      ?report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
-      :(report.impression||"");
-    return`FINDINGS:\n${findingsText}\n\nIMPRESSION:\n${imp}`;
+    if(urgency!=="routine"){
+      if(report.urgency_note&&report.urgency_note!=="null")
+        text+=`\n\n⚠ ${urgency.toUpperCase()} NOTE:\n${report.urgency_note}`;
+      if(report.recommendation&&report.recommendation!=="null")
+        text+=`\n\nRECOMMENDATION:\n${report.recommendation}`;
+    }
+    return text;
   };
 
   const copyReport=()=>{
@@ -492,6 +518,16 @@ Generate a professional radiology report as JSON.`;
                   </div>
                 </Field>
 
+                <Field label="URGENCY">
+                  <div style={{display:"flex",gap:8}}>
+                    {URGENCY_OPTIONS.map(u=>(
+                      <Tag key={u.value} active={urgency===u.value} color={u.color} onClick={()=>setUrgency(u.value)}>
+                        {u.label}
+                      </Tag>
+                    ))}
+                  </div>
+                </Field>
+
               </div>
             </div>
 
@@ -583,7 +619,17 @@ Generate a professional radiology report as JSON.`;
               <div>
                 <div style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:2,marginBottom:4}}>OUTPUT REPORT</div>
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontFamily:disp,fontSize:16,fontWeight:700,color:C.bright}}>{modality} · {bodypart}</span>
+                  <span style={{fontFamily:disp,fontSize:16,fontWeight:700,color:C.bright}}>
+                    {modality}{contrastOptions?` · ${getContrastLabel()}`:""} · {bodypart}
+                  </span>
+                  {urgency!=="routine"&&(()=>{
+                    const uc=URGENCY_OPTIONS.find(u=>u.value===urgency);
+                    return(
+                      <span style={{padding:"2px 10px",borderRadius:20,border:`1px solid ${uc.color}`,color:uc.color,fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1}}>
+                        {urgency.toUpperCase()}
+                      </span>
+                    );
+                  })()}
                 </div>
                 {hospital&&<div style={{fontFamily:mono,fontSize:10,color:C.dim,marginTop:4}}>{hospital}{radiologist?" · "+radiologist:""}</div>}
               </div>
@@ -603,7 +649,7 @@ Generate a professional radiology report as JSON.`;
             <div style={{padding:28}}>
               {!report&&!loading&&(
                 <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:400,gap:16}}>
-                  <div style={{width:64,height:64,borderRadius:16,background:C.accentDim,border:`1px solid ${C.borderHover}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28}}>🩻</div>
+  
                   <div style={{textAlign:"center"}}>
                     <p style={{fontFamily:disp,fontSize:16,color:C.bright,marginBottom:6}}>Ready to Generate</p>
                     <p style={{fontFamily:mono,fontSize:11,color:C.dim}}>Finding을 입력하고 Generate를 누르세요</p>
@@ -693,6 +739,21 @@ Generate a professional radiology report as JSON.`;
                       </ReportSection>
                     </>
                   )}
+
+                  {report.urgency_note&&report.urgency_note!=="null"&&(()=>{
+                    const uc=URGENCY_OPTIONS.find(u=>u.value===urgency);
+                    const col=uc?.color||C.amber;
+                    const colDim=urgency==="critical"?"rgba(248,113,113,0.08)":urgency==="urgent"?"rgba(251,191,36,0.08)":"rgba(52,211,153,0.08)";
+                    const colBorder=urgency==="critical"?"rgba(248,113,113,0.3)":urgency==="urgent"?"rgba(251,191,36,0.3)":"rgba(52,211,153,0.3)";
+                    return(
+                      <div style={{padding:"12px 16px",borderRadius:8,background:colDim,border:`1px solid ${colBorder}`,marginBottom:20}}>
+                        <div style={{fontFamily:mono,fontSize:9,color:col,letterSpacing:2,fontWeight:700,marginBottom:4}}>
+                          ⚠ {urgency.toUpperCase()} NOTE
+                        </div>
+                        <p style={{color:col,fontSize:13,lineHeight:1.6}}>{report.urgency_note}</p>
+                      </div>
+                    );
+                  })()}
 
                   {report.recommendation&&report.recommendation!=="null"&&(
                     <ReportSection title="RECOMMENDATION">
