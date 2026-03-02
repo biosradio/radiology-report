@@ -58,6 +58,11 @@ const TONE_OPTIONS = [
   {value:"clinical", label:"CLINICAL"},
 ];
 
+const CONTRAST_OPTIONS = {
+  CT:  [{value:"non-contrast",label:"Non-Contrast"},{value:"contrast",label:"+ Contrast"},{value:"both",label:"Both Phases"}],
+  MRI: [{value:"non-contrast",label:"Non-Contrast"},{value:"gadolinium",label:"+ Gadolinium"}],
+};
+
 function hexToRgb(hex){
   const r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return r?`${parseInt(r[1],16)},${parseInt(r[2],16)},${parseInt(r[3],16)}`:"56,189,248";
@@ -180,8 +185,9 @@ function breakSentences(text){
 
 function App(){
   const [apiKey,       setApiKey]      = useState("");
-  const [examDate,     setExamDate]    = useState(new Date().toISOString().split("T")[0]);
+  const examDate = new Date().toISOString().split("T")[0];
   const [modality,     setModality]    = useState("CT");
+  const [contrast,     setContrast]    = useState("non-contrast");
   const [selCat,       setSelCat]      = useState("Chest / Abdomen");
   const [bodypart,     setBodypart]    = useState("Chest");
   const [indication,   setIndication]  = useState("");
@@ -200,64 +206,84 @@ function App(){
   const modalTextRef = useRef(null);
   const apiOk = apiKey.startsWith("AIza");
 
+  const contrastOptions = CONTRAST_OPTIONS[modality] || null;
+  const handleModalityChange = (val) => { setModality(val); setContrast("non-contrast"); };
+  const getContrastLabel = () => contrastOptions?.find(o=>o.value===contrast)?.label || "";
+
   const generate = useCallback(async()=>{
     if(!apiOk){setError("상단에 Gemini API 키를 입력해주세요. (AIza...)");return;}
     if(!finding.trim()){setError("Finding을 입력해주세요.");return;}
     setLoading(true);setError(null);setReport(null);
 
-    const langInstr=lang==="ko"
-      ?"Korean (한국어). Write ALL content in Korean using standard Korean radiology terminology."
-      :"English. Write ALL content in English.";
+    const isKo = lang==="ko";
+    const isXray = modality==="X-ray";
+    const langInstr = isKo
+      ? "Korean (한국어). Write ALL content in Korean. Translate organ names: Lungs→폐, Heart→심장, Liver→간, Kidney→신장, Spleen→비장, Pancreas→췌장, Gallbladder→담낭, Aorta→대동맥, Mediastinum→종격동, Pleura→흉막, Bones→뼈, etc."
+      : "English. Write ALL content in English.";
 
     const organMap = {
-      "Chest":       lang==="ko"?"폐,흉막,심장,종격동,대동맥,횡격막":"Lungs,Pleura,Heart,Mediastinum,Aorta,Diaphragm",
-      "Abdomen":     lang==="ko"?"간,담낭,췌장,비장,신장,부신,복막":"Liver,Gallbladder,Pancreas,Spleen,Kidneys,Adrenals,Peritoneum",
-      "Pelvis":      lang==="ko"?"방광,자궁/전립선,직장,골반벽":"Bladder,Uterus/Prostate,Rectum,Pelvic Wall",
-      "Abdomen & Pelvis": lang==="ko"?"간,담낭,췌장,비장,신장,방광,장,복막":"Liver,Gallbladder,Pancreas,Spleen,Kidneys,Bladder,Bowel,Peritoneum",
-      "Brain":       lang==="ko"?"뇌실질,뇌실,백질,뇌간,소뇌,뇌혈관":"Parenchyma,Ventricles,White Matter,Brainstem,Cerebellum,Vasculature",
-      "Neck":        lang==="ko"?"갑상선,림프절,혈관,연부조직":"Thyroid,Lymph Nodes,Vessels,Soft Tissue",
-      "C-spine":     lang==="ko"?"추체,추간판,척수,신경공,인대":"Vertebrae,Discs,Spinal Cord,Foramina,Ligaments",
-      "L-spine":     lang==="ko"?"추체,추간판,척수원뿔,신경공,인대":"Vertebrae,Discs,Conus,Foramina,Ligaments",
-      "Knee":        lang==="ko"?"골구조물,연골,반월판,인대,관절강,연부조직":"Bones,Cartilage,Menisci,Ligaments,Joint Space,Soft Tissue",
-      "Shoulder":    lang==="ko"?"골구조물,회전근개,관절순,관절강,점액낭":"Bones,Rotator Cuff,Labrum,Joint Space,Bursa",
-      "Hip":         lang==="ko"?"골구조물,관절연골,관절강,연부조직":"Bones,Articular Cartilage,Joint Space,Soft Tissue",
+      "Chest":            isKo?"폐,흉막,심장,심낭,종격동,기관지,대동맥,횡격막,흉벽,뼈":"Lungs,Pleura,Heart,Pericardium,Mediastinum,Trachea & Bronchi,Aorta,Diaphragm,Chest Wall,Bones",
+      "Abdomen":          isKo?"간,담낭,담도,췌장,비장,부신,신장,장,복막,혈관,뼈":"Liver,Gallbladder,Bile Ducts,Pancreas,Spleen,Adrenal Glands,Kidneys,Bowel,Peritoneum,Vessels,Bones",
+      "Pelvis":           isKo?"방광,자궁/난소 또는 전립선,직장,골반혈관,뼈":"Bladder,Uterus/Ovaries or Prostate,Rectum,Pelvic Vessels,Bones",
+      "Abdomen & Pelvis": isKo?"간,담낭,췌장,비장,신장,방광,장,복막,혈관,뼈":"Liver,Gallbladder,Pancreas,Spleen,Kidneys,Bladder,Bowel,Peritoneum,Vessels,Bones",
+      "Brain":            isKo?"뇌실질,뇌실,뇌구/회,백질,뇌간,소뇌,두개골,부비동,안와":"Brain Parenchyma,Ventricles,Sulci & Gyri,White Matter,Brainstem,Cerebellum,Skull,Sinuses,Orbits",
+      "Neck":             isKo?"갑상선,림프절,혈관,연부조직":"Thyroid,Lymph Nodes,Vessels,Soft Tissue",
+      "C-spine":          isKo?"추체,추간판,척수관,신경공,척추주변연부조직":"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue",
+      "T-spine":          isKo?"추체,추간판,척수관,신경공,척추주변연부조직":"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue",
+      "L-spine":          isKo?"추체,추간판,척수원뿔,신경공,척추주변연부조직":"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue",
+      "Knee":             isKo?"골구조물,관절강,연골,반월판,인대,연부조직":"Bones,Joint Space,Cartilage,Menisci,Ligaments,Soft Tissue",
+      "Shoulder":         isKo?"골구조물,회전근개,관절순,관절강,점액낭":"Bones,Rotator Cuff,Labrum,Joint Space,Bursa",
+      "Hip":              isKo?"골구조물,관절연골,관절강,연부조직":"Bones,Articular Cartilage,Joint Space,Soft Tissue",
     };
-    const organs = organMap[bodypart] || "";
+    const organs = organMap[bodypart] || (isKo?"뼈,연부조직":"Bones,Soft Tissue");
+    const contrastStr = contrastOptions ? getContrastLabel() : "N/A";
 
-    const systemPrompt=`You are an expert radiologist assistant. Generate professional radiology reports.
+    const xraySystemPrompt=`You are an expert radiologist. Generate a concise X-ray report.
+Language: ${isKo?"Korean (한국어). ALL content in Korean.":"English."}
+Tone: ${tone}
+
+Merge Findings and Impression into ONE concise "summary" field (2–4 sentences max).
+The summary describes key observations AND their clinical significance together — no repetition, no separate sections.
+
+Return ONLY raw JSON, no markdown, no code fences:
+{
+  "technique": "string",
+  "summary": "string",
+  "recommendation": null
+}`;
+
+    const systemPrompt = isXray ? xraySystemPrompt : `You are an expert radiologist assistant. Generate professional radiology reports.
 Format: ${format} | Tone: ${tone}
 Language: ${langInstr}
+Contrast: ${contrastStr} — reflect accurately in technique (e.g. "CT chest without IV contrast", "CT abdomen with and without IV contrast", "MRI brain with gadolinium enhancement").
 
 ${format==="structured"
-  ?`For STRUCTURED format, return findings as an ARRAY of organ objects:
-"findings": [{"organ": "장기명", "finding": "소견"}, ...]
+  ?`For STRUCTURED format, "findings" MUST be an array of organ objects:
+"findings": [{"organ":"Lungs","finding":"..."}, {"organ":"Heart","finding":"..."}, ...]
 Use these organs for ${bodypart}: ${organs}
-Include all organs listed, describe findings for each.`
+Include ALL organs listed. For each, describe the finding or state it is normal.`
   :format==="bullet"
-  ?`For BULLET format, findings MUST be a plain string. Each item on its own line starting with •.
+  ?`For BULLET format, "findings" MUST be a plain string. Each item on its own NEW LINE starting with •.
 Example:
 • 첫 번째 소견 내용
 • 두 번째 소견 내용
-NEVER combine multiple items on one line.`
-  :`For NARRATIVE format, return findings as a single flowing prose paragraph.`}
+NEVER combine multiple bullet items on one line.`
+  :`For NARRATIVE format, "findings" is a single flowing prose paragraph.`}
 
-Return valid JSON only (no markdown code blocks):
+Return ONLY a raw JSON object — no markdown, no code fences:
 {
-  "technique": "Brief technique description",
-  "comparison": null,
-  "findings": ${format==="structured"?`[{"organ":"...","finding":"..."}]`:'"findings text"'},
-  "impression": ["item 1", "item 2"],
+  "technique": "string",
+  "comparison": "string or null",
+  "findings": ${format==="structured"?`[{"organ":"...","finding":"..."}]`:'"string"'},
+  "impression": ["item 1","item 2"],
   "recommendation": null
 }
-
-CRITICAL RULES:
-- impression MUST be a JSON array of strings. Each item on one line, no internal line breaks.
-- No markdown symbols **, *, __, _.
-- Return raw JSON only, no code blocks.`;
+"impression" must always be a JSON array of strings.`;
 
     const userPrompt=`Modality: ${modality}
 Body Part: ${bodypart}
 Exam Date: ${examDate}
+Contrast: ${contrastStr}
 ${indication?"Clinical Indication: "+indication:""}
 Clinical Information: ${clinicalInfo||"Not provided"}
 ${radiologist?"Radiologist: "+radiologist:""}
@@ -282,19 +308,52 @@ Generate a professional radiology report as JSON.`;
       const data=await res.json();
       if(!res.ok)throw new Error(data.error?.message||JSON.stringify(data));
       const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
-      const clean=raw.replace(/```json\n?|\n?```/g,"").trim();
-      const parsed=JSON.parse(clean);
-      console.log("RAW FINDINGS:", JSON.stringify(parsed.findings));
+      let clean=raw.replace(/```json\s*/gi,"").replace(/```/g,"").trim();
+      const si=clean.indexOf("{"); const ei=clean.lastIndexOf("}");
+      if(si!==-1&&ei!==-1)clean=clean.slice(si,ei+1);
+      let parsed;
+      try{ parsed=JSON.parse(clean); }
+      catch{
+        parsed=isXray
+          ?{technique:`X-ray ${bodypart}`,summary:raw,recommendation:null}
+          :{
+            technique:`${modality} of ${bodypart}`,
+            comparison:isKo?"이전 검사 없음":"No prior studies available",
+            findings:raw,
+            impression:[isKo?"임상 소견과 비교 검토 요망.":"Correlate clinically."],
+            recommendation:null,
+          };
+      }
+      if(isXray){
+        if(!parsed.summary){
+          parsed.summary=parsed.findings
+            ?(Array.isArray(parsed.findings)?parsed.findings.map(f=>f.finding||String(f)).join(" "):String(parsed.findings))
+            :(isKo?"소견을 확인하세요.":"Please review findings.");
+        }
+      } else {
+        if(format==="structured"){
+          if(!Array.isArray(parsed.findings))
+            parsed.findings=[{organ:isKo?"소견":"Findings",finding:String(parsed.findings||"")}];
+        } else {
+          if(typeof parsed.findings!=="string")
+            parsed.findings=Array.isArray(parsed.findings)
+              ?parsed.findings.map(f=>f.finding||String(f)).join("\n")
+              :(isKo?"소견을 확인하세요.":"Please review findings.");
+        }
+        if(!Array.isArray(parsed.impression))
+          parsed.impression=parsed.impression?[String(parsed.impression)]:[isKo?"임상 소견과 비교 검토 요망.":"Correlate clinically."];
+      }
       setReport(parsed);
     }catch(e){
       setError("오류: "+e.message);
     }finally{
       setLoading(false);
     }
-  },[apiKey,apiOk,finding,clinicalInfo,indication,modality,bodypart,examDate,format,tone,lang,radiologist,hospital]);
+  },[apiKey,apiOk,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,lang,radiologist,hospital]);
 
   const getCopyText=()=>{
     if(!report)return"";
+    if(modality==="X-ray") return breakSentences(report.summary||"");
     let findingsText="";
     if(Array.isArray(report.findings)){
       findingsText=report.findings.map(f=>`${f.organ}: ${f.finding}`).join("\n");
@@ -386,14 +445,38 @@ Generate a professional radiology report as JSON.`;
               <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:14}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                   <Field label="EXAM DATE">
-                    <input type="date" style={inputBase} value={examDate} onChange={e=>setExamDate(e.target.value)} onFocus={focusStyle} onBlur={blurStyle}/>
+                    <div style={{...inputBase,display:"flex",alignItems:"center",gap:8,cursor:"default",userSelect:"none"}}>
+                      <span style={{opacity:0.5}}>📅</span>
+                      <span style={{fontFamily:mono,fontSize:12,fontWeight:700,color:C.bright}}>{examDate}</span>
+                      <span style={{fontFamily:mono,fontSize:9,color:C.accent,marginLeft:"auto",letterSpacing:1}}>AUTO</span>
+                    </div>
                   </Field>
                   <Field label="MODALITY">
-                    <select style={{...inputBase,cursor:"pointer"}} value={modality} onChange={e=>setModality(e.target.value)} onFocus={focusStyle} onBlur={blurStyle}>
+                    <select style={{...inputBase,cursor:"pointer"}} value={modality} onChange={e=>handleModalityChange(e.target.value)} onFocus={focusStyle} onBlur={blurStyle}>
                       {MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}
                     </select>
                   </Field>
                 </div>
+
+                {contrastOptions&&(
+                  <Field label={modality==="MRI"?"CONTRAST AGENT":"CONTRAST"}>
+                    <div style={{display:"flex",background:"rgba(0,0,0,0.3)",borderRadius:8,padding:3,border:`1px solid ${C.border}`,gap:2}}>
+                      {contrastOptions.map(opt=>{
+                        const active=contrast===opt.value;
+                        return(
+                          <button key={opt.value} onClick={()=>setContrast(opt.value)} style={{
+                            flex:1,padding:"8px 10px",borderRadius:6,border:"none",cursor:"pointer",
+                            fontFamily:mono,fontSize:10,fontWeight:700,letterSpacing:0.6,
+                            transition:"all 0.2s",
+                            background:active?C.accent:"transparent",
+                            color:active?C.bg:C.dim,
+                            boxShadow:active?`0 2px 8px ${C.accentGlow}`:"none",
+                          }}>{opt.label}</button>
+                        );
+                      })}
+                    </div>
+                  </Field>
+                )}
                 <Field label="BODY REGION">
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
                     <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
@@ -458,7 +541,12 @@ Generate a professional radiology report as JSON.`;
                   </div>
                 </Field>
                 <Field label="FORMAT">
-                  <SegmentedControl options={FORMAT_OPTIONS} value={format} onChange={setFormat}/>
+                  {modality==="X-ray"
+                    ?<div style={{...inputBase,display:"flex",alignItems:"center",opacity:0.4,cursor:"default",userSelect:"none"}}>
+                       <span style={{fontFamily:mono,fontSize:11,color:C.dim}}>N/A for X-ray</span>
+                     </div>
+                    :<SegmentedControl options={FORMAT_OPTIONS} value={format} onChange={setFormat}/>
+                  }
                 </Field>
                 <Field label="TONE">
                   <SegmentedControl options={TONE_OPTIONS} value={tone} onChange={setTone} small/>
@@ -528,7 +616,14 @@ Generate a professional radiology report as JSON.`;
               {report&&!loading&&(
                 <div style={{animation:"fadeIn 0.4s ease"}}>
                   <div style={{display:"flex",gap:20,marginBottom:24,padding:"12px 16px",background:"rgba(0,0,0,0.2)",borderRadius:8,border:`1px solid ${C.border}`,flexWrap:"wrap"}}>
-                    {[["DATE",examDate],["MODALITY",modality],["REGION",bodypart],["FORMAT",format.toUpperCase()]].map(([k,v])=>(
+                    {[
+                      ["DATE",examDate],
+                      ["MODALITY",modality],
+                      ...(contrastOptions?[["CONTRAST",getContrastLabel()]]:[]),
+                      ["REGION",bodypart],
+                      ["FORMAT",format.toUpperCase()],
+                      ["LANG",lang==="ko"?"한국어":"ENG"],
+                    ].map(([k,v])=>(
                       <div key={k}>
                         <div style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:1.5,marginBottom:3}}>{k}</div>
                         <div style={{fontFamily:mono,fontSize:11,color:C.bright,fontWeight:700}}>{v}</div>
@@ -539,55 +634,65 @@ Generate a professional radiology report as JSON.`;
                   {report.technique&&<ReportSection title="TECHNIQUE"><p style={{lineHeight:1.8,color:C.text,fontSize:14,whiteSpace:"pre-wrap"}}>{breakSentences(report.technique)}</p></ReportSection>}
                   {report.comparison&&report.comparison!=="null"&&<ReportSection title="COMPARISON"><p style={{lineHeight:1.8,color:C.text,fontSize:14,whiteSpace:"pre-wrap"}}>{report.comparison}</p></ReportSection>}
 
-                  <ReportSection title="FINDINGS">
-                    {Array.isArray(report.findings)
-                      ?(
-                        <div style={{display:"flex",flexDirection:"column",gap:0,borderRadius:8,overflow:"hidden",border:`1px solid ${C.border}`}}>
-                          {report.findings.map((f,i)=>(
-                            <div key={i} style={{display:"grid",gridTemplateColumns:"120px 1fr",borderBottom:i<report.findings.length-1?`1px solid ${C.border}`:"none"}}>
-                              <div style={{padding:"10px 14px",background:"rgba(56,189,248,0.06)",borderRight:`1px solid ${C.border}`,fontFamily:mono,fontSize:11,fontWeight:700,color:C.accent,display:"flex",alignItems:"flex-start",paddingTop:12}}>{f.organ}</div>
-                              <div style={{padding:"10px 16px",fontSize:14,lineHeight:1.8,color:C.bright}}>{f.finding}</div>
-                            </div>
-                          ))}
-                        </div>
-                      )
-                      :format==="bullet"
-                        ?(
-                          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                            {(report.findings||"")
-                              .replace(/([^\n])\s*•\s*/g,"$1\n")
-                              .replace(/([^\n])\s*-\s+/g,"$1\n")
-                              .split("\n")
-                              .map(l=>l.replace(/^[•\-\*]\s*/,"").trim())
-                              .filter(l=>l.length>0)
-                              .map((text,i)=>(
-                                <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                                  <span style={{color:C.accent,fontWeight:700,fontSize:16,lineHeight:1.4,flexShrink:0}}>•</span>
-                                  <p style={{lineHeight:1.8,color:C.bright,fontSize:14}}>{text}</p>
+                  {modality==="X-ray"?(
+                    <ReportSection title={lang==="ko"?"판독 소견 (Findings + Impression)":"REPORT SUMMARY"}>
+                      <div style={{padding:"18px 20px",borderRadius:10,background:"rgba(56,189,248,0.04)",border:`1px solid ${C.borderHover}`}}>
+                        <p style={{lineHeight:1.9,color:C.bright,fontSize:14,whiteSpace:"pre-wrap"}}>{breakSentences(report.summary||"")}</p>
+                      </div>
+                    </ReportSection>
+                  ):(
+                    <>
+                      <ReportSection title="FINDINGS">
+                        {Array.isArray(report.findings)
+                          ?(
+                            <div style={{display:"flex",flexDirection:"column",gap:0,borderRadius:8,overflow:"hidden",border:`1px solid ${C.border}`}}>
+                              {report.findings.map((f,i)=>(
+                                <div key={i} style={{display:"grid",gridTemplateColumns:"120px 1fr",borderBottom:i<report.findings.length-1?`1px solid ${C.border}`:"none",background:i%2===0?"rgba(0,0,0,0.15)":"rgba(0,0,0,0.05)"}}>
+                                  <div style={{padding:"11px 14px",borderRight:`1px solid ${C.border}`,fontFamily:mono,fontSize:11,fontWeight:700,color:C.accent,display:"flex",alignItems:"center"}}>{f.organ}</div>
+                                  <div style={{padding:"11px 16px",fontSize:13,lineHeight:1.7,color:C.bright}}>{f.finding}</div>
                                 </div>
-                              ))
-                            }
-                          </div>
-                        )
-                        :<p style={{lineHeight:1.9,color:C.bright,fontSize:14,whiteSpace:"pre-wrap"}}>{breakSentences(report.findings||"")}</p>
-                    }
-                  </ReportSection>
-
-                  <ReportSection title="IMPRESSION">
-                    <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                      {Array.isArray(report.impression)
-                        ?report.impression.map((line,i)=>(
-                          <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-                            <div style={{width:22,height:22,borderRadius:6,background:C.accentDim,border:`1px solid ${C.borderHover}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                              <span style={{fontFamily:mono,fontSize:10,fontWeight:800,color:C.accent}}>{i+1}</span>
+                              ))}
                             </div>
-                            <p style={{lineHeight:1.7,color:C.bright,fontSize:14,paddingTop:2}}>{line}</p>
-                          </div>
-                        ))
-                        :<p style={{lineHeight:1.9,color:C.bright,fontSize:14,whiteSpace:"pre-wrap"}}>{report.impression}</p>
-                      }
-                    </div>
-                  </ReportSection>
+                          )
+                          :format==="bullet"
+                            ?(
+                              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                                {(report.findings||"")
+                                  .replace(/([^\n])\s*•\s*/g,"$1\n")
+                                  .replace(/([^\n])\s*-\s+/g,"$1\n")
+                                  .split("\n")
+                                  .map(l=>l.replace(/^[•\-\*]\s*/,"").trim())
+                                  .filter(l=>l.length>0)
+                                  .map((text,i)=>(
+                                    <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                                      <span style={{color:C.accent,fontWeight:700,fontSize:16,lineHeight:1.4,flexShrink:0}}>•</span>
+                                      <p style={{lineHeight:1.8,color:C.bright,fontSize:14}}>{text}</p>
+                                    </div>
+                                  ))
+                                }
+                              </div>
+                            )
+                            :<p style={{lineHeight:1.9,color:C.bright,fontSize:14,whiteSpace:"pre-wrap"}}>{breakSentences(report.findings||"")}</p>
+                        }
+                      </ReportSection>
+
+                      <ReportSection title="IMPRESSION">
+                        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                          {Array.isArray(report.impression)
+                            ?report.impression.map((line,i)=>(
+                              <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+                                <div style={{width:22,height:22,borderRadius:6,background:C.accentDim,border:`1px solid ${C.borderHover}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                                  <span style={{fontFamily:mono,fontSize:10,fontWeight:800,color:C.accent}}>{i+1}</span>
+                                </div>
+                                <p style={{lineHeight:1.7,color:C.bright,fontSize:14,paddingTop:2}}>{line}</p>
+                              </div>
+                            ))
+                            :<p style={{lineHeight:1.9,color:C.bright,fontSize:14,whiteSpace:"pre-wrap"}}>{report.impression}</p>
+                          }
+                        </div>
+                      </ReportSection>
+                    </>
+                  )}
 
                   {report.recommendation&&report.recommendation!=="null"&&(
                     <ReportSection title="RECOMMENDATION">
