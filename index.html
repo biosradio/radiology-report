@@ -388,7 +388,7 @@ Generate a professional radiology report as JSON.`;
       const compVal=report.comparison||"";
       const compEmpty=!compVal||compVal==="null"||/^none\s*(available)?\.?$/i.test(compVal.trim())||/^이전\s*검사\s*없음\.?$/.test(compVal.trim());
       const comp=compEmpty?"":`COMPARISON:\n${compVal}\n\n`;
-      text=`${comp}FINDINGS:\n${findingsText}\n\nIMPRESSION:\n${imp}`;
+      text=`${comp}${findingsText}\n\nIMPRESSION:\n${imp}`;
     }
     if(urgency!=="routine"){
       if(report.urgency_note&&report.urgency_note!=="null")
