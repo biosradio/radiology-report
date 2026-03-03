@@ -385,7 +385,10 @@ Generate a professional radiology report as JSON.`;
       const imp=Array.isArray(report.impression)
         ?report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
         :(report.impression||"");
-      text=`FINDINGS:\n${findingsText}\n\nIMPRESSION:\n${imp}`;
+      const comp=(report.comparison&&report.comparison!=="null")
+        ?`COMPARISON:\n${report.comparison}\n\n`
+        :"";
+      text=`${comp}FINDINGS:\n${findingsText}\n\nIMPRESSION:\n${imp}`;
     }
     if(urgency!=="routine"){
       if(report.urgency_note&&report.urgency_note!=="null")
