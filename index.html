@@ -287,13 +287,14 @@ Return ONLY raw JSON, no markdown, no code fences:
     const systemPrompt = isXray ? xraySystemPrompt : `You are an expert radiologist assistant. Generate professional radiology reports.
 Format: ${format} | Tone: ${tone} | Urgency: ${urgency}
 Language: ${langInstr}
+${tone==="concise"?`CONCISE MODE: Be brief but diagnostically meaningful. Findings: 1 short sentence per organ — ALWAYS include organs mentioned in the raw findings input, skip only organs that are normal AND not mentioned at all. Impression: max 1-2 items, each concise but must suggest or name a specific diagnosis/condition (e.g. "Suggestive of pneumonia", "Compatible with hepatic steatosis", "폐렴 의심", "간경변 가능성"). Avoid vague phrases like "abnormality noted" or "clinical correlation recommended" alone — always infer the most likely diagnosis from the findings.`:""}
 Contrast: ${contrastStr} — reflect accurately in technique (e.g. "CT chest without IV contrast", "CT abdomen with and without IV contrast", "MRI brain with gadolinium enhancement").
 
 ${format==="structured"
   ?`For STRUCTURED format, "findings" MUST be an array of organ objects:
 "findings": [{"organ":"Lungs","finding":"..."}, {"organ":"Heart","finding":"..."}, ...]
 Use these organs for ${bodypart}: ${organs}
-Include ALL organs listed. For each, describe the finding or state it is normal.`
+Include ALL organs listed. For each, describe the finding or state it is normal.${tone==="concise"?" EXCEPTION: In concise mode, OMIT organs that are entirely normal AND not mentioned in the raw findings input. However, ANY organ mentioned in the raw findings MUST be included regardless.":""}`
   :format==="bullet"
   ?`For BULLET format, "findings" MUST be a plain string. Each item on its own NEW LINE starting with •.
 Example:
@@ -403,7 +404,9 @@ Generate a professional radiology report as JSON.`;
         findingsText=breakSentences(report.findings||"");
       }
       const imp=Array.isArray(report.impression)
-        ?report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
+        ?report.impression.length===1
+          ?report.impression[0]
+          :report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
         :(report.impression||"");
       const compVal=report.comparison||"";
       const compEmpty=!compVal||compVal==="null"||/^none\s*(available)?\.?$/i.test(compVal.trim())||/^이전\s*검사\s*없음\.?$/.test(compVal.trim())||/no prior/i.test(compVal.trim())||/not available/i.test(compVal.trim())||/unavailable/i.test(compVal.trim())||/없음/i.test(compVal.trim());
