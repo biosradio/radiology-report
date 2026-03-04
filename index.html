@@ -406,7 +406,7 @@ Generate a professional radiology report as JSON.`;
         ?report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
         :(report.impression||"");
       const compVal=report.comparison||"";
-      const compEmpty=!compVal||compVal==="null"||/^none\s*(available)?\.?$/i.test(compVal.trim())||/^이전\s*검사\s*없음\.?$/.test(compVal.trim());
+      const compEmpty=!compVal||compVal==="null"||/^none\s*(available)?\.?$/i.test(compVal.trim())||/^이전\s*검사\s*없음\.?$/.test(compVal.trim())||/no prior/i.test(compVal.trim())||/not available/i.test(compVal.trim())||/unavailable/i.test(compVal.trim())||/없음/i.test(compVal.trim());
       const comp=compEmpty?"":`COMPARISON:\n${compVal}\n\n`;
       text=`${comp}${findingsText}\n\nIMPRESSION:\n${imp}`;
     }
