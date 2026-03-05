@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>RadReport</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -10,7 +10,22 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@700;800&display=swap');
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:#030712; color:#94a3b8; font-family:'DM Sans',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  :root {
+    --fs-xs: clamp(8px, 0.7vw, 10px);
+    --fs-sm: clamp(10px, 0.85vw, 12px);
+    --fs-md: clamp(12px, 1vw, 14px);
+    --fs-lg: clamp(14px, 1.2vw, 16px);
+    --fs-xl: clamp(20px, 2vw, 28px);
+    --fs-2xl: clamp(24px, 2.5vw, 36px);
+    --sp-xs: clamp(4px, 0.4vw, 6px);
+    --sp-sm: clamp(8px, 0.7vw, 12px);
+    --sp-md: clamp(12px, 1vw, 18px);
+    --sp-lg: clamp(16px, 1.4vw, 24px);
+    --sp-xl: clamp(20px, 1.8vw, 32px);
+    --left-panel: clamp(280px, 28vw, 420px);
+    --radius: clamp(8px, 0.8vw, 14px);
+  }
+  body { background:#030712; color:#94a3b8; font-family:'DM Sans',system-ui,sans-serif; -webkit-font-smoothing:antialiased; font-size:var(--fs-md); min-height:100vh; overflow-x:hidden; }
   @keyframes spin { to{transform:rotate(360deg);} }
   @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
   @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
@@ -18,6 +33,18 @@
   ::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.12);border-radius:4px;}
   input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.5);cursor:pointer;}
   select option{background:#0f172a;color:#f1f5f9;}
+  /* portrait / tall monitor optimisation */
+  @media (max-aspect-ratio: 3/4) {
+    :root {
+      --fs-xs: clamp(9px, 1.1vw, 11px);
+      --fs-sm: clamp(11px, 1.3vw, 13px);
+      --fs-md: clamp(13px, 1.5vw, 15px);
+      --fs-lg: clamp(15px, 1.7vw, 17px);
+      --fs-xl: clamp(18px, 2.2vw, 24px);
+      --fs-2xl: clamp(22px, 2.8vw, 30px);
+      --left-panel: clamp(260px, 32vw, 400px);
+    }
+  }
 </style>
 </head>
 <body>
@@ -96,7 +123,7 @@ function Divider({label}){
   return(
     <div style={{display:"flex",alignItems:"center",gap:12,margin:"4px 0"}}>
       <div style={{flex:1,height:"1px",background:C.border}}/>
-      <span style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:2,fontWeight:700}}>{label}</span>
+      <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,fontWeight:700}}>{label}</span>
       <div style={{flex:1,height:"1px",background:C.border}}/>
     </div>
   );
@@ -106,7 +133,7 @@ function Field({label,children,hint}){
   return(
     <div style={{display:"flex",flexDirection:"column",gap:6}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <label style={{fontFamily:mono,fontSize:10,color:C.dim,letterSpacing:1.5,fontWeight:700}}>{label}</label>
+        <label style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:1.5,fontWeight:700}}>{label}</label>
         {hint&&<span style={{fontFamily:mono,fontSize:9,color:C.dim,opacity:0.6}}>{hint}</span>}
       </div>
       {children}
@@ -116,7 +143,7 @@ function Field({label,children,hint}){
 
 const inputBase={
   background:"rgba(0,0,0,0.25)",border:`1px solid ${C.border}`,
-  color:C.bright,fontFamily:sans,fontSize:14,padding:"10px 14px",
+  color:C.bright,fontFamily:sans,fontSize:"var(--fs-md)",padding:"var(--sp-xs) var(--sp-sm)",
   borderRadius:8,outline:"none",transition:"border-color 0.2s,box-shadow 0.2s",width:"100%",
 };
 
@@ -162,7 +189,7 @@ function ReportSection({title,children}){
     <div style={{marginBottom:24}}>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
         <div style={{width:3,height:14,background:C.accent,borderRadius:2,boxShadow:`0 0 8px ${C.accentGlow}`}}/>
-        <span style={{fontFamily:mono,fontSize:10,color:C.accent,letterSpacing:2,fontWeight:700}}>{title}</span>
+        <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.accent,letterSpacing:2,fontWeight:700}}>{title}</span>
       </div>
       {children}
     </div>
@@ -287,7 +314,7 @@ Return ONLY raw JSON, no markdown, no code fences:
     const systemPrompt = isXray ? xraySystemPrompt : `You are an expert radiologist assistant. Generate professional radiology reports.
 Format: ${format} | Tone: ${tone} | Urgency: ${urgency}
 Language: ${langInstr}
-${tone==="concise"?`CONCISE MODE: Be brief but diagnostically meaningful. Findings: 1 short sentence per organ — ALWAYS include organs mentioned in the raw findings input, skip only organs that are normal AND not mentioned at all. Impression: max 1-2 items, each concise but must suggest or name a specific diagnosis/condition (e.g. "Suggestive of pneumonia", "Compatible with hepatic steatosis", "폐렴 의심", "간경변 가능성"). Avoid vague phrases like "abnormality noted" or "clinical correlation recommended" alone — always infer the most likely diagnosis from the findings.`:""}
+${tone==="concise"?`CONCISE MODE: Be brief but diagnostically meaningful. Findings: 1 short sentence per organ — ALWAYS include organs mentioned in the raw findings input, skip only organs that are normal AND not mentioned at all. Impression: use as many items as the findings require — 1 item if single issue, multiple items if there are distinct findings each warranting a separate conclusion. Each item must be concise (under 15 words) but must suggest or name a specific diagnosis/condition (e.g. "Suggestive of pneumonia", "Compatible with hepatic steatosis", "폐렴 의심", "간경변 가능성"). Avoid vague phrases like "abnormality noted" or "clinical correlation recommended" alone — always infer the most likely diagnosis from the findings.`:""}
 Contrast: ${contrastStr} — reflect accurately in technique (e.g. "CT chest without IV contrast", "CT abdomen with and without IV contrast", "MRI brain with gadolinium enhancement").
 
 ${format==="structured"
@@ -409,9 +436,9 @@ Generate a professional radiology report as JSON.`;
           :report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
         :(report.impression||"");
       const compVal=report.comparison||"";
-      const compEmpty=!compVal||compVal==="null"||/^none\s*(available)?\.?$/i.test(compVal.trim())||/^이전\s*검사\s*없음\.?$/.test(compVal.trim())||/no prior/i.test(compVal.trim())||/not available/i.test(compVal.trim())||/unavailable/i.test(compVal.trim())||/없음/i.test(compVal.trim());
+      const compEmpty=!compVal||compVal==="null"||/^none\s*(available)?\.?$/i.test(compVal.trim())||/^이전\s*검사\s*없음\.?$/.test(compVal.trim())||/no prior/i.test(compVal.trim())||/not available/i.test(compVal.trim())||/unavailable/i.test(compVal.trim())||/없음/i.test(compVal.trim())||(lang==="ko");
       const comp=compEmpty?"":`COMPARISON:\n${compVal}\n\n`;
-      text=`${comp}${findingsText}\n\nIMPRESSION:\n${imp}`;
+      text=`${comp}${findingsText}\n\n${lang==="ko"?"결론":"IMPRESSION"}:\n${imp}`;
     }
     if(urgency!=="routine"){
       if(report.urgency_note&&report.urgency_note!=="null")
@@ -464,23 +491,23 @@ Generate a professional radiology report as JSON.`;
         </div>
       )}
 
-      <div style={{position:"relative",zIndex:1,maxWidth:1200,margin:"0 auto",padding:"28px 20px 60px"}}>
+      <div style={{position:"relative",zIndex:1,maxWidth:"min(1400px,96vw)",margin:"0 auto",padding:"var(--sp-lg) var(--sp-md) var(--sp-xl)"}}>
 
         {/* Header */}
         <div style={{marginBottom:28,display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
           <div>
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
               <div style={{width:8,height:8,borderRadius:"50%",background:C.accent,boxShadow:`0 0 12px ${C.accentGlow}`}}/>
-              <span style={{fontFamily:mono,fontSize:10,color:C.accent,letterSpacing:3,fontWeight:700}}>RADIOLOGY AI</span>
+              <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.accent,letterSpacing:3,fontWeight:700}}>RADIOLOGY AI</span>
             </div>
-            <h1 style={{fontFamily:disp,fontSize:32,fontWeight:800,color:C.bright,letterSpacing:"-1px",lineHeight:1.1,marginBottom:4}}>RadReport</h1>
-            <p style={{color:C.dim,fontSize:13}}>AI-powered radiology report generator — powered by Gemini</p>
+            <h1 style={{fontFamily:disp,fontSize:"var(--fs-2xl)",fontWeight:800,color:C.bright,letterSpacing:"-1px",lineHeight:1.1,marginBottom:4}}>RadReport</h1>
+            <p style={{color:C.dim,fontSize:"var(--fs-sm)"}}>AI-powered radiology report generator — powered by Gemini</p>
           </div>
           {/* API Key */}
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{position:"relative"}}>
               <input type="password" placeholder="AIza... (Gemini API Key)" value={apiKey} onChange={e=>{setApiKey(e.target.value);fetchModels(e.target.value);}}
-                style={{...inputBase,width:260,fontSize:11,fontFamily:mono,paddingRight:36,borderColor:apiOk?C.green:C.border}}
+                style={{...inputBase,width:"clamp(180px,18vw,280px)",fontSize:"var(--fs-xs)",fontFamily:mono,paddingRight:36,borderColor:apiOk?C.green:C.border}}
                 onFocus={focusStyle} onBlur={blurStyle}/>
               <span style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:11}}>{apiOk?"🟢":"🔴"}</span>
             </div>
@@ -492,21 +519,21 @@ Generate a professional radiology report as JSON.`;
                 {availableModels.map(m=><option key={m} value={m}>{m}</option>)}
               </select>
             )}
-            <div style={{fontFamily:mono,fontSize:10,color:apiOk?C.green:C.red,border:`1px solid ${apiOk?C.green:C.red}`,padding:"5px 12px",borderRadius:20,letterSpacing:1,whiteSpace:"nowrap"}}>
+            <div style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:apiOk?C.green:C.red,border:`1px solid ${apiOk?C.green:C.red}`,padding:"4px 10px",borderRadius:20,letterSpacing:1,whiteSpace:"nowrap"}}>
               {apiOk?"● READY":"● NO KEY"}
             </div>
           </div>
         </div>
 
-        <div style={{display:"grid",gridTemplateColumns:"400px 1fr",gap:20,alignItems:"start"}}>
+        <div style={{display:"grid",gridTemplateColumns:"var(--left-panel) 1fr",gap:20,alignItems:"start"}}>
 
           {/* LEFT PANEL */}
           <div style={{display:"flex",flexDirection:"column",gap:16}}>
 
             {/* Study Info */}
-            <div style={{background:C.surface,backdropFilter:"blur(12px)",border:`1px solid ${C.border}`,borderRadius:14,padding:22}}>
+            <div style={{background:C.surface,backdropFilter:"blur(12px)",border:`1px solid ${C.border}`,borderRadius:"var(--radius)",padding:"var(--sp-md)"}}>
               <Divider label="STUDY INFORMATION"/>
-              <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:14}}>
+              <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:"var(--sp-sm)"}}>
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
                   <Field label="EXAM DATE">
                     <div style={{...inputBase,display:"flex",alignItems:"center",gap:8,cursor:"default",userSelect:"none"}}>
@@ -570,9 +597,9 @@ Generate a professional radiology report as JSON.`;
             </div>
 
             {/* Clinical Input */}
-            <div style={{background:C.surface,backdropFilter:"blur(12px)",border:`1px solid ${C.border}`,borderRadius:14,padding:22}}>
+            <div style={{background:C.surface,backdropFilter:"blur(12px)",border:`1px solid ${C.border}`,borderRadius:"var(--radius)",padding:"var(--sp-md)"}}>
               <Divider label="CLINICAL INPUT"/>
-              <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:14}}>
+              <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:"var(--sp-sm)"}}>
                 <Field label="CLINICAL INDICATION" hint="optional">
                   <input style={inputBase} value={indication} onChange={e=>setIndication(e.target.value)} placeholder="R/O pneumonia, f/u after surgery..." onFocus={focusStyle} onBlur={blurStyle}/>
                 </Field>
@@ -581,7 +608,7 @@ Generate a professional radiology report as JSON.`;
                 </Field>
                 <Field label="FINDINGS / OBSERVATIONS">
                   <textarea
-                    style={{...inputBase,height:160,resize:"vertical",lineHeight:1.7}}
+                    style={{...inputBase,height:"clamp(120px,14vh,200px)",resize:"vertical",lineHeight:1.7}}
                     placeholder={"소견을 자유롭게 입력하세요\n\nExample:\n- No pleural effusion\n- Heart size normal"}
                     value={finding} onChange={e=>setFinding(e.target.value)}
                     onFocus={focusStyle} onBlur={blurStyle}/>
@@ -590,9 +617,9 @@ Generate a professional radiology report as JSON.`;
             </div>
 
             {/* Output Options */}
-            <div style={{background:C.surface,backdropFilter:"blur(12px)",border:`1px solid ${C.border}`,borderRadius:14,padding:22}}>
+            <div style={{background:C.surface,backdropFilter:"blur(12px)",border:`1px solid ${C.border}`,borderRadius:"var(--radius)",padding:"var(--sp-md)"}}>
               <Divider label="OUTPUT OPTIONS"/>
-              <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:14}}>
+              <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:"var(--sp-sm)"}}>
                 <Field label="LANGUAGE">
                   <div style={{display:"flex",alignItems:"center",gap:12}}>
                     <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="en"?C.accent:C.dim,transition:"color 0.2s"}}>ENG</span>
@@ -639,11 +666,11 @@ Generate a professional radiology report as JSON.`;
             {error&&<div style={{padding:"12px 16px",borderRadius:8,background:"rgba(248,113,113,0.1)",border:"1px solid rgba(248,113,113,0.3)",color:C.red,fontFamily:mono,fontSize:11}}>{error}</div>}
 
             <button onClick={generate} disabled={loading||!apiOk} style={{
-              padding:"16px 24px",borderRadius:12,
+              padding:"var(--sp-sm) var(--sp-lg)",borderRadius:"var(--radius)",
               background:(!loading&&apiOk)?"linear-gradient(135deg,#0ea5e9 0%,#38bdf8 100%)":"rgba(56,189,248,0.1)",
               border:(!loading&&apiOk)?"none":`1px solid ${C.border}`,
               color:(!loading&&apiOk)?C.bg:C.dim,
-              fontFamily:mono,fontSize:12,fontWeight:800,letterSpacing:2,
+              fontFamily:mono,fontSize:"var(--fs-sm)",fontWeight:800,letterSpacing:2,
               cursor:(!loading&&apiOk)?"pointer":"not-allowed",transition:"all 0.2s",
               boxShadow:(!loading&&apiOk)?`0 4px 20px ${C.accentGlow},0 0 0 1px rgba(56,189,248,0.2)`:"none",
             }}>
@@ -652,12 +679,12 @@ Generate a professional radiology report as JSON.`;
           </div>
 
           {/* RIGHT PANEL */}
-          <div style={{background:C.surface,backdropFilter:"blur(12px)",border:`1px solid ${C.border}`,borderRadius:14,overflow:"hidden",minHeight:600}}>
+          <div style={{background:C.surface,backdropFilter:"blur(12px)",border:`1px solid ${C.border}`,borderRadius:"var(--radius)",overflow:"hidden",minHeight:"clamp(500px,70vh,900px)"}}>
             <div style={{padding:"20px 28px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div>
-                <div style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:2,marginBottom:4}}>OUTPUT REPORT</div>
+                <div style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,marginBottom:4}}>OUTPUT REPORT</div>
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
-                  <span style={{fontFamily:disp,fontSize:16,fontWeight:700,color:C.bright}}>
+                  <span style={{fontFamily:disp,fontSize:"var(--fs-lg)",fontWeight:700,color:C.bright}}>
                     {modality}{contrastOptions?` · ${getContrastLabel()}`:""} · {bodypart}
                   </span>
                   {urgency!=="routine"&&(()=>{
@@ -677,7 +704,7 @@ Generate a professional radiology report as JSON.`;
                   background:copied?C.greenDim:C.accentDim,
                   border:`1px solid ${copied?C.green:C.accent}`,
                   color:copied?C.green:C.accent,
-                  fontFamily:mono,fontSize:10,fontWeight:700,letterSpacing:1,transition:"all 0.2s",
+                  fontFamily:mono,fontSize:"var(--fs-xs)",fontWeight:700,letterSpacing:1,transition:"all 0.2s",
                 }}>
                   {copied?"✓ COPIED":"⊕ COPY"}
                 </button>
@@ -686,7 +713,7 @@ Generate a professional radiology report as JSON.`;
 
             <div style={{padding:28}}>
               {!report&&!loading&&(
-                <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:400,gap:16}}>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"clamp(300px,40vh,500px)",gap:16}}>
   
                   <div style={{textAlign:"center"}}>
                     <p style={{fontFamily:disp,fontSize:16,color:C.bright,marginBottom:6}}>Ready to Generate</p>
@@ -709,19 +736,19 @@ Generate a professional radiology report as JSON.`;
                       ["LANG",lang==="ko"?"한국어":"ENG"],
                     ].map(([k,v])=>(
                       <div key={k}>
-                        <div style={{fontFamily:mono,fontSize:9,color:C.dim,letterSpacing:1.5,marginBottom:3}}>{k}</div>
-                        <div style={{fontFamily:mono,fontSize:11,color:C.bright,fontWeight:700}}>{v}</div>
+                        <div style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:1.5,marginBottom:3}}>{k}</div>
+                        <div style={{fontFamily:mono,fontSize:"var(--fs-sm)",color:C.bright,fontWeight:700}}>{v}</div>
                       </div>
                     ))}
                   </div>
 
-                  {report.technique&&<ReportSection title="TECHNIQUE"><p style={{lineHeight:1.8,color:C.text,fontSize:14,whiteSpace:"pre-wrap"}}>{breakSentences(report.technique)}</p></ReportSection>}
-                  {report.comparison&&report.comparison!=="null"&&<ReportSection title="COMPARISON"><p style={{lineHeight:1.8,color:C.text,fontSize:14,whiteSpace:"pre-wrap"}}>{report.comparison}</p></ReportSection>}
+                  {report.technique&&<ReportSection title="TECHNIQUE"><p style={{lineHeight:1.8,color:C.text,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{breakSentences(report.technique)}</p></ReportSection>}
+                  {report.comparison&&report.comparison!=="null"&&!(lang==="ko"&&(/no prior/i.test(report.comparison)||/not available/i.test(report.comparison)||/unavailable/i.test(report.comparison)||/없음/.test(report.comparison)||/^none/i.test(report.comparison)))&&<ReportSection title="COMPARISON"><p style={{lineHeight:1.8,color:C.text,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{report.comparison}</p></ReportSection>}
 
                   {modality==="X-ray"?(
                     <ReportSection title={lang==="ko"?"판독 소견 (Findings + Impression)":"REPORT SUMMARY"}>
                       <div style={{padding:"18px 20px",borderRadius:10,background:"rgba(56,189,248,0.04)",border:`1px solid ${C.borderHover}`}}>
-                        <p style={{lineHeight:1.9,color:C.bright,fontSize:14,whiteSpace:"pre-wrap"}}>{breakSentences(report.summary||"")}</p>
+                        <p style={{lineHeight:1.9,color:C.bright,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{breakSentences(report.summary||"")}</p>
                       </div>
                     </ReportSection>
                   ):(
@@ -732,8 +759,8 @@ Generate a professional radiology report as JSON.`;
                             <div style={{display:"flex",flexDirection:"column",gap:0,borderRadius:8,overflow:"hidden",border:`1px solid ${C.border}`}}>
                               {report.findings.map((f,i)=>(
                                 <div key={i} style={{display:"grid",gridTemplateColumns:"120px 1fr",borderBottom:i<report.findings.length-1?`1px solid ${C.border}`:"none",background:i%2===0?"rgba(0,0,0,0.15)":"rgba(0,0,0,0.05)"}}>
-                                  <div style={{padding:"11px 14px",borderRight:`1px solid ${C.border}`,fontFamily:mono,fontSize:11,fontWeight:700,color:C.accent,display:"flex",alignItems:"center"}}>{f.organ}</div>
-                                  <div style={{padding:"11px 16px",fontSize:13,lineHeight:1.7,color:C.bright}}>{f.finding}</div>
+                                  <div style={{padding:"var(--sp-xs) var(--sp-sm)",borderRight:`1px solid ${C.border}`,fontFamily:mono,fontSize:"var(--fs-sm)",fontWeight:700,color:C.accent,display:"flex",alignItems:"center"}}>{f.organ}</div>
+                                  <div style={{padding:"var(--sp-xs) var(--sp-sm)",fontSize:"var(--fs-md)",lineHeight:1.7,color:C.bright}}>{f.finding}</div>
                                 </div>
                               ))}
                             </div>
@@ -750,13 +777,13 @@ Generate a professional radiology report as JSON.`;
                                   .map((text,i)=>(
                                     <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
                                       <span style={{color:C.accent,fontWeight:700,fontSize:16,lineHeight:1.4,flexShrink:0}}>•</span>
-                                      <p style={{lineHeight:1.8,color:C.bright,fontSize:14}}>{text}</p>
+                                      <p style={{lineHeight:1.8,color:C.bright,fontSize:"var(--fs-md)"}}>{text}</p>
                                     </div>
                                   ))
                                 }
                               </div>
                             )
-                            :<p style={{lineHeight:1.9,color:C.bright,fontSize:14,whiteSpace:"pre-wrap"}}>{breakSentences(report.findings||"")}</p>
+                            :<p style={{lineHeight:1.9,color:C.bright,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{breakSentences(report.findings||"")}</p>
                         }
                       </ReportSection>
 
@@ -768,10 +795,10 @@ Generate a professional radiology report as JSON.`;
                                 <div style={{width:22,height:22,borderRadius:6,background:C.accentDim,border:`1px solid ${C.borderHover}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                                   <span style={{fontFamily:mono,fontSize:10,fontWeight:800,color:C.accent}}>{i+1}</span>
                                 </div>
-                                <p style={{lineHeight:1.7,color:C.bright,fontSize:14,paddingTop:2}}>{line}</p>
+                                <p style={{lineHeight:1.7,color:C.bright,fontSize:"var(--fs-md)",paddingTop:1}}>{line}</p>
                               </div>
                             ))
-                            :<p style={{lineHeight:1.9,color:C.bright,fontSize:14,whiteSpace:"pre-wrap"}}>{report.impression}</p>
+                            :<p style={{lineHeight:1.9,color:C.bright,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{report.impression}</p>
                           }
                         </div>
                       </ReportSection>
@@ -798,14 +825,14 @@ Generate a professional radiology report as JSON.`;
 
                   {report.recommendation&&report.recommendation!=="null"&&(
                     <ReportSection title="RECOMMENDATION">
-                      <p style={{lineHeight:1.8,color:C.text,fontSize:14,whiteSpace:"pre-wrap"}}>{report.recommendation}</p>
+                      <p style={{lineHeight:1.8,color:C.text,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{report.recommendation}</p>
                     </ReportSection>
                   )}
 
                   <div style={{marginTop:24,paddingTop:20,borderTop:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-                    <span style={{fontFamily:mono,fontSize:10,color:C.dim}}>{radiologist?"Interpreted by: "+radiologist:"For clinical review only"}</span>
-                    <span style={{fontFamily:mono,fontSize:10,color:C.dim}}>{new Date().toLocaleString("ko-KR")}</span>
-                    <div style={{fontFamily:mono,fontSize:9,color:C.green,border:`1px solid ${C.green}`,padding:"3px 10px",borderRadius:3,letterSpacing:1}}>FINAL REPORT</div>
+                    <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim}}>{radiologist?"Interpreted by: "+radiologist:"For clinical review only"}</span>
+                    <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim}}>{new Date().toLocaleString("ko-KR")}</span>
+                    <div style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.green,border:`1px solid ${C.green}`,padding:"3px 10px",borderRadius:3,letterSpacing:1}}>FINAL REPORT</div>
                   </div>
                 </div>
               )}
