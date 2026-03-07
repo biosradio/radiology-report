@@ -101,9 +101,9 @@ const MAMMO_PARTS={
 };
 const MAMMO_PARENCHYMA=[
   {value:"A","label":"① 25% 미만"},
-  {value:"B","label":"② 25–50%"},
-  {value:"C","label":"③ 51–75%"},
-  {value:"D","label":"④ 76–100%"},
+  {value:"B","label":"② 25-50%"},
+  {value:"C","label":"③ 51-75%"},
+  {value:"D","label":"④ 76-100%"},
   {value:"E","label":"⑤ 유방실질내 인공물질 주입"},
 ];
 const MAMMO_FINDINGS_OPTIONS=[
@@ -758,11 +758,11 @@ Generate a professional radiology report as JSON.`;
         :"";
       const lines=[
         "[ 유방검진 판독 ]",
-        `가. 유방실질분포량: ${mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"—"}`,
-        `나. 판독소견: ${mammoFindings.length?mammoFindings.map(v=>v==="10"?`직접기입(${mammoFindingCustom||"—"})`:MAMMO_FINDINGS_OPTIONS.find(o=>o.value===v)?.label).join(", "):"—"}`,
+        `가. 유방실질분포량: ${mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"-"}`,
+        `나. 판독소견: ${mammoFindings.length?mammoFindings.map(v=>v==="10"?`직접기입(${mammoFindingCustom||"-"})`:MAMMO_FINDINGS_OPTIONS.find(o=>o.value===v)?.label).join(", "):"-"}`,
         `다. 병변위치 오른쪽: ${mammoLocationR.length?mammoLocationR.join(", "):"없음"}`,
         `다. 병변위치 왼쪽: ${mammoLocationL.length?mammoLocationL.join(", "):"없음"}`,
-        `라. 판정구분: ${mammoAssessment?MAMMO_ASSESSMENT.find(a=>a.value===mammoAssessment)?.label:"—"}`,
+        `라. 판정구분: ${mammoAssessment?MAMMO_ASSESSMENT.find(a=>a.value===mammoAssessment)?.label:"-"}`,
       ];
       if(autoMsg) lines.push(`* ${autoMsg}`);
       else if(mammoAddlTest) lines.push("* 초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다.");
@@ -1216,11 +1216,11 @@ Generate a professional radiology report as JSON.`;
                         </div>
                         <div style={{display:"flex",flexDirection:"column",gap:0}}>
                           {[
-                            ["가. 유방실질분포량", mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"—"],
-                            ["나. 판독소견", mammoFindings.length?mammoFindings.map(v=>v==="10"?`직접기입(${mammoFindingCustom||"—"})`:MAMMO_FINDINGS_OPTIONS.find(o=>o.value===v)?.label).join(", "):"—"],
+                            ["가. 유방실질분포량", mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"-"],
+                            ["나. 판독소견", mammoFindings.length?mammoFindings.map(v=>v==="10"?`직접기입(${mammoFindingCustom||"-"})`:MAMMO_FINDINGS_OPTIONS.find(o=>o.value===v)?.label).join(", "):"-"],
                             ["다. 병변위치 (우)", mammoLocationR.length?mammoLocationR.join(", "):"없음"],
                             ["다. 병변위치 (좌)", mammoLocationL.length?mammoLocationL.join(", "):"없음"],
-                            ["라. 판정구분", mammoAssessment?MAMMO_ASSESSMENT.find(a=>a.value===mammoAssessment)?.label:"—"],
+                            ["라. 판정구분", mammoAssessment?MAMMO_ASSESSMENT.find(a=>a.value===mammoAssessment)?.label:"-"],
                           ].map(([k,v],i,arr)=>(
                             <div key={k} style={{display:"grid",gridTemplateColumns:"160px 1fr",borderBottom:i<arr.length-1?"1px solid rgba(244,114,182,0.12)":"none",background:i%2===0?"rgba(0,0,0,0.2)":"rgba(0,0,0,0.06)"}}>
                               <div style={{padding:"7px 12px",fontFamily:mono,fontSize:"var(--fs-xs)",color:"#f472b6",fontWeight:700,borderRight:"1px solid rgba(244,114,182,0.12)",display:"flex",alignItems:"center"}}>{k}</div>
