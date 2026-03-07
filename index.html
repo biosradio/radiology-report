@@ -134,27 +134,30 @@ const MAMMO_ASSESSMENT=[
   {value:"5","label":"5. 기존유방암 환자"},
 ];
 const MODALITIES=["CT","MRI","X-ray","Ultrasound","PET-CT","Mammography","Fluoroscopy"];
-const AUTO_DETECT_MODALITIES=["CT","MRI","Ultrasound"];
+const AUTO_DETECT_MODALITIES=["CT","MRI","Ultrasound","X-ray"];
 
 /* ── BODY REGION AUTO-DETECT ── */
 const REGION_KEYWORDS={
-  "Brain":        /brain|cerebr|infarct|hemorrhag|bleed|edema|뇌|경색|출혈|부종|두개|뇌실|뇌간|소뇌|백질|회백질/i,
-  "MRA":          /MRA|aneurysm|stenosis.*arteri|arteri.*stenosis|ICA|MCA|ACA|PCA|basilar|vertebral.*arter|Willis|동맥류|협착.*동맥|내경동맥|중대뇌동맥|전대뇌동맥|후대뇌동맥|추골동맥|기저동맥/i,
-  "Neck":         /thyroid|lymph node|neck|갑상선|림프절|경부/i,
-  "Paranasal Sinus":/sinus|mucosal|부비동|점막|상악동|사골동|접형동|전두동/i,
-  "C-spine":      /cervical spine|c-spine|c[\s-]?spine|C[1-7]|경추|목뼈/i,
-  "T-spine":      /thoracic spine|t-spine|t[\s-]?spine|T[1-9]|T1[0-2]|흉추|등뼈/i,
-  "L-spine":      /lumbar spine|l-spine|l[\s-]?spine|L[1-5]|요추|허리뼈|disc.*herniation|herniated.*disc|추간판|요추간판/i,
-  "Chest":        /lung|lobe|consolidat|pneumonia|pleural|effusion|mediastin|pericardi|trachea|bronch|aorta|폐|흉막|삼출|종격|기관|기관지|대동맥|심낭|흉부/i,
-  "Abdomen":      /liver|gallbladder|bile|pancreas|spleen|adrenal|kidney|bowel|peritoneum|hepat|간|담낭|담도|췌장|비장|부신|신장|장|복막/i,
-  "Pelvis":       /bladder|uterus|ovary|ovaries|prostate|rectum|pelvis|pelvic|방광|자궁|난소|전립선|직장|골반/i,
+  "Brain":        /\bbrain\b|\bcerebr|\binfarct|\bhemorrhag|\bbleed\b|\bedema\b|\bmidline\b|\bsulc|\bgyri\b|\bventricle\b|\bcistern\b|\bsubdural\b|\bepidural\b|\bsubarachnoid\b|corpus callosum|basal ganglia|\bthalamus\b|뇌경색|뇌출혈|뇌부종|뇌실|뇌간|소뇌|뇌압|지주막하|경막하|기저핵|시상|두개내/i,
+  "MRA":          /\bMRA\b|\baneurysm\b|stenosis.*arteri|arteri.*stenosis|\bICA\b|\bMCA\b|\bACA\b|\bPCA\b|basilar artery|vertebral artery|circle of Willis|동맥류|내경동맥|중대뇌동맥|전대뇌동맥|후대뇌동맥|추골동맥|기저동맥/i,
+  "Neck":         /\bthyroid\b|\bparathyroid\b|thyroiditis|\blymph node\b|neck mass|\bparotid\b|\bsubmandib|\bcarotid\b|\bjugular\b|갑상선|부갑상선|갑상선염|림프절|경부종괴|이하선|악하선|경동맥|경정맥/i,
+  "Paranasal Sinus":/\bsinus\b|mucosal thickening|air.fluid level|부비동|점막비후|상악동|사골동|접형동|전두동/i,
+  "C-spine":      /cervical spine|\bc.spine\b|\bC[1-7]\b|경추|경추간판|경추협착/i,
+  "T-spine":      /thoracic spine|\bt.spine\b|\bT[1-9]\b|\bT1[0-2]\b|흉추/i,
+  "L-spine":      /lumbar spine|\bl.spine\b|\bL[1-5]\b|요추|추간판탈출|요추간판|spondylosis|spondylolisthesis|spinal stenosis|척추관협착/i,
+  "Chest":        /\blung\b|\blobe\b|consolidat|pneumonia|\bpleural\b|\bmediastin|\bpericardi|\btrachea\b|\bpulmonary\b|pericardial|cardiomegaly|pneumothorax|atelectasis|interstitial|ejection fraction|wall motion|폐렴|폐결절|폐부종|흉수|흉막삼출|종격동|심낭삼출|심비대|기흉|무기폐|박출률|심벽운동/i,
+  "Abdomen":      /\bliver\b|\bhepat|\bgallbladder\b|\bGB\b(?!stone.*knee|\bknee)|\bbile duct\b|\bCBD\b|\bpancreas\b|\bspleen\b|\badrenal\b|\bkidney\b|\brenal\b|echogenicity|echotexture|hyperechoic|hypoechoic|isoechoic|anechoic|posterior shadowing|acoustic shadow|\bIHBD\b|portal vein|hepatic vein|\bascites\b|\bperitoneum\b|간실질|담낭|담도|췌장|비장|부신|신장|복막|복수|에코|고에코|저에코|무에코|후방음향|담관|간내담관|문맥|간정맥|하대정맥|신피질/i,
+  "Pelvis":       /\bbladder\b|\buterus\b|\buterine\b|\bendometrium\b|\bmyometrium\b|\bmyoma\b|\bfibroid\b|\bovary\b|\bovarian\b|\bfollicle\b|corpus luteum|\bcervix\b|\bprostate\b|seminal vesicle|\brectum\b|\bpelvis\b|\bpelvic\b|cul.de.sac|방광|자궁|자궁내막|자궁근층|자궁근종|난소|난포|황체|전립선|정낭|직장|골반|더글라스와/i,
   "Abdomen & Pelvis":/abdomen.*pelvis|pelvis.*abdomen|복부.*골반|골반.*복부/i,
-  "Shoulder":     /shoulder|rotator|cuff|labrum|어깨|회전근개|관절순/i,
-  "Elbow":        /elbow|팔꿈치/i,
-  "Wrist":        /wrist|carpal|손목|수근/i,
-  "Knee":         /knee|menisci|meniscus|ACL|PCL|MCL|LCL|무릎|반월판|십자인대/i,
-  "Hip":          /hip|femoral head|acetabul|고관절|대퇴골두|비구/i,
-  "Ankle":        /ankle|achilles|발목|아킬레스/i,
+  "Shoulder":     /\bshoulder\b|rotator cuff|\bsupraspinatus\b|\binfrasprospinatus\b|\bsubscapularis\b|\blabrum\b|\bacromion\b|biceps tendon|subacromial|어깨|회전근개|극상근|극하근|견갑하근|관절순|견봉|이두건/i,
+  "Elbow":        /\belbow\b|lateral epicondyl|medial epicondyl|common extensor|팔꿈치|외상과|내상과/i,
+  "Wrist":        /\bwrist\b|carpal tunnel|median nerve|de Quervain|손목|수근관|정중신경|건초염/i,
+  "Hand":         /\bmetacarpal\b|\bphalanx\b|\bphalanges\b|손가락|중수골|지골/i,
+  "Knee":         /\bknee\b|\bmenisci\b|\bmeniscus\b|\bACL\b|\bPCL\b|\bMCL\b|\bLCL\b|\bpatella\b|patellar tendon|Baker.s cyst|\bpopliteal\b|무릎|반월판|십자인대|슬개골|슬와낭종/i,
+  "Hip":          /\bhip\b|femoral head|\bacetabul|\bfemoral neck\b|intertrochanteric|\biliopsoas\b|\binguinal\b|고관절|대퇴골두|비구|대퇴경부|장요근|서혜부/i,
+  "Ankle":        /\bankle\b|\bachilles\b|\btalus\b|\bcalcaneus\b|\bfibula\b|\bperoneal\b|plantar fascia|발목|아킬레스|거골|종골|비골|족저근막/i,
+  "Foot":         /\bmetatarsal\b|plantar fasciitis|\bmorton\b|족저근막염|중족골/i,
+  "Breast":       /\bbreast\b|\bnipple\b|\bareola\b|\baxilla\b|BI.RADS|BIRADS|유방|유두|유륜|액와|액와림프절/i,
 };
 
 function detectBodyRegion(text,currentBodypart,forceDetect=false){
@@ -165,10 +168,12 @@ function detectBodyRegion(text,currentBodypart,forceDetect=false){
     if(matches) scores[region]=(scores[region]||0)+matches.length;
   }
   if(Object.keys(scores).length===0) return null;
-  const best=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
-  if(best[0]===currentBodypart) return null;
-  // forceDetect면 임계값 없이 최선값 반환, 아니면 점수 2 이상만
-  if(!forceDetect&&best[1]<2) return null;
+  const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  const best=sorted[0];
+  // forceDetect: 점수 1개 이상이면 반환 (현재값 동일해도 항상 기록용으로 반환)
+  if(forceDetect) return best[1]>=1?best[0]:null;
+  // 일반 모드: 점수 2 이상이고 현재값과 다를 때만
+  if(best[1]<2||best[0]===currentBodypart) return null;
   return best[0];
 }
 const FORMAT_OPTIONS=[{value:"structured",icon:"⊞",label:"STRUCTURED"},{value:"narrative",icon:"≡",label:"NARRATIVE"},{value:"bullet",icon:"∷",label:"BULLET"}];
@@ -569,10 +574,10 @@ function App(){
 
     const isKo=lang==="ko";
     const isXray=modality==="X-ray";
-    const isAutoDetect=AUTO_DETECT_MODALITIES.includes(modality);
+    const isAutoDetect=AUTO_DETECT_MODALITIES.includes(modality); // CT,MRI,US,X-ray 모두 포함
 
-    // body region 자동 감지 — autoDetect modality는 강제 적용, 나머지는 점수 기반
-    const autoRegion=(!isMammo&&!isXray)?detectBodyRegion(finding+"\n"+(clinicalInfo||"")+(indication||""),bodypart,isAutoDetect):null;
+    // body region 자동 감지 — Mammography만 제외
+    const autoRegion=!isMammo?detectBodyRegion(finding+"\n"+(clinicalInfo||"")+(indication||""),bodypart,isAutoDetect):null;
     const effectiveBodypart=autoRegion||bodypart;
 
     const organs=organMap[effectiveBodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
@@ -707,6 +712,8 @@ Generate a professional radiology report as JSON.`;
         if(!Array.isArray(parsed.impression)) parsed.impression=parsed.impression?[String(parsed.impression)]:[isKo?"임상 소견과 비교 검토 요망.":"Correlate clinically."];
       }
       parsed._bodypart=effectiveBodypart;
+      // UI bodypart state도 감지 결과로 동기화 (모든 렌더링 참조 일치)
+      if(effectiveBodypart!==bodypart) setBodypart(effectiveBodypart);
       setReport(parsed);
       // save to history
       setHistory(h=>[{
@@ -960,7 +967,7 @@ Generate a professional radiology report as JSON.`;
                     )}
 
                     <div style={{gridColumn:"1/-1"}}>
-                      {AUTO_DETECT_MODALITIES.includes(modality)?(
+                      {["CT","MRI","Ultrasound"].includes(modality)?(
                         <Field label="BODY REGION">
                           <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:8,background:"rgba(34,211,238,0.04)",border:`1px solid rgba(34,211,238,0.2)`}}>
                             <span style={{fontSize:11}}>🔍</span>
@@ -1166,7 +1173,7 @@ Generate a professional radiology report as JSON.`;
                       ["DATE",examDate],
                       ["MODALITY",modality],
                       ...(contrastOptions?[["CONTRAST",getContrastLabel()]]:[]),
-                      ["REGION",bodypart],
+                      ["REGION", report?._bodypart||bodypart],
                       ["FORMAT",format.toUpperCase()],
                       ["LANG",lang==="ko"?"한국어":"ENG"],
                     ].map(([k,v])=>(
