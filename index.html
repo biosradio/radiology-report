@@ -25,7 +25,6 @@
     --sp-md:clamp(12px,1vw,18px);
     --sp-lg:clamp(16px,1.4vw,24px);
     --sp-xl:clamp(20px,1.8vw,32px);
-    --left-panel:clamp(290px,29vw,440px);
     --radius:clamp(8px,0.8vw,14px);
     --accent:#22d3ee;
     --accent2:#818cf8;
@@ -80,7 +79,6 @@
   .icon-btn{display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;}
   .icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   textarea.field-input{resize:vertical;line-height:1.7;}
-  @media(max-aspect-ratio:3/4){:root{--left-panel:clamp(260px,32vw,400px);}}
 </style>
 </head>
 <body>
@@ -169,7 +167,7 @@ function breakSentences(text){
 /* ── SMALL UI COMPONENTS ─────────────────── */
 function GridBg(){
   return(
-    <svg style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0,opacity:0.6}} xmlns="http://www.w3.org/2000/svg">
+    <svg aria-hidden="true" style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0,opacity:0.6}} xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
           <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(34,211,238,0.05)" strokeWidth="0.5"/>
@@ -199,11 +197,11 @@ function Divider({label,color}){
   );
 }
 
-function Field({label,children,hint,accent}){
+function Field({label,children,hint,accent,htmlFor}){
   return(
     <div style={{display:"flex",flexDirection:"column",gap:5}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <label style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:accent?C.accent:C.dim,letterSpacing:1.5,fontWeight:700}}>{label}</label>
+        <label htmlFor={htmlFor||undefined} style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:accent?C.accent:C.dim,letterSpacing:1.5,fontWeight:700}}>{label}</label>
         {hint&&<span style={{fontFamily:mono,fontSize:9,color:C.dim,opacity:0.6}}>{hint}</span>}
       </div>
       {children}
@@ -220,7 +218,7 @@ function Tag({children,color,active,onClick}){
       background:active?`${c}20`:"transparent",
       color:active?c:C.dim,
       fontFamily:mono,fontSize:10,fontWeight:700,letterSpacing:0.8,
-      cursor:"pointer",transition:"all 0.15s",whiteSpace:"nowrap",
+      cursor:"pointer",transition:"color 0.15s ease,background 0.15s ease,border-color 0.15s ease",whiteSpace:"nowrap",
     }}>{children}</button>
   );
 }
@@ -234,7 +232,7 @@ function SegBtn({options,value,onChange,small}){
           <button key={opt.value} onClick={()=>onChange(opt.value)} style={{
             flex:1,padding:small?"5px 6px":"7px 10px",borderRadius:6,border:"none",cursor:"pointer",
             fontFamily:mono,fontSize:small?9:10,fontWeight:700,letterSpacing:1,
-            transition:"all 0.2s",
+            transition:"color 0.2s ease,background 0.2s ease,box-shadow 0.2s ease",
             background:active?C.accent:"transparent",
             color:active?C.bg:C.dim,
             boxShadow:active?`0 2px 8px ${C.accentGlow}`:"none",
@@ -260,7 +258,7 @@ function ReportSection({title,children,highlight}){
 }
 
 function Spinner(){
-  const steps=["임상 정보 분석 중...","영상 소견 처리 중...","리포트 생성 중...","최종 검토 중..."];
+  const steps=["임상 정보 분석 중…","영상 소견 처리 중…","리포트 생성 중…","최종 검토 중…"];
   const [step,setStep]=useState(0);
   useEffect(()=>{
     const t=setInterval(()=>setStep(s=>(s+1)%steps.length),1400);
@@ -428,12 +426,9 @@ function App(){
   const [tone,setTone]=useState("clinical");
   const [urgency,setUrgency]=useState("routine");
   const [lang,setLang]=useState("ko");
-  const [radiologist,setRadiologist]=useState("");
-  const [hospital,setHospital]=useState("");
+
   // NEW fields
-  const [patientAge,setPatientAge]=useState("");
   const [patientSex,setPatientSex]=useState("선택 안 함");
-  const [patientId,setPatientId]=useState("");
 
   const [differentialDx,setDifferentialDx]=useState("");
   const [keyMeasurements,setKeyMeasurements]=useState("");
@@ -452,8 +447,11 @@ function App(){
     catch{return[];}
   });
   useEffect(()=>{
-    try{localStorage.setItem("radreport_history",JSON.stringify(history));}
-    catch(e){console.warn("localStorage 저장 실패:",e);}
+    const t=setTimeout(()=>{
+      try{localStorage.setItem("radreport_history",JSON.stringify(history));}
+      catch(e){console.warn("localStorage 저장 실패:",e);}
+    },400);
+    return()=>clearTimeout(t);
   },[history]);
   const deleteHistory=(id)=>setHistory(h=>h.filter(item=>item.id!==id));
   const clearHistory=()=>{setHistory([]);localStorage.removeItem("radreport_history");};
@@ -463,26 +461,20 @@ function App(){
   const [error,setError]=useState(null);
   const [copied,setCopied]=useState(false);
   const [showModal,setShowModal]=useState(false);
+  const [showConfirmClear,setShowConfirmClear]=useState(false);
   const modalTextRef=useRef(null);
 
   const [selectedModel,setSelectedModel]=useState("gemini-2.5-flash");
-  const [availableModels,setAvailableModels]=useState([]);
+  const KNOWN_MODELS=[
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro",
+  ];
   const apiOk=apiKey.startsWith("AIza");
-
-  const fetchModels=useCallback(async(key)=>{
-    if(!key.startsWith("AIza"))return;
-    try{
-      const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-      const data=await res.json();
-      if(data.models){
-        const chat=data.models.filter(m=>m.supportedGenerationMethods?.includes("generateContent")).map(m=>m.name.replace("models/","")).filter(m=>m.startsWith("gemini"));
-        setAvailableModels(chat);
-        const preferred=["gemini-2.5-flash","gemini-2.5-pro","gemini-2.0-flash","gemini-1.5-flash","gemini-1.5-pro"];
-        const best=preferred.find(p=>chat.includes(p))||chat[0];
-        if(best)setSelectedModel(best);
-      }
-    }catch(e){}
-  },[]);
 
   const contrastOptions=CONTRAST_OPTIONS[modality]||null;
   const isMammo=modality==="Mammography";
@@ -535,8 +527,6 @@ function App(){
     const organs=organMap[bodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
     const contrastStr=contrastOptions?getContrastLabel():"N/A";
     const patientCtx=[
-      patientId&&`Patient ID: ${patientId}`,
-      patientAge&&`Age: ${patientAge}`,
       patientSex!=="선택 안 함"&&`Sex: ${patientSex}`,
     ].filter(Boolean).join(" | ");
     const measCtx=keyMeasurements?`\nKey Measurements: ${keyMeasurements}`:"";
@@ -599,8 +589,7 @@ ${patientCtx?`Patient: ${patientCtx}`:""}
 ${indication?"Clinical Indication: "+indication:""}
 Clinical Information: ${clinicalInfo||"Not provided"}
 ${measCtx}${ddxCtx}${mammoCtx}
-${radiologist?"Radiologist: "+radiologist:""}
-${hospital?"Hospital: "+hospital:""}
+
 
 Raw Findings:
 ${finding}
@@ -609,17 +598,36 @@ Generate a professional radiology report as JSON.`;
 
     try{
       const url=`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
-      const res=await fetch(url,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          systemInstruction:{parts:[{text:isXray?xraySystem:mainSystem}]},
-          contents:[{role:"user",parts:[{text:userMsg}]}],
-          generationConfig:{maxOutputTokens:1500,temperature:0.3},
-        }),
-      });
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),30000);
+      let res;
+      try{
+        res=await fetch(url,{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({
+            systemInstruction:{parts:[{text:isXray?xraySystem:mainSystem}]},
+            contents:[{role:"user",parts:[{text:userMsg}]}],
+            generationConfig:{maxOutputTokens:1500,temperature:0.3},
+          }),
+          signal:controller.signal,
+        });
+      }catch(fetchErr){
+        clearTimeout(timeout);
+        if(fetchErr.name==="AbortError")throw new Error("요청 시간 초과 (30초). 네트워크 상태를 확인해주세요.");
+        throw new Error("네트워크 연결 오류 — Gemini API에 도달할 수 없습니다.\n\n가능한 원인:\n① API 키가 올바르지 않습니다\n② 브라우저가 외부 API 요청을 차단 중입니다 (CORS)\n③ 인터넷 연결을 확인해주세요");
+      }
+      clearTimeout(timeout);
       const data=await res.json();
-      if(!res.ok)throw new Error(data.error?.message||JSON.stringify(data));
+      if(!res.ok){
+        const msg=data.error?.message||JSON.stringify(data);
+        const status=res.status;
+        if(status===400)throw new Error(`잘못된 요청 (400): ${msg}`);
+        if(status===401||status===403)throw new Error(`API 키 인증 실패 (${status}): 키가 유효한지, Gemini API가 활성화되어 있는지 확인해주세요.`);
+        if(status===429)throw new Error(`요청 한도 초과 (429): 잠시 후 다시 시도해주세요.`);
+        if(status===503)throw new Error(`Gemini 서버 일시 오류 (503): 잠시 후 다시 시도해주세요.`);
+        throw new Error(`오류 ${status}: ${msg}`);
+      }
       const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||"";
       let clean=raw.replace(/```json\s*/gi,"").replace(/```/g,"").trim();
       const si=clean.indexOf("{");const ei=clean.lastIndexOf("}");
@@ -653,14 +661,14 @@ Generate a professional radiology report as JSON.`;
       // save to history
       setHistory(h=>[{
         id:Date.now(),date:examDate,modality,bodypart,
-        patientId:patientId||"—",urgency,lang,report:parsed,
+        urgency,lang,report:parsed,
       },...h.slice(0,49)]);
     }catch(e){
       setError("오류: "+e.message);
     }finally{
       setLoading(false);
     }
-  },[apiKey,apiOk,selectedModel,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,urgency,lang,radiologist,hospital,patientAge,patientSex,patientId,differentialDx,keyMeasurements]);
+  },[apiKey,apiOk,selectedModel,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,urgency,lang,patientSex,differentialDx,keyMeasurements]);
 
   /* ── COPY ── */
   const getCopyText=()=>{
@@ -738,6 +746,21 @@ Generate a professional radiology report as JSON.`;
         </div>
       )}
 
+      {/* Confirm Clear Modal */}
+      {showConfirmClear&&(
+        <div onClick={()=>setShowConfirmClear(false)} style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",padding:20,overscrollBehavior:"contain"}}>
+          <div role="dialog" aria-modal="true" aria-label="히스토리 전체 삭제 확인" onClick={e=>e.stopPropagation()} style={{background:"#0f172a",border:`1px solid rgba(248,113,113,0.4)`,borderRadius:16,padding:28,maxWidth:380,width:"100%",boxShadow:"0 24px 60px rgba(0,0,0,0.7)",animation:"fadeIn 0.2s ease"}}>
+            <div style={{fontFamily:mono,fontSize:9,color:C.red,letterSpacing:2,marginBottom:10}}>⚠ CONFIRM DELETE</div>
+            <p style={{fontFamily:sans,fontSize:14,color:C.bright,marginBottom:6}}>히스토리를 전체 삭제할까요?</p>
+            <p style={{fontFamily:sans,fontSize:12,color:C.dim,marginBottom:20}}>저장된 리포트 {history.length}건이 모두 삭제되며 복구할 수 없습니다.</p>
+            <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+              <button onClick={()=>setShowConfirmClear(false)} style={{padding:"9px 18px",borderRadius:8,border:`1px solid ${C.border}`,background:"transparent",color:C.dim,fontFamily:mono,fontSize:10,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>취소</button>
+              <button onClick={()=>{clearHistory();setShowConfirmClear(false);}} style={{padding:"9px 18px",borderRadius:8,border:`1px solid rgba(248,113,113,0.5)`,background:"rgba(248,113,113,0.12)",color:C.red,fontFamily:mono,fontSize:10,fontWeight:700,letterSpacing:1,cursor:"pointer"}}>전체 삭제</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{position:"relative",zIndex:1,maxWidth:"min(1440px,97vw)",margin:"0 auto",padding:"var(--sp-lg) var(--sp-md) var(--sp-xl)"}}>
 
         {/* ── HEADER ── */}
@@ -758,17 +781,17 @@ Generate a professional radiology report as JSON.`;
           <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
             <div style={{position:"relative"}}>
               <input type="password" name="gemini-api-key" autoComplete="off" spellCheck={false} placeholder="AIza… (Gemini API Key)"
-                value={apiKey} onChange={e=>{setApiKey(e.target.value);fetchModels(e.target.value);}}
+                value={apiKey} onChange={e=>setApiKey(e.target.value)}
                 className="field-input"
                 style={{width:"clamp(200px,20vw,300px)",fontSize:"var(--fs-xs)",fontFamily:mono,paddingRight:36,borderColor:apiOk?C.green:undefined}}/>
               <span style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",fontSize:10}}>{apiOk?"🟢":"🔴"}</span>
             </div>
-            {apiOk&&availableModels.length>0&&(
-              <select value={selectedModel} onChange={e=>setSelectedModel(e.target.value)} style={{
+            {apiOk&&(
+              <select id="select-model" name="model" value={selectedModel} onChange={e=>setSelectedModel(e.target.value)} style={{
                 background:"rgba(0,0,0,0.3)",border:`1px solid ${C.border}`,color:C.bright,
                 fontFamily:mono,fontSize:10,padding:"7px 10px",borderRadius:8,outline:"none",cursor:"pointer",
               }}>
-                {availableModels.map(m=><option key={m} value={m}>{m}</option>)}
+                {KNOWN_MODELS.map(m=><option key={m} value={m}>{m}</option>)}
               </select>
             )}
             <StatusBadge ok={apiOk}/>
@@ -776,9 +799,9 @@ Generate a professional radiology report as JSON.`;
         </div>
 
         {/* ── MAIN GRID ── */}
-        <div style={{display:"grid",gridTemplateColumns:"var(--left-panel) 1fr",gap:18,alignItems:"start"}}>
+        <div style={{display:"flex",flexDirection:"column",gap:18}}>
 
-          {/* LEFT PANEL */}
+          {/* TOP — INPUT + TABS */}
           <div style={{display:"flex",flexDirection:"column",gap:14}}>
 
             {/* Tab Nav */}
@@ -811,7 +834,7 @@ Generate a professional radiology report as JSON.`;
                     localStorage 영구 저장
                   </span>
                   {history.length>0&&(
-                    <button onClick={()=>{if(window.confirm("히스토리를 전체 삭제할까요?"))clearHistory();}} style={{
+                    <button onClick={()=>setShowConfirmClear(true)} style={{
                       fontFamily:mono,fontSize:9,color:C.red,background:"rgba(248,113,113,0.08)",
                       border:`1px solid rgba(248,113,113,0.25)`,padding:"3px 10px",borderRadius:6,cursor:"pointer",
                     }}>전체 삭제</button>
@@ -838,7 +861,6 @@ Generate a professional radiology report as JSON.`;
                             </div>
                             <div style={{display:"flex",gap:12}}>
                               <span style={{fontFamily:mono,fontSize:9,color:C.dim}}>{h.date}</span>
-                              {h.patientId!=="—"&&<span style={{fontFamily:mono,fontSize:9,color:C.dim}}>ID: {h.patientId}</span>}
                               <span style={{fontFamily:mono,fontSize:9,color:C.dim,marginLeft:"auto",opacity:0.5}}>{h.lang==="ko"?"KO":"EN"}</span>
                             </div>
                           </button>
@@ -858,80 +880,72 @@ Generate a professional radiology report as JSON.`;
               </div>
             ):(
               <>
-                {/* Study Info */}
+                {/* ── 가로 3열 입력 그리드 ── */}
+                <div className="input-grid" style={{display:"grid",gridTemplateColumns:"1fr",gap:14,alignItems:"start"}}>
+
+                  {/* COL 1 — Study + Patient */}
+                  <div style={{display:"flex",flexDirection:"column",gap:14}}>
                 <div className="panel" style={{padding:"var(--sp-md)"}}>
                   <Divider label="STUDY INFORMATION"/>
-                  <div style={{marginTop:14,display:"flex",flexDirection:"column",gap:"var(--sp-sm)"}}>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                      <Field label="EXAM DATE">
-                        <div className="field-input" style={{display:"flex",alignItems:"center",gap:8,cursor:"default",userSelect:"none"}}>
-                          <span style={{opacity:0.4,fontSize:11}}>📅</span>
-                          <span style={{fontFamily:mono,fontSize:12,fontWeight:700,color:C.bright}}>{examDate}</span>
-                          <span style={{fontFamily:mono,fontSize:9,color:C.accent,marginLeft:"auto",letterSpacing:1}}>AUTO</span>
-                        </div>
-                      </Field>
-                      <Field label="MODALITY">
-                        <select className="field-input" style={{cursor:"pointer"}} value={modality} onChange={e=>handleModalityChange(e.target.value)}>
-                          {MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}
-                        </select>
-                      </Field>
-                    </div>
-
+                  <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                    <Field label="EXAM DATE">
+                      <div className="field-input" style={{display:"flex",alignItems:"center",gap:8,cursor:"default",userSelect:"none"}}>
+                        <span style={{opacity:0.4,fontSize:11}}>📅</span>
+                        <span style={{fontFamily:mono,fontSize:12,fontWeight:700,color:C.bright}}>{examDate}</span>
+                        <span style={{fontFamily:mono,fontSize:9,color:C.accent,marginLeft:"auto",letterSpacing:1}}>AUTO</span>
+                      </div>
+                    </Field>
+                    <Field label="MODALITY" htmlFor="select-modality">
+                      <select id="select-modality" name="modality" className="field-input" style={{cursor:"pointer"}} value={modality} onChange={e=>handleModalityChange(e.target.value)}>
+                        {MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}
+                      </select>
+                    </Field>
                     {contrastOptions&&(
-                      <Field label={modality==="MRI"?"CONTRAST AGENT":"CONTRAST"}>
+                      <Field label={modality==="MRI"?"CONTRAST AGENT":"CONTRAST"} style={{gridColumn:"1/-1"}}>
                         <SegBtn options={contrastOptions} value={contrast} onChange={setContrast}/>
                       </Field>
                     )}
-
-                    <Field label="BODY REGION">
-                      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                          {Object.keys(activeBodyParts).map(cat=>(
-                            <Tag key={cat} active={selCat===cat} onClick={()=>{setSelCat(cat);setBodypart(activeBodyParts[cat][0]);}}>{cat}</Tag>
+                    <Field label="SEX" hint="optional">
+                      <select className="field-input" style={{cursor:"pointer"}} value={patientSex} onChange={e=>setPatientSex(e.target.value)}>
+                        {SEX_OPTIONS.map(s=><option key={s}>{s}</option>)}
+                      </select>
+                    </Field>
+                    <div style={{gridColumn:"1/-1"}}>
+                      <Field label="BODY REGION">
+                        <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:2}}>
+                          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                            {Object.keys(activeBodyParts).map(cat=>(
+                              <Tag key={cat} active={selCat===cat} onClick={()=>{setSelCat(cat);setBodypart(activeBodyParts[cat][0]);}}>{cat}</Tag>
+                            ))}
+                          </div>
+                          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                            {(activeBodyParts[selCat]||[]).map(bp=>(
+                              <Tag key={bp} active={bodypart===bp} color={C.accent2} onClick={()=>setBodypart(bp)}>{bp}</Tag>
+                            ))}
+                          </div>
+                        </div>
+                      </Field>
+                    </div>
+                    <div style={{gridColumn:"1/-1"}}>
+                      <Field label="URGENCY">
+                        <div style={{display:"flex",gap:8,marginTop:2}}>
+                          {URGENCY_OPTIONS.map(u=>(
+                            <Tag key={u.value} active={urgency===u.value} color={u.color} onClick={()=>setUrgency(u.value)}>{u.label}</Tag>
                           ))}
                         </div>
-                        <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                          {(activeBodyParts[selCat]||[]).map(bp=>(
-                            <Tag key={bp} active={bodypart===bp} color={C.accent2} onClick={()=>setBodypart(bp)}>{bp}</Tag>
-                          ))}
-                        </div>
-                      </div>
-                    </Field>
-
-                    <Field label="URGENCY">
-                      <div style={{display:"flex",gap:8}}>
-                        {URGENCY_OPTIONS.map(u=>(
-                          <Tag key={u.value} active={urgency===u.value} color={u.color} onClick={()=>setUrgency(u.value)}>{u.label}</Tag>
-                        ))}
-                      </div>
-                    </Field>
-                  </div>
-                </div>
-
-                {/* Patient Info — NEW */}
-                <div className="panel" style={{padding:"var(--sp-md)"}}>
-                  <Divider label="PATIENT INFORMATION" color={C.accent2}/>
-                  <div style={{marginTop:14,display:"flex",flexDirection:"column",gap:"var(--sp-sm)"}}>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
-                      <Field label="PATIENT ID" hint="optional">
-                        <input className="field-input" name="patient-id" autoComplete="off" spellCheck={false} value={patientId} onChange={e=>setPatientId(e.target.value)} placeholder="P-20250307…"/>
-                      </Field>
-                      <Field label="AGE" hint="optional">
-                        <input className="field-input" type="number" name="patient-age" autoComplete="off" inputMode="numeric" min="0" max="150" value={patientAge} onChange={e=>setPatientAge(e.target.value)} placeholder="45…"/>
-                      </Field>
-                      <Field label="SEX" hint="optional">
-                        <select className="field-input" style={{cursor:"pointer"}} value={patientSex} onChange={e=>setPatientSex(e.target.value)}>
-                          {SEX_OPTIONS.map(s=><option key={s}>{s}</option>)}
-                        </select>
                       </Field>
                     </div>
                   </div>
                 </div>
 
+                  </div>{/* /COL 1 */}
+
+                  {/* COL 2 — Clinical Input */}
+                  <div style={{display:"flex",flexDirection:"column",gap:14}}>
                 {/* Clinical Input */}
                 <div className="panel" style={{padding:"var(--sp-md)"}}>
                   <Divider label="CLINICAL INPUT"/>
-                  <div style={{marginTop:14,display:"flex",flexDirection:"column",gap:"var(--sp-sm)"}}>
+                  <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                     <Field label="CLINICAL INDICATION" hint="optional">
                       <input className="field-input" name="indication" autoComplete="off" value={indication} onChange={e=>setIndication(e.target.value)} placeholder="R/O pneumonia, f/u after surgery…"/>
                     </Field>
@@ -944,14 +958,21 @@ Generate a professional radiology report as JSON.`;
                     <Field label="CLINICIAN'S DDx" hint="optional" accent>
                       <input className="field-input" name="ddx" autoComplete="off" value={differentialDx} onChange={e=>setDifferentialDx(e.target.value)} placeholder="폐암 vs 전이 vs 염증성 병변…" style={{borderColor:differentialDx?`${C.accent}50`:undefined}}/>
                     </Field>
-                    <Field label="FINDINGS / OBSERVATIONS" accent>
-                      <textarea className="field-input" name="findings" autoComplete="off"
-                        style={{height:"clamp(120px,14vh,200px)"}}
-                        placeholder={"소견을 자유롭게 입력하세요…\n\nExample:\n- RLL consolidation with air bronchogram\n- No pleural effusion\n- Heart size normal"}
-                        value={finding} onChange={e=>setFinding(e.target.value)}/>
-                    </Field>
+                    <div style={{gridColumn:"1/-1"}}>
+                      <Field label="FINDINGS / OBSERVATIONS" accent>
+                        <textarea className="field-input" name="findings" autoComplete="off"
+                          style={{height:"clamp(100px,12vh,180px)"}}
+                          placeholder={"소견을 자유롭게 입력하세요…\n\nExample:\n- RLL consolidation with air bronchogram\n- No pleural effusion\n- Heart size normal"}
+                          value={finding} onChange={e=>setFinding(e.target.value)}/>
+                      </Field>
+                    </div>
                   </div>
                 </div>
+
+                  </div>{/* /COL 2 */}
+
+                  {/* COL 3 — Output Options + Mammography */}
+                  <div style={{display:"flex",flexDirection:"column",gap:14}}>
 
                 {/* Mammography 전용 패널 */}
                 {isMammo&&(
@@ -969,22 +990,7 @@ Generate a professional radiology report as JSON.`;
                 {/* Output Options */}
                 <div className="panel" style={{padding:"var(--sp-md)"}}>
                   <Divider label="OUTPUT OPTIONS"/>
-                  <div style={{marginTop:14,display:"flex",flexDirection:"column",gap:"var(--sp-sm)"}}>
-                    <Field label="LANGUAGE">
-                      <div style={{display:"flex",alignItems:"center",gap:12}}>
-                        <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="en"?C.accent:C.dim,transition:"color 0.2s"}}>ENG</span>
-                        <div onClick={()=>setLang(l=>l==="en"?"ko":"en")} style={{
-                          width:52,height:28,borderRadius:14,cursor:"pointer",position:"relative",
-                          background:lang==="ko"?C.accent:"rgba(0,0,0,0.4)",
-                          border:`1px solid ${lang==="ko"?C.accent:C.border}`,
-                          transition:"background 0.25s,border-color 0.25s",
-                          boxShadow:lang==="ko"?`0 0 12px ${C.accentGlow}`:"none",
-                        }}>
-                          <div style={{position:"absolute",top:3,left:lang==="ko"?26:3,width:20,height:20,borderRadius:"50%",background:lang==="ko"?C.bg:C.dim,transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.4)"}}/>
-                        </div>
-                        <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="ko"?C.accent:C.dim,transition:"color 0.2s"}}>한국어</span>
-                      </div>
-                    </Field>
+                  <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                     <Field label="FORMAT">
                       {modality==="X-ray"
                         ?<div className="field-input" style={{opacity:0.4,cursor:"default",userSelect:"none"}}><span style={{fontFamily:mono,fontSize:11,color:C.dim}}>N/A for X-ray</span></div>
@@ -994,32 +1000,45 @@ Generate a professional radiology report as JSON.`;
                     <Field label="TONE">
                       <SegBtn options={TONE_OPTIONS} value={tone} onChange={setTone} small/>
                     </Field>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                      <Field label="RADIOLOGIST">
-                        <input className="field-input" name="radiologist" autoComplete="name" value={radiologist} onChange={e=>setRadiologist(e.target.value)} placeholder="김영상 (전문의)…"/>
-                      </Field>
-                      <Field label="HOSPITAL / DEPT">
-                        <input className="field-input" name="hospital" autoComplete="organization" value={hospital} onChange={e=>setHospital(e.target.value)} placeholder="서울대학교병원…"/>
+
+                    <div style={{gridColumn:"1/-1"}}>
+                      <Field label="LANGUAGE">
+                        <div style={{display:"flex",alignItems:"center",gap:12,marginTop:2}}>
+                          <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="en"?C.accent:C.dim,transition:"color 0.2s"}}>ENG</span>
+                          <div onClick={()=>setLang(l=>l==="en"?"ko":"en")} style={{
+                            width:52,height:28,borderRadius:14,cursor:"pointer",position:"relative",
+                            background:lang==="ko"?C.accent:"rgba(0,0,0,0.4)",
+                            border:`1px solid ${lang==="ko"?C.accent:C.border}`,
+                            transition:"background 0.25s,border-color 0.25s",
+                            boxShadow:lang==="ko"?`0 0 12px ${C.accentGlow}`:"none",
+                          }}>
+                            <div style={{position:"absolute",top:3,left:lang==="ko"?26:3,width:20,height:20,borderRadius:"50%",background:lang==="ko"?C.bg:C.dim,transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.4)"}}/>
+                          </div>
+                          <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="ko"?C.accent:C.dim,transition:"color 0.2s"}}>한국어</span>
+                        </div>
                       </Field>
                     </div>
                   </div>
                 </div>
 
                 {error&&(
-                  <div style={{padding:"12px 16px",borderRadius:10,background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",color:C.red,fontFamily:mono,fontSize:11,lineHeight:1.6}}>
+                  <div style={{padding:"12px 16px",borderRadius:10,background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",color:C.red,fontFamily:mono,fontSize:11,lineHeight:1.7,whiteSpace:"pre-wrap"}}>
                     ⚠ {error}
                   </div>
                 )}
 
-                <button onClick={generate} disabled={loading||!apiOk} className="btn-primary" aria-busy={loading} style={{padding:"var(--sp-sm) var(--sp-lg)",fontSize:"var(--fs-sm)"}}>
+                  </div>{/* /COL 3 */}
+                </div>{/* /3-col grid */}
+
+                <button onClick={generate} disabled={loading||!apiOk} className="btn-primary" aria-busy={loading} style={{padding:"var(--sp-sm) var(--sp-lg)",fontSize:"var(--fs-sm)",width:"100%",marginTop:4}}>
                   {loading?"ANALYZING…":"⟶  Generate Report"}
                 </button>
               </>
             )}
-          </div>
+          </div>{/* /TOP INPUT */}
 
-          {/* RIGHT PANEL — REPORT OUTPUT */}
-          <div className="panel" style={{overflow:"hidden",minHeight:"clamp(500px,72vh,920px)"}}>
+          {/* BOTTOM — REPORT OUTPUT */}
+          <div className="panel" style={{overflow:"hidden",minHeight:"clamp(420px,55vh,800px)"}}>
             {/* Report Header */}
             <div style={{padding:"18px 24px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(0,0,0,0.2)"}}>
               <div>
@@ -1036,10 +1055,9 @@ Generate a professional radiology report as JSON.`;
                       </span>
                     );
                   })()}
-                  {patientId&&<span style={{fontFamily:mono,fontSize:9,color:C.dim}}>ID: {patientId}</span>}
-                  {patientAge&&<span style={{fontFamily:mono,fontSize:9,color:C.dim}}>{patientAge}세{patientSex!=="선택 안 함"?" · "+patientSex:""}</span>}
+                  {patientSex!=="선택 안 함"&&<span style={{fontFamily:mono,fontSize:9,color:C.dim}}>{patientSex}</span>}
                 </div>
-                {hospital&&<div style={{fontFamily:mono,fontSize:10,color:C.dim,marginTop:3}}>{hospital}{radiologist?" · "+radiologist:""}</div>}
+
               </div>
               {report&&(
                 <button aria-label={copied?"복사 완료":"리포트 복사"} onClick={copyReport} style={{
@@ -1083,7 +1101,6 @@ Generate a professional radiology report as JSON.`;
                       ["REGION",bodypart],
                       ["FORMAT",format.toUpperCase()],
                       ["LANG",lang==="ko"?"한국어":"ENG"],
-                      ...(patientAge?[["AGE",patientAge+"세"]]:[]),
                     ].map(([k,v])=>(
                       <div key={k}>
                         <div style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:1.5,marginBottom:2}}>{k}</div>
@@ -1183,7 +1200,7 @@ Generate a professional radiology report as JSON.`;
                             {report.findings.map((f,i)=>(
                               <div key={i} style={{display:"grid",gridTemplateColumns:"130px 1fr",borderBottom:i<report.findings.length-1?`1px solid ${C.border}`:"none",background:i%2===0?"rgba(0,0,0,0.18)":"rgba(0,0,0,0.06)"}}>
                                 <div style={{padding:"var(--sp-xs) var(--sp-sm)",borderRight:`1px solid ${C.border}`,fontFamily:mono,fontSize:"var(--fs-sm)",fontWeight:700,color:C.accent,display:"flex",alignItems:"center"}}>{f.organ}</div>
-                                <div style={{padding:"var(--sp-xs) var(--sp-sm)",fontSize:"var(--fs-md)",lineHeight:1.7,color:C.bright}}>{f.finding}</div>
+                                <div style={{padding:"var(--sp-xs) var(--sp-sm)",fontSize:"var(--fs-md)",lineHeight:1.7,color:C.bright,minWidth:0,wordBreak:"break-word"}}>{f.finding}</div>
                               </div>
                             ))}
                           </div>
@@ -1248,7 +1265,7 @@ Generate a professional radiology report as JSON.`;
                   )}
 
                   <div style={{marginTop:20,paddingTop:16,borderTop:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-                    <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim}}>{radiologist?"Interpreted by: "+radiologist:"For clinical review only"}</span>
+
                     <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim}}>{new Date().toLocaleString("ko-KR")}</span>
                     <div style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.green,border:`1px solid ${C.green}40`,padding:"3px 10px",borderRadius:4,letterSpacing:1,background:C.greenDim}}>✓ FINAL REPORT</div>
                   </div>
