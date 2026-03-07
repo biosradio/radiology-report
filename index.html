@@ -101,6 +101,40 @@ const BODY_PARTS={
 const MAMMO_PARTS={
   "Breast":["Both Breasts","Right Breast","Left Breast","Right Breast (Targeted)","Left Breast (Targeted)"],
 };
+const MAMMO_PARENCHYMA=[
+  {value:"A","label":"① 25% 미만"},
+  {value:"B","label":"② 25–50%"},
+  {value:"C","label":"③ 51–75%"},
+  {value:"D","label":"④ 76–100%"},
+  {value:"E","label":"⑤ 유방실질내 인공물질 주입"},
+];
+const MAMMO_FINDINGS_OPTIONS=[
+  {value:"1","label":"이상소견 없음"},
+  {value:"2","label":"종괴"},
+  {value:"3","label":"양성석회화"},
+  {value:"4","label":"미세석회화"},
+  {value:"5","label":"구조 왜곡"},
+  {value:"6","label":"비대칭"},
+  {value:"7","label":"피부 이상"},
+  {value:"8","label":"임파선 비후"},
+  {value:"9","label":"판정곤란"},
+  {value:"10","label":"직접기입"},
+];
+const MAMMO_LOCATIONS=[
+  {num:"①",label:"상외측"},
+  {num:"②",label:"상내측"},
+  {num:"③",label:"하외측"},
+  {num:"④",label:"하내측"},
+  {num:"⑤",label:"유두하부"},
+  {num:"⑥",label:"액와부"},
+];
+const MAMMO_ASSESSMENT=[
+  {value:"1","label":"1. 이상소견 없음"},
+  {value:"2","label":"2. 양성질환"},
+  {value:"3","label":"3. 유방암 의심"},
+  {value:"4","label":"4. 판정유보"},
+  {value:"5","label":"5. 기존유방암 환자"},
+];
 const MODALITIES=["CT","MRI","X-ray","Ultrasound","PET-CT","Mammography","Fluoroscopy"];
 const FORMAT_OPTIONS=[{value:"structured",icon:"⊞",label:"STRUCTURED"},{value:"narrative",icon:"≡",label:"NARRATIVE"},{value:"bullet",icon:"∷",label:"BULLET"}];
 const TONE_OPTIONS=[{value:"formal",label:"FORMAL"},{value:"concise",label:"CONCISE"},{value:"detailed",label:"DETAILED"},{value:"clinical",label:"CLINICAL"}];
@@ -262,6 +296,123 @@ function StatusBadge({ok}){
   );
 }
 
+/* ── MAMMOGRAPHY PANEL ───────────────────── */
+function MammoPanel({
+  parenchyma,setParenchyma,
+  findings,setFindings,
+  findingCustom,setFindingCustom,
+  locationR,setLocationR,
+  locationL,setLocationL,
+  assessment,setAssessment,
+  addlTest,setAddlTest,
+}){
+  const toggleArr=(arr,set,v)=>set(arr.includes(v)?arr.filter(x=>x!==v):[...arr,v]);
+  const selBtn=(active,color)=>({
+    padding:"4px 10px",borderRadius:6,border:`1px solid ${active?(color||C.accent):C.border}`,
+    background:active?`${color||C.accent}20`:"transparent",
+    color:active?(color||C.accent):C.dim,
+    fontFamily:mono,fontSize:10,fontWeight:700,cursor:"pointer",
+    transition:"border-color 0.15s ease,background 0.15s ease,color 0.15s ease",
+  });
+
+  // 판정구분에 따른 자동 문구
+  const autoMsg=assessment==="1"||assessment==="2"
+    ?"유방통증, 만져지는 병변이 있거나 혈성분비물, 유두습진 등의 증상이 있는 경우에는 추가 검사가 필요할 수 있으니 진료 상담을 받으시기 바랍니다."
+    :assessment==="3"||assessment==="4"||assessment==="5"
+    ?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다."
+    :"";
+
+  return(
+    <div className="panel" style={{padding:"var(--sp-md)"}}>
+      <Divider label="MAMMOGRAPHY 검진" color="#f472b6"/>
+
+      {/* 가. 유방실질분포량 */}
+      <div style={{marginTop:14,display:"flex",flexDirection:"column",gap:10}}>
+        <Field label="가. 유방실질분포량">
+          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+            {MAMMO_PARENCHYMA.map(p=>(
+              <button key={p.value} onClick={()=>setParenchyma(p.value)} style={selBtn(parenchyma===p.value,"#f472b6")}>{p.label}</button>
+            ))}
+          </div>
+        </Field>
+
+        {/* 나. 판독소견 */}
+        <Field label="나. 판독소견 (복수선택)">
+          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+            {MAMMO_FINDINGS_OPTIONS.map(f=>(
+              <button key={f.value} onClick={()=>toggleArr(findings,setFindings,f.value)} style={selBtn(findings.includes(f.value),"#f472b6")}>
+                {f.value}. {f.label}
+              </button>
+            ))}
+          </div>
+          {findings.includes("10")&&(
+            <input className="field-input" style={{marginTop:6}} name="mammo-custom" autoComplete="off"
+              placeholder="직접 기입…" value={findingCustom} onChange={e=>setFindingCustom(e.target.value)}/>
+          )}
+        </Field>
+
+        {/* 다. 병변위치 */}
+        <Field label="다. 병변위치">
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {[["오른쪽",locationR,setLocationR],["왼쪽",locationL,setLocationL]].map(([side,locs,setLocs])=>(
+              <div key={side} style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                <span style={{fontFamily:mono,fontSize:10,color:C.dim,minWidth:42,fontWeight:700}}>{side}</span>
+                {MAMMO_LOCATIONS.map((loc)=>(
+                  <button key={loc.label} onClick={()=>toggleArr(locs,setLocs,`${loc.num}${loc.label}`)} style={selBtn(locs.includes(`${loc.num}${loc.label}`),"#fb923c")}>
+                    {loc.num} {loc.label}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        </Field>
+
+        {/* 라. 판정구분 */}
+        <Field label="라. 판정구분">
+          <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+            {MAMMO_ASSESSMENT.map(a=>(
+              <button key={a.value} onClick={()=>setAssessment(a.value===assessment?"":a.value)} style={selBtn(assessment===a.value,
+                a.value==="3"?C.red:a.value==="2"?C.amber:a.value==="4"?C.amber:C.green
+              )}>{a.label}</button>
+            ))}
+          </div>
+        </Field>
+
+        {/* 판정구분 자동 문구 */}
+        {autoMsg&&(
+          <div style={{
+            padding:"10px 14px",borderRadius:8,
+            background:assessment==="1"||assessment==="2"?"rgba(74,222,128,0.06)":"rgba(244,114,182,0.08)",
+            border:`1px solid ${assessment==="1"||assessment==="2"?"rgba(74,222,128,0.25)":"rgba(244,114,182,0.3)"}`,
+            display:"flex",gap:8,alignItems:"flex-start",
+          }}>
+            <span style={{color:assessment==="1"||assessment==="2"?C.green:"#f472b6",fontWeight:800,flexShrink:0,marginTop:1}}>*</span>
+            <span style={{fontSize:"var(--fs-sm)",color:assessment==="1"||assessment==="2"?C.green:"#f472b6",lineHeight:1.6}}>{autoMsg}</span>
+          </div>
+        )}
+
+        {/* 추가검사 (수동 override) */}
+        {(assessment==="3"||assessment==="4"||assessment==="5"||!assessment)&&(
+          <div style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",borderRadius:8,
+            background:addlTest?"rgba(244,114,182,0.08)":"rgba(0,0,0,0.2)",
+            border:`1px solid ${addlTest?"rgba(244,114,182,0.3)":C.border}`,
+            transition:"background 0.2s ease,border-color 0.2s ease",cursor:"pointer"}}
+            onClick={()=>setAddlTest(v=>!v)}>
+            <div style={{width:18,height:18,borderRadius:4,border:`2px solid ${addlTest?"#f472b6":C.dim}`,
+              background:addlTest?"#f472b6":"transparent",display:"flex",alignItems:"center",justifyContent:"center",
+              transition:"background 0.2s ease,border-color 0.2s ease",flexShrink:0}}>
+              {addlTest&&<span style={{color:"#020817",fontSize:11,fontWeight:800,lineHeight:1}}>✓</span>}
+            </div>
+            <span style={{fontFamily:sans,fontSize:"var(--fs-sm)",color:addlTest?"#f472b6":C.dim,lineHeight:1.5}}>
+              추가 검사 권고 포함
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ── MAIN APP ─────────────────────────────── */
 function App(){
   const examDate=new Date().toISOString().split("T")[0];
@@ -286,6 +437,15 @@ function App(){
 
   const [differentialDx,setDifferentialDx]=useState("");
   const [keyMeasurements,setKeyMeasurements]=useState("");
+
+  // Mammography 전용 state
+  const [mammoParenchyma,setMammoParenchyma]=useState(""); // 유방실질분포량
+  const [mammoFindings,setMammoFindings]=useState([]);     // 판독소견 (복수선택)
+  const [mammoFindingCustom,setMammoFindingCustom]=useState(""); // 직접기입
+  const [mammoLocationR,setMammoLocationR]=useState([]);   // 우측 병변위치
+  const [mammoLocationL,setMammoLocationL]=useState([]);   // 좌측 병변위치
+  const [mammoAssessment,setMammoAssessment]=useState(""); // 판정구분
+  const [mammoAddlTest,setMammoAddlTest]=useState(false);  // 추가검사 필요
   const [activeTab,setActiveTab]=useState("input");
   const [history,setHistory]=useState(()=>{
     try{const s=localStorage.getItem("radreport_history");return s?JSON.parse(s):[];}
@@ -420,6 +580,16 @@ recommendation: ${urgency!=="routine"?"Clinical follow-up recommendation.":"null
 Return ONLY raw JSON:
 {"technique":"string","comparison":"string or null","findings":${format==="structured"?`[{"organ":"...","finding":"..."}]`:'"string"'},"impression":["..."],"urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`;
 
+    const isMammoModality=modality==="Mammography";
+    const mammoCtx=isMammoModality?`
+[유방검진 정보]
+유방실질분포량: ${mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"미입력"}
+판독소견: ${mammoFindings.length?mammoFindings.map(v=>{const f=MAMMO_FINDINGS_OPTIONS.find(o=>o.value===v);return v==="10"?`직접기입(${mammoFindingCustom||"미입력"})`:f?.label;}).join(", "):"미입력"}
+병변위치 오른쪽: ${mammoLocationR.length?mammoLocationR.join(", "):"없음"}
+병변위치 왼쪽: ${mammoLocationL.length?mammoLocationL.join(", "):"없음"}
+판정구분: ${mammoAssessment?MAMMO_ASSESSMENT.find(a=>a.value===mammoAssessment)?.label:"미입력"}
+추가검사 권고: ${mammoAddlTest?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다.":"해당없음"}`:"";
+
     const userMsg=`Modality: ${modality}
 Body Part: ${bodypart}
 Exam Date: ${examDate}
@@ -428,7 +598,7 @@ Urgency: ${urgency}
 ${patientCtx?`Patient: ${patientCtx}`:""}
 ${indication?"Clinical Indication: "+indication:""}
 Clinical Information: ${clinicalInfo||"Not provided"}
-${measCtx}${ddxCtx}
+${measCtx}${ddxCtx}${mammoCtx}
 ${radiologist?"Radiologist: "+radiologist:""}
 ${hospital?"Hospital: "+hospital:""}
 
@@ -465,9 +635,17 @@ Generate a professional radiology report as JSON.`;
         if(!parsed.summary) parsed.summary=parsed.findings?(Array.isArray(parsed.findings)?parsed.findings.map(f=>f.finding||String(f)).join(" "):String(parsed.findings)):(isKo?"소견을 확인하세요.":"Please review findings.");
       } else {
         if(format==="structured"){
-          if(!Array.isArray(parsed.findings)) parsed.findings=[{organ:isKo?"소견":"Findings",finding:String(parsed.findings||"")}];
+          if(!Array.isArray(parsed.findings)){
+            // 문자열이면 단일 항목 배열로 변환
+            parsed.findings=[{organ:isKo?"소견":"Findings",finding:String(parsed.findings||"")}];
+          }
         } else {
-          if(typeof parsed.findings!=="string") parsed.findings=Array.isArray(parsed.findings)?parsed.findings.map(f=>f.finding||String(f)).join("\n"):(isKo?"소견을 확인하세요.":"Please review findings.");
+          // bullet / narrative — 반드시 문자열로
+          if(Array.isArray(parsed.findings)){
+            parsed.findings=parsed.findings.map(f=>typeof f==="object"?(f.organ?`${f.organ}: ${f.finding||""}`:f.finding||String(f)):String(f)).join("\n");
+          } else if(typeof parsed.findings!=="string"){
+            parsed.findings=isKo?"소견을 확인하세요.":"Please review findings.";
+          }
         }
         if(!Array.isArray(parsed.impression)) parsed.impression=parsed.impression?[String(parsed.impression)]:[isKo?"임상 소견과 비교 검토 요망.":"Correlate clinically."];
       }
@@ -489,8 +667,29 @@ Generate a professional radiology report as JSON.`;
     if(!report)return"";
     let text="";
     const isKo=lang==="ko";
+
+    // Mammography 검진 판독 먼저
+    if(modality==="Mammography"&&(mammoParenchyma||mammoFindings.length||mammoAssessment)){
+      const autoMsg=mammoAssessment==="1"||mammoAssessment==="2"
+        ?"유방통증, 만져지는 병변이 있거나 혈성분비물, 유두습진 등의 증상이 있는 경우에는 추가 검사가 필요할 수 있으니 진료 상담을 받으시기 바랍니다."
+        :mammoAssessment==="3"||mammoAssessment==="4"||mammoAssessment==="5"
+        ?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다."
+        :"";
+      const lines=[
+        "[ 유방검진 판독 ]",
+        `가. 유방실질분포량: ${mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"—"}`,
+        `나. 판독소견: ${mammoFindings.length?mammoFindings.map(v=>v==="10"?`직접기입(${mammoFindingCustom||"—"})`:MAMMO_FINDINGS_OPTIONS.find(o=>o.value===v)?.label).join(", "):"—"}`,
+        `다. 병변위치 오른쪽: ${mammoLocationR.length?mammoLocationR.join(", "):"없음"}`,
+        `다. 병변위치 왼쪽: ${mammoLocationL.length?mammoLocationL.join(", "):"없음"}`,
+        `라. 판정구분: ${mammoAssessment?MAMMO_ASSESSMENT.find(a=>a.value===mammoAssessment)?.label:"—"}`,
+      ];
+      if(autoMsg) lines.push(`* ${autoMsg}`);
+      else if(mammoAddlTest) lines.push("* 초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다.");
+      text=lines.join("\n")+"\n\n";
+    }
+
     if(modality==="X-ray"){
-      text=breakSentences(report.summary||"");
+      text+=breakSentences(report.summary||"");
     } else {
       let findingsText="";
       if(Array.isArray(report.findings)){
@@ -499,7 +698,7 @@ Generate a professional radiology report as JSON.`;
       const imp=Array.isArray(report.impression)
         ?report.impression.length===1?report.impression[0]:report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
         :(report.impression||"");
-      text=`${findingsText}\n\n${isKo?"결론":"IMPRESSION"}:\n${imp}`;
+      text+=`${findingsText}\n\n${isKo?"결론":"IMPRESSION"}:\n${imp}`;
     }
     if(urgency!=="routine"){
       if(report.urgency_note&&report.urgency_note!=="null") text+=`\n\n${urgency.toUpperCase()} NOTE:\n${report.urgency_note}`;
@@ -754,6 +953,19 @@ Generate a professional radiology report as JSON.`;
                   </div>
                 </div>
 
+                {/* Mammography 전용 패널 */}
+                {isMammo&&(
+                  <MammoPanel
+                    parenchyma={mammoParenchyma} setParenchyma={setMammoParenchyma}
+                    findings={mammoFindings} setFindings={setMammoFindings}
+                    findingCustom={mammoFindingCustom} setFindingCustom={setMammoFindingCustom}
+                    locationR={mammoLocationR} setLocationR={setMammoLocationR}
+                    locationL={mammoLocationL} setLocationL={setMammoLocationL}
+                    assessment={mammoAssessment} setAssessment={setMammoAssessment}
+                    addlTest={mammoAddlTest} setAddlTest={setMammoAddlTest}
+                  />
+                )}
+
                 {/* Output Options */}
                 <div className="panel" style={{padding:"var(--sp-md)"}}>
                   <Divider label="OUTPUT OPTIONS"/>
@@ -880,6 +1092,47 @@ Generate a professional radiology report as JSON.`;
                     ))}
                   </div>
 
+                  {/* Mammography 검진 결과 요약 */}
+                  {modality==="Mammography"&&(mammoParenchyma||mammoFindings.length||mammoAssessment)&&(()=>{
+                    const autoMsg=mammoAssessment==="1"||mammoAssessment==="2"
+                      ?"유방통증, 만져지는 병변이 있거나 혈성분비물, 유두습진 등의 증상이 있는 경우에는 추가 검사가 필요할 수 있으니 진료 상담을 받으시기 바랍니다."
+                      :mammoAssessment==="3"||mammoAssessment==="4"||mammoAssessment==="5"
+                      ?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다."
+                      :"";
+                    const isGreen=mammoAssessment==="1"||mammoAssessment==="2";
+                    return(
+                      <div style={{marginBottom:20,borderRadius:10,overflow:"hidden",border:"1px solid rgba(244,114,182,0.3)"}}>
+                        <div style={{padding:"8px 14px",background:"rgba(244,114,182,0.1)",borderBottom:"1px solid rgba(244,114,182,0.2)",display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{width:3,height:14,background:"#f472b6",borderRadius:2,boxShadow:"0 0 8px rgba(244,114,182,0.5)"}}/>
+                          <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:"#f472b6",letterSpacing:2,fontWeight:700}}>유방검진 판독</span>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:0}}>
+                          {[
+                            ["가. 유방실질분포량", mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"—"],
+                            ["나. 판독소견", mammoFindings.length?mammoFindings.map(v=>v==="10"?`직접기입(${mammoFindingCustom||"—"})`:MAMMO_FINDINGS_OPTIONS.find(o=>o.value===v)?.label).join(", "):"—"],
+                            ["다. 병변위치 (우)", mammoLocationR.length?mammoLocationR.join(", "):"없음"],
+                            ["다. 병변위치 (좌)", mammoLocationL.length?mammoLocationL.join(", "):"없음"],
+                            ["라. 판정구분", mammoAssessment?MAMMO_ASSESSMENT.find(a=>a.value===mammoAssessment)?.label:"—"],
+                          ].map(([k,v],i,arr)=>(
+                            <div key={k} style={{display:"grid",gridTemplateColumns:"160px 1fr",borderBottom:i<arr.length-1?"1px solid rgba(244,114,182,0.12)":"none",background:i%2===0?"rgba(0,0,0,0.2)":"rgba(0,0,0,0.06)"}}>
+                              <div style={{padding:"7px 12px",fontFamily:mono,fontSize:"var(--fs-xs)",color:"#f472b6",fontWeight:700,borderRight:"1px solid rgba(244,114,182,0.12)",display:"flex",alignItems:"center"}}>{k}</div>
+                              <div style={{padding:"7px 12px",fontSize:"var(--fs-md)",color:C.bright,lineHeight:1.6}}>{v}</div>
+                            </div>
+                          ))}
+                          {/* 자동 문구 */}
+                          {(autoMsg||(mammoAddlTest&&(mammoAssessment==="3"||mammoAssessment==="4"||mammoAssessment==="5"||!mammoAssessment)))&&(
+                            <div style={{padding:"10px 14px",background:isGreen?"rgba(74,222,128,0.06)":"rgba(244,114,182,0.06)",borderTop:"1px solid rgba(244,114,182,0.12)",display:"flex",gap:8,alignItems:"flex-start"}}>
+                              <span style={{color:isGreen?C.green:"#f472b6",fontWeight:800,flexShrink:0}}>*</span>
+                              <span style={{fontSize:"var(--fs-md)",color:isGreen?C.green:"#f472b6",lineHeight:1.7}}>
+                                {autoMsg||(mammoAddlTest?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다.":"")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {report.technique&&(
                     <ReportSection title="TECHNIQUE">
                       <p style={{lineHeight:1.8,color:C.text,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{breakSentences(report.technique)}</p>
@@ -925,6 +1178,7 @@ Generate a professional radiology report as JSON.`;
                     <>
                       <ReportSection title="FINDINGS">
                         {Array.isArray(report.findings)?(
+                          /* structured: 테이블 */
                           <div style={{display:"flex",flexDirection:"column",gap:0,borderRadius:10,overflow:"hidden",border:`1px solid ${C.border}`}}>
                             {report.findings.map((f,i)=>(
                               <div key={i} style={{display:"grid",gridTemplateColumns:"130px 1fr",borderBottom:i<report.findings.length-1?`1px solid ${C.border}`:"none",background:i%2===0?"rgba(0,0,0,0.18)":"rgba(0,0,0,0.06)"}}>
@@ -933,33 +1187,44 @@ Generate a professional radiology report as JSON.`;
                               </div>
                             ))}
                           </div>
-                        ):format==="bullet"?(
-                          <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                            {(report.findings||"").replace(/([^\n])\s*•\s*/g,"$1\n").replace(/([^\n])\s*-\s+/g,"$1\n").split("\n").map(l=>l.replace(/^[•\-\*]\s*/,"").trim()).filter(l=>l.length>0).map((text,i)=>(
-                              <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                                <span style={{color:C.accent,fontWeight:700,fontSize:16,lineHeight:1.4,flexShrink:0}}>•</span>
-                                <p style={{lineHeight:1.8,color:C.bright,fontSize:"var(--fs-md)"}}>{text}</p>
+                        ):(()=>{
+                          /* bullet 또는 narrative — 문자열 보장 후 렌더링 */
+                          const raw=typeof report.findings==="string"?report.findings
+                            :Array.isArray(report.findings)?report.findings.map(f=>typeof f==="object"?(f.organ?`${f.organ}: ${f.finding}`:f.finding||String(f)):String(f)).join("\n")
+                            :String(report.findings||"");
+                          if(format==="bullet"){
+                            const items=raw.replace(/([^\n])\s*•\s*/g,"$1\n").replace(/([^\n])\s*-\s+/g,"$1\n").split("\n").map(l=>l.replace(/^[•\-\*]\s*/,"").trim()).filter(l=>l.length>0);
+                            return(
+                              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                                {items.map((text,i)=>(
+                                  <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                                    <span style={{color:C.accent,fontWeight:700,fontSize:16,lineHeight:1.4,flexShrink:0}}>•</span>
+                                    <p style={{lineHeight:1.8,color:C.bright,fontSize:"var(--fs-md)"}}>{text}</p>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
-                        ):(
-                          <p style={{lineHeight:1.9,color:C.bright,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{breakSentences(report.findings||"")}</p>
-                        )}
+                            );
+                          }
+                          return <p style={{lineHeight:1.9,color:C.bright,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{breakSentences(raw)}</p>;
+                        })()}
                       </ReportSection>
 
                       <ReportSection title="IMPRESSION" highlight={C.accent2}>
                         <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                          {Array.isArray(report.impression)
-                            ?report.impression.map((line,i)=>(
+                          {(()=>{
+                            const imp=Array.isArray(report.impression)
+                              ?report.impression
+                              :report.impression?[String(report.impression)]:[];
+                            if(imp.length===0) return <p style={{color:C.dim,fontSize:"var(--fs-md)"}}>—</p>;
+                            return imp.map((line,i)=>(
                               <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
                                 <div style={{width:22,height:22,borderRadius:6,background:"rgba(129,140,248,0.15)",border:`1px solid ${C.accent2}50`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                                   <span style={{fontFamily:mono,fontSize:10,fontWeight:800,color:C.accent2}}>{i+1}</span>
                                 </div>
                                 <p style={{lineHeight:1.7,color:C.bright,fontSize:"var(--fs-md)",paddingTop:1}}>{line}</p>
                               </div>
-                            ))
-                            :<p style={{lineHeight:1.9,color:C.bright,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{report.impression}</p>
-                          }
+                            ));
+                          })()}
                         </div>
                       </ReportSection>
                     </>
