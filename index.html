@@ -625,15 +625,31 @@ Return ONLY raw JSON:
 {"technique":"string","comparison":"string or null","findings":${format==="structured"?`[{"organ":"...","finding":"..."}]`:'"string"'},"impression":["..."],"urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`;
 
     const isMammoModality=modality==="Mammography";
+    const parenchymaLabel=mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"미입력";
     const mammoCtx=isMammoModality?`
 [유방검진 정보]
-유방실질분포량: ${mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"미입력"}
+유방실질분포량: ${parenchymaLabel}
 판독소견: ${mammoFindings.length?mammoFindings.map(v=>{const f=MAMMO_FINDINGS_OPTIONS.find(o=>o.value===v);return v==="10"?`직접기입(${mammoFindingCustom||"미입력"})`:f?.label;}).join(", "):"미입력"}
 병변위치 오른쪽: ${mammoLocationR.length?mammoLocationR.join(", "):"없음"}
 병변위치 왼쪽: ${mammoLocationL.length?mammoLocationL.join(", "):"없음"}
 판정구분: ${mammoAssessment?MAMMO_ASSESSMENT.find(a=>a.value===mammoAssessment)?.label:"미입력"}
 추가검사 권고: ${mammoAddlTest?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다.":"해당없음"}`:"";
 
+    const mammoSystem=isMammoModality?`You are an expert breast radiologist. Generate a Korean mammography screening report in JSON.
+Language: Korean. Write ALL content in Korean.
+Tone: ${tone} | Urgency: ${urgency}
+
+CRITICAL RULES FOR MAMMOGRAPHY REPORT:
+1. "findings" MUST be a JSON array in this EXACT order:
+   - First entry: {"organ":"유방실질분포량","finding":"${parenchymaLabel||"기재 필요"}"}  ← ALWAYS include this as the FIRST item, using the exact value provided.
+   - Then entries for each breast region with findings.
+2. "technique": write as "양측 유방 촬영술 (MLO, CC view)" or appropriate view description.
+3. "impression": array of strings summarizing overall assessment and BI-RADS category if applicable.
+4. "comparison": null unless prior study mentioned.
+5. urgency_note: ${urgency!=="routine"?'"string — key finding only"':"null"}
+6. recommendation: ${urgency!=="routine"?'"string"':"null"}
+Return ONLY raw JSON:
+{"technique":"string","comparison":null,"findings":[{"organ":"...","finding":"..."}],"impression":["..."],"urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`:"";
     const userMsg=`Modality: ${modality}
 Body Part: ${effectiveBodypart}
 Exam Date: ${examDate}
@@ -660,7 +676,7 @@ Generate a professional radiology report as JSON.`;
           method:"POST",
           headers:{"Content-Type":"application/json"},
           body:JSON.stringify({
-            systemInstruction:{parts:[{text:isXray?xraySystem:mainSystem}]},
+            systemInstruction:{parts:[{text:isMammoModality?mammoSystem:isXray?xraySystem:mainSystem}]},
             contents:[{role:"user",parts:[{text:userMsg}]}],
             generationConfig:{maxOutputTokens:1500,temperature:0.3},
           }),
