@@ -141,7 +141,6 @@ const CONTRAST_OPTIONS={
   CT:[{value:"non-contrast",label:"Non-Contrast"},{value:"contrast",label:"+ Contrast"},{value:"both",label:"Both Phases"}],
   MRI:[{value:"non-contrast",label:"Non-Contrast"},{value:"gadolinium",label:"+ Gadolinium"}],
 };
-const SEX_OPTIONS=["선택 안 함","남성 (M)","여성 (F)"];
 
 const C={
   bg:"#020817",surface:"rgba(15,23,42,0.85)",surface2:"rgba(30,41,59,0.5)",
@@ -428,7 +427,6 @@ function App(){
   const [lang,setLang]=useState("ko");
 
   // NEW fields
-  const [patientSex,setPatientSex]=useState("선택 안 함");
 
   const [differentialDx,setDifferentialDx]=useState("");
   const [keyMeasurements,setKeyMeasurements]=useState("");
@@ -464,21 +462,30 @@ function App(){
   const [showConfirmClear,setShowConfirmClear]=useState(false);
   const modalTextRef=useRef(null);
 
-  const [selectedModel,setSelectedModel]=useState("gemini-2.5-flash");
+  const [selectedModel,setSelectedModel]=useState("gemini-3-flash-preview");
   const KNOWN_MODELS=[
-    "gemini-2.5-flash",
+    "gemini-3.1-pro-preview",
+    "gemini-3-flash-preview",
+    "gemini-3.1-flash-lite-preview",
     "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
     "gemini-1.5-pro",
+    "gemini-1.5-flash",
   ];
   const apiOk=apiKey.startsWith("AIza");
 
   const contrastOptions=CONTRAST_OPTIONS[modality]||null;
   const isMammo=modality==="Mammography";
-  const activeBodyParts=isMammo?MAMMO_PARTS:BODY_PARTS;
+  const isMRI=modality==="MRI";
+  const activeBodyParts=isMammo?MAMMO_PARTS:{
+    ...BODY_PARTS,
+    "Head / Neck":isMRI
+      ?["Brain","MRA","Neck","Orbit","Temporal Bone","Paranasal Sinus"]
+      :BODY_PARTS["Head / Neck"],
+  };
 
   const handleModalityChange=(val)=>{
     setModality(val);
@@ -501,6 +508,7 @@ function App(){
     "Pelvis":         {ko:"방광,자궁/난소 또는 전립선,직장,골반혈관,뼈",en:"Bladder,Uterus/Ovaries or Prostate,Rectum,Pelvic Vessels,Bones"},
     "Abdomen & Pelvis":{ko:"간,담낭,췌장,비장,신장,방광,장,복막,혈관,뼈",en:"Liver,Gallbladder,Pancreas,Spleen,Kidneys,Bladder,Bowel,Peritoneum,Vessels,Bones"},
     "Brain":          {ko:"뇌실질,뇌실,뇌구/회,백질,뇌간,소뇌,두개골,부비동,안와",en:"Brain Parenchyma,Ventricles,Sulci & Gyri,White Matter,Brainstem,Cerebellum,Skull,Sinuses,Orbits"},
+    "MRA":            {ko:"우측 내경동맥,좌측 내경동맥,우측 중대뇌동맥,좌측 중대뇌동맥,우측 전대뇌동맥,좌측 전대뇌동맥,우측 후대뇌동맥,좌측 후대뇌동맥,우측 추골동맥,좌측 추골동맥,기저동맥,Willis환",en:"Rt. Internal Carotid Artery,Lt. Internal Carotid Artery,Rt. Middle Cerebral Artery,Lt. Middle Cerebral Artery,Rt. Anterior Cerebral Artery,Lt. Anterior Cerebral Artery,Rt. Posterior Cerebral Artery,Lt. Posterior Cerebral Artery,Rt. Vertebral Artery,Lt. Vertebral Artery,Basilar Artery,Circle of Willis"},
     "Neck":           {ko:"갑상선,림프절,혈관,연부조직",en:"Thyroid,Lymph Nodes,Vessels,Soft Tissue"},
     "C-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
     "T-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
@@ -526,9 +534,7 @@ function App(){
     const isXray=modality==="X-ray";
     const organs=organMap[bodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
     const contrastStr=contrastOptions?getContrastLabel():"N/A";
-    const patientCtx=[
-      patientSex!=="선택 안 함"&&`Sex: ${patientSex}`,
-    ].filter(Boolean).join(" | ");
+    const patientCtx=[].filter(Boolean).join(" | ");
     const measCtx=keyMeasurements?`\nKey Measurements: ${keyMeasurements}`:"";
     const ddxCtx=differentialDx?`\nClinician's DDx: ${differentialDx}`:"";
 
@@ -551,7 +557,7 @@ Language: ${langInstr}
 Contrast: ${contrastStr} — reflect accurately in technique.
 ${tone==="concise"?"CONCISE MODE: 1 short sentence per organ. Impression: specific diagnosis per finding.":""}
 ${format==="structured"
-  ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${bodypart}: ${organs}. Include ALL.${tone==="concise"?" Omit normal organs not mentioned in raw input.":""}`
+  ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${bodypart}: ${organs}. Include ALL.${bodypart==="MRA"?" CRITICAL: Every vessel listed above MUST appear as a separate organ entry — never omit any vessel even if not explicitly mentioned in raw input. For vessels with no abnormality, write normal/unremarkable.":tone==="concise"?" Omit normal organs not mentioned in raw input.":""}`
   :format==="bullet"
   ?`"findings" is a plain string. Each item on its own NEW LINE starting with •. Never combine multiple items on one line.`
   :`"findings" is a single flowing prose paragraph. Do NOT use arrays or bullet points.`}
@@ -668,7 +674,7 @@ Generate a professional radiology report as JSON.`;
     }finally{
       setLoading(false);
     }
-  },[apiKey,apiOk,selectedModel,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,urgency,lang,patientSex,differentialDx,keyMeasurements]);
+  },[apiKey,apiOk,selectedModel,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,urgency,lang,differentialDx,keyMeasurements]);
 
   /* ── COPY ── */
   const getCopyText=()=>{
@@ -905,11 +911,7 @@ Generate a professional radiology report as JSON.`;
                         <SegBtn options={contrastOptions} value={contrast} onChange={setContrast}/>
                       </Field>
                     )}
-                    <Field label="SEX" hint="optional">
-                      <select className="field-input" style={{cursor:"pointer"}} value={patientSex} onChange={e=>setPatientSex(e.target.value)}>
-                        {SEX_OPTIONS.map(s=><option key={s}>{s}</option>)}
-                      </select>
-                    </Field>
+
                     <div style={{gridColumn:"1/-1"}}>
                       <Field label="BODY REGION">
                         <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:2}}>
@@ -1055,7 +1057,7 @@ Generate a professional radiology report as JSON.`;
                       </span>
                     );
                   })()}
-                  {patientSex!=="선택 안 함"&&<span style={{fontFamily:mono,fontSize:9,color:C.dim}}>{patientSex}</span>}
+
                 </div>
 
               </div>
