@@ -134,6 +134,43 @@ const MAMMO_ASSESSMENT=[
   {value:"5","label":"5. 기존유방암 환자"},
 ];
 const MODALITIES=["CT","MRI","X-ray","Ultrasound","PET-CT","Mammography","Fluoroscopy"];
+const AUTO_DETECT_MODALITIES=["CT","MRI","Ultrasound"];
+
+/* ── BODY REGION AUTO-DETECT ── */
+const REGION_KEYWORDS={
+  "Brain":        /brain|cerebr|infarct|hemorrhag|bleed|edema|뇌|경색|출혈|부종|두개|뇌실|뇌간|소뇌|백질|회백질/i,
+  "MRA":          /MRA|aneurysm|stenosis.*arteri|arteri.*stenosis|ICA|MCA|ACA|PCA|basilar|vertebral.*arter|Willis|동맥류|협착.*동맥|내경동맥|중대뇌동맥|전대뇌동맥|후대뇌동맥|추골동맥|기저동맥/i,
+  "Neck":         /thyroid|lymph node|neck|갑상선|림프절|경부/i,
+  "Paranasal Sinus":/sinus|mucosal|부비동|점막|상악동|사골동|접형동|전두동/i,
+  "C-spine":      /cervical spine|c-spine|c[\s-]?spine|C[1-7]|경추|목뼈/i,
+  "T-spine":      /thoracic spine|t-spine|t[\s-]?spine|T[1-9]|T1[0-2]|흉추|등뼈/i,
+  "L-spine":      /lumbar spine|l-spine|l[\s-]?spine|L[1-5]|요추|허리뼈|disc.*herniation|herniated.*disc|추간판|요추간판/i,
+  "Chest":        /lung|lobe|consolidat|pneumonia|pleural|effusion|mediastin|pericardi|trachea|bronch|aorta|폐|흉막|삼출|종격|기관|기관지|대동맥|심낭|흉부/i,
+  "Abdomen":      /liver|gallbladder|bile|pancreas|spleen|adrenal|kidney|bowel|peritoneum|hepat|간|담낭|담도|췌장|비장|부신|신장|장|복막/i,
+  "Pelvis":       /bladder|uterus|ovary|ovaries|prostate|rectum|pelvis|pelvic|방광|자궁|난소|전립선|직장|골반/i,
+  "Abdomen & Pelvis":/abdomen.*pelvis|pelvis.*abdomen|복부.*골반|골반.*복부/i,
+  "Shoulder":     /shoulder|rotator|cuff|labrum|어깨|회전근개|관절순/i,
+  "Elbow":        /elbow|팔꿈치/i,
+  "Wrist":        /wrist|carpal|손목|수근/i,
+  "Knee":         /knee|menisci|meniscus|ACL|PCL|MCL|LCL|무릎|반월판|십자인대/i,
+  "Hip":          /hip|femoral head|acetabul|고관절|대퇴골두|비구/i,
+  "Ankle":        /ankle|achilles|발목|아킬레스/i,
+};
+
+function detectBodyRegion(text,currentBodypart,forceDetect=false){
+  if(!text||text.trim().length<10) return null;
+  const scores={};
+  for(const [region,pattern] of Object.entries(REGION_KEYWORDS)){
+    const matches=text.match(new RegExp(pattern.source,"gi"));
+    if(matches) scores[region]=(scores[region]||0)+matches.length;
+  }
+  if(Object.keys(scores).length===0) return null;
+  const best=Object.entries(scores).sort((a,b)=>b[1]-a[1])[0];
+  if(best[0]===currentBodypart) return null;
+  // forceDetect면 임계값 없이 최선값 반환, 아니면 점수 2 이상만
+  if(!forceDetect&&best[1]<2) return null;
+  return best[0];
+}
 const FORMAT_OPTIONS=[{value:"structured",icon:"⊞",label:"STRUCTURED"},{value:"narrative",icon:"≡",label:"NARRATIVE"},{value:"bullet",icon:"∷",label:"BULLET"}];
 const TONE_OPTIONS=[{value:"formal",label:"FORMAL"},{value:"concise",label:"CONCISE"},{value:"detailed",label:"DETAILED"},{value:"clinical",label:"CLINICAL"}];
 const URGENCY_OPTIONS=[{value:"routine",label:"Routine",color:"#4ade80"},{value:"urgent",label:"Urgent",color:"#fbbf24"},{value:"critical",label:"Critical",color:"#f87171"}];
@@ -532,7 +569,13 @@ function App(){
 
     const isKo=lang==="ko";
     const isXray=modality==="X-ray";
-    const organs=organMap[bodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
+    const isAutoDetect=AUTO_DETECT_MODALITIES.includes(modality);
+
+    // body region 자동 감지 — autoDetect modality는 강제 적용, 나머지는 점수 기반
+    const autoRegion=(!isMammo&&!isXray)?detectBodyRegion(finding+"\n"+(clinicalInfo||"")+(indication||""),bodypart,isAutoDetect):null;
+    const effectiveBodypart=autoRegion||bodypart;
+
+    const organs=organMap[effectiveBodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
     const contrastStr=contrastOptions?getContrastLabel():"N/A";
     const patientCtx=[].filter(Boolean).join(" | ");
     const measCtx=keyMeasurements?`\nKey Measurements: ${keyMeasurements}`:"";
@@ -557,7 +600,7 @@ Language: ${langInstr}
 Contrast: ${contrastStr} — reflect accurately in technique.
 ${tone==="concise"?"CONCISE MODE: 1 short sentence per organ. Impression: specific diagnosis per finding.":""}
 ${format==="structured"
-  ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${bodypart}: ${organs}. Include ALL.${bodypart==="MRA"?" CRITICAL: Every vessel listed above MUST appear as a separate organ entry — never omit any vessel even if not explicitly mentioned in raw input. For vessels with no abnormality, write normal/unremarkable.":tone==="concise"?" Omit normal organs not mentioned in raw input.":""}`
+  ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${effectiveBodypart}: ${organs}. Include ALL.${effectiveBodypart==="MRA"?" CRITICAL: Every vessel listed above MUST appear as a separate organ entry — never omit any vessel even if not explicitly mentioned in raw input. For vessels with no abnormality, write normal/unremarkable.":tone==="concise"?" Omit normal organs not mentioned in raw input.":""}`
   :format==="bullet"
   ?`"findings" is a plain string. Each item on its own NEW LINE starting with •. Never combine multiple items on one line.`
   :`"findings" is a single flowing prose paragraph. Do NOT use arrays or bullet points.`}
@@ -587,7 +630,7 @@ Return ONLY raw JSON:
 추가검사 권고: ${mammoAddlTest?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다.":"해당없음"}`:"";
 
     const userMsg=`Modality: ${modality}
-Body Part: ${bodypart}
+Body Part: ${effectiveBodypart}
 Exam Date: ${examDate}
 Contrast: ${contrastStr}
 Urgency: ${urgency}
@@ -642,8 +685,8 @@ Generate a professional radiology report as JSON.`;
       try{parsed=JSON.parse(clean);}
       catch{
         parsed=isXray
-          ?{technique:`X-ray ${bodypart}`,summary:raw,recommendation:null}
-          :{technique:`${modality} of ${bodypart}`,comparison:isKo?"이전 검사 없음":"No prior studies",findings:raw,impression:[isKo?"임상 소견과 비교 검토 요망.":"Correlate clinically."],recommendation:null};
+          ?{technique:`X-ray ${effectiveBodypart}`,summary:raw,recommendation:null}
+          :{technique:`${modality} of ${effectiveBodypart}`,comparison:isKo?"이전 검사 없음":"No prior studies",findings:raw,impression:[isKo?"임상 소견과 비교 검토 요망.":"Correlate clinically."],recommendation:null};
       }
       if(isXray){
         if(!parsed.summary) parsed.summary=parsed.findings?(Array.isArray(parsed.findings)?parsed.findings.map(f=>f.finding||String(f)).join(" "):String(parsed.findings)):(isKo?"소견을 확인하세요.":"Please review findings.");
@@ -663,10 +706,11 @@ Generate a professional radiology report as JSON.`;
         }
         if(!Array.isArray(parsed.impression)) parsed.impression=parsed.impression?[String(parsed.impression)]:[isKo?"임상 소견과 비교 검토 요망.":"Correlate clinically."];
       }
+      parsed._bodypart=effectiveBodypart;
       setReport(parsed);
       // save to history
       setHistory(h=>[{
-        id:Date.now(),date:examDate,modality,bodypart,
+        id:Date.now(),date:examDate,modality,bodypart:effectiveBodypart,
         urgency,lang,report:parsed,
       },...h.slice(0,49)]);
     }catch(e){
@@ -916,20 +960,29 @@ Generate a professional radiology report as JSON.`;
                     )}
 
                     <div style={{gridColumn:"1/-1"}}>
-                      <Field label="BODY REGION">
-                        <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:2}}>
-                          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                            {Object.keys(activeBodyParts).map(cat=>(
-                              <Tag key={cat} active={selCat===cat} onClick={()=>{setSelCat(cat);setBodypart(activeBodyParts[cat][0]);}}>{cat}</Tag>
-                            ))}
+                      {AUTO_DETECT_MODALITIES.includes(modality)?(
+                        <Field label="BODY REGION">
+                          <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:8,background:"rgba(34,211,238,0.04)",border:`1px solid rgba(34,211,238,0.2)`}}>
+                            <span style={{fontSize:11}}>🔍</span>
+                            <span style={{fontFamily:mono,fontSize:10,color:C.dim,letterSpacing:0.5}}>findings 입력 후 자동 감지</span>
                           </div>
-                          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                            {(activeBodyParts[selCat]||[]).map(bp=>(
-                              <Tag key={bp} active={bodypart===bp} color={C.accent2} onClick={()=>setBodypart(bp)}>{bp}</Tag>
-                            ))}
+                        </Field>
+                      ):(
+                        <Field label="BODY REGION">
+                          <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:2}}>
+                            <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                              {Object.keys(activeBodyParts).map(cat=>(
+                                <Tag key={cat} active={selCat===cat} onClick={()=>{setSelCat(cat);setBodypart(activeBodyParts[cat][0]);}}>{cat}</Tag>
+                              ))}
+                            </div>
+                            <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                              {(activeBodyParts[selCat]||[]).map(bp=>(
+                                <Tag key={bp} active={bodypart===bp} color={C.accent2} onClick={()=>setBodypart(bp)}>{bp}</Tag>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      </Field>
+                        </Field>
+                      )}
                     </div>
                     <div style={{gridColumn:"1/-1"}}>
                       <Field label="URGENCY">
@@ -1035,6 +1088,16 @@ Generate a professional radiology report as JSON.`;
                   </div>{/* /COL 3 */}
                 </div>{/* /3-col grid */}
 
+                {report&&report._bodypart&&report._bodypart!==bodypart&&(
+                  <div style={{padding:"8px 14px",borderRadius:8,background:"rgba(34,211,238,0.06)",border:`1px solid rgba(34,211,238,0.3)`,display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:12}}>🔍</span>
+                    <span style={{fontFamily:mono,fontSize:10,color:C.accent,letterSpacing:0.5}}>
+                      Body region auto-detected: <strong>{report._bodypart}</strong>
+                      {!AUTO_DETECT_MODALITIES.includes(modality)&&<span style={{color:C.dim,marginLeft:6}}>(선택값 "{bodypart}" 대신 적용됨)</span>}
+                    </span>
+                  </div>
+                )}
+
                 <button onClick={generate} disabled={loading||!apiOk} className="btn-primary" aria-busy={loading} style={{padding:"var(--sp-sm) var(--sp-lg)",fontSize:"var(--fs-sm)",width:"100%",marginTop:4}}>
                   {loading?"ANALYZING…":"⟶  Generate Report"}
                 </button>
@@ -1050,7 +1113,7 @@ Generate a professional radiology report as JSON.`;
                 <div style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,marginBottom:3}}>OUTPUT REPORT</div>
                 <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
                   <span style={{fontFamily:"'Sora',sans-serif",fontSize:"var(--fs-lg)",fontWeight:600,color:C.bright}}>
-                    {modality}{contrastOptions?` · ${getContrastLabel()}`:""} · {bodypart}
+                    {modality}{contrastOptions?` · ${getContrastLabel()}`:""} · {report?report._bodypart||bodypart:bodypart}
                   </span>
                   {urgency!=="routine"&&(()=>{
                     const uc=URGENCY_OPTIONS.find(u=>u.value===urgency);
