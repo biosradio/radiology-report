@@ -14,12 +14,12 @@
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
   :root{
-    --fs-xs:clamp(8px,0.7vw,10px);
-    --fs-sm:clamp(10px,0.85vw,12px);
-    --fs-md:clamp(12px,1vw,14px);
-    --fs-lg:clamp(14px,1.2vw,16px);
-    --fs-xl:clamp(20px,2vw,28px);
-    --fs-2xl:clamp(24px,2.5vw,36px);
+    --fs-xs:clamp(10px,0.85vw,12px);
+    --fs-sm:clamp(12px,1vw,14px);
+    --fs-md:clamp(14px,1.1vw,16px);
+    --fs-lg:clamp(16px,1.3vw,18px);
+    --fs-xl:clamp(22px,2.2vw,30px);
+    --fs-2xl:clamp(26px,2.7vw,38px);
     --sp-xs:clamp(4px,0.4vw,6px);
     --sp-sm:clamp(8px,0.7vw,12px);
     --sp-md:clamp(12px,1vw,18px);
@@ -35,7 +35,8 @@
     --tr-btn:transform 0.2s ease,box-shadow 0.2s ease,background 0.2s ease,color 0.2s ease;
     --tr-ui:background 0.2s ease,color 0.2s ease,border-color 0.2s ease;
   }
-  body{background:#f0f4f8;color:#1e293b;font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:var(--fs-md);min-height:100vh;overflow-x:hidden;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  body{background:#f0f4f8;color:#1e293b;font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:var(--fs-md);min-height:100vh;overflow-x:hidden;width:100%;max-width:100vw;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  #root{width:100%;max-width:100vw;overflow-x:hidden;}
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
@@ -75,12 +76,17 @@
   .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(3,105,161,0.35);}
   .btn-primary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
   .btn-primary:disabled{background:#e2e8f0;color:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none;border:1px solid #e2e8f0;}
-  .panel{background:#ffffff;border:1px solid #e2e8f0;border-radius:var(--radius);box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+  .panel{background:#ffffff;border:1px solid #e2e8f0;border-radius:var(--radius);box-shadow:0 1px 4px rgba(0,0,0,0.06);width:100%;box-sizing:border-box;overflow:hidden;}
+  *{min-width:0;}
   .tab-btn{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;transition:var(--tr-ui);}
   .tab-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .icon-btn{display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.15s ease,color 0.15s ease,background 0.15s ease;}
   .icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   textarea.field-input{resize:vertical;line-height:1.7;}
+  .panel{overflow:hidden;}
+  @media(max-width:600px){
+    .field-input{font-size:16px !important;} /* iOS zoom 방지 */
+  }
 </style>
 </head>
 <body>
@@ -255,31 +261,33 @@ function Tag({children,color,active,onClick}){
   const c=color||C.accent;
   return(
     <button onClick={onClick} style={{
-      padding:"4px 10px",borderRadius:20,
+      padding:"4px 8px",borderRadius:20,
       border:`1px solid ${active?c:C.border}`,
       background:active?`${c}20`:"transparent",
       color:active?c:C.dim,
-      fontFamily:mono,fontSize:10,fontWeight:700,letterSpacing:0.8,
-      cursor:"pointer",transition:"color 0.15s ease,background 0.15s ease,border-color 0.15s ease",whiteSpace:"nowrap",
+      fontFamily:mono,fontSize:10,fontWeight:700,letterSpacing:0.5,
+      cursor:"pointer",transition:"color 0.15s ease,background 0.15s ease,border-color 0.15s ease",
+      wordBreak:"keep-all",overflowWrap:"anywhere",textAlign:"center",lineHeight:1.3,
     }}>{children}</button>
   );
 }
 
 function SegBtn({options,value,onChange,small}){
   return(
-    <div style={{display:"flex",background:"#f1f5f9",borderRadius:8,padding:3,border:`1px solid ${C.border}`,gap:2}}>
+    <div style={{display:"flex",background:"#f1f5f9",borderRadius:8,padding:3,border:`1px solid ${C.border}`,gap:2,minWidth:0,width:"100%"}}>
       {options.map(opt=>{
         const active=value===opt.value;
         return(
           <button key={opt.value} onClick={()=>onChange(opt.value)} style={{
-            flex:1,padding:small?"5px 6px":"7px 10px",borderRadius:6,border:"none",cursor:"pointer",
-            fontFamily:mono,fontSize:small?9:10,fontWeight:700,letterSpacing:1,
+            flex:1,minWidth:0,padding:small?"5px 4px":"7px 6px",borderRadius:6,border:"none",cursor:"pointer",
+            fontFamily:mono,fontSize:small?9:10,fontWeight:700,letterSpacing:0.5,
             transition:"color 0.2s ease,background 0.2s ease,box-shadow 0.2s ease",
             background:active?C.accent:"transparent",
             color:active?"#ffffff":C.dim,
             boxShadow:active?`0 2px 8px ${C.accentGlow}`:"none",
+            overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",
           }}>
-            {opt.icon&&<span style={{marginRight:4}}>{opt.icon}</span>}{opt.label}
+            {opt.icon&&<span style={{marginRight:3}}>{opt.icon}</span>}{opt.label}
           </button>
         );
       })}
@@ -838,40 +846,42 @@ Generate a professional radiology report as JSON.`;
         </div>
       )}
 
-      <div style={{position:"relative",zIndex:1,maxWidth:"min(1440px,97vw)",margin:"0 auto",padding:"var(--sp-lg) var(--sp-md) var(--sp-xl)"}}>
+      <div style={{position:"relative",zIndex:1,maxWidth:"min(1440px,100vw)",width:"100%",margin:"0 auto",padding:"var(--sp-lg) clamp(8px,3vw,24px) var(--sp-xl)",boxSizing:"border-box"}}>
 
         {/* ── HEADER ── */}
-        <div style={{marginBottom:24,display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:16}}>
-          <div>
-            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-              <div style={{width:28,height:28,borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.accent2})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>⚕</div>
-              <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.accent,letterSpacing:3,fontWeight:700}}>RADIOLOGY AI</span>
-              <span style={{fontFamily:mono,fontSize:9,background:"rgba(99,102,241,0.1)",border:`1px solid ${C.accent2}40`,padding:"2px 8px",borderRadius:20,letterSpacing:1,color:C.accent2}}>PRO</span>
+        <div style={{marginBottom:24,display:"flex",flexDirection:"column",gap:12}}>
+          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+            <div>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                <div style={{width:28,height:28,borderRadius:8,background:`linear-gradient(135deg,${C.accent},${C.accent2})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>⚕</div>
+                <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.accent,letterSpacing:3,fontWeight:700}}>RADIOLOGY AI</span>
+                <span style={{fontFamily:mono,fontSize:9,background:"rgba(99,102,241,0.1)",border:`1px solid ${C.accent2}40`,padding:"2px 8px",borderRadius:20,letterSpacing:1,color:C.accent2}}>PRO</span>
+              </div>
+              <h1 style={{fontFamily:"'Sora',sans-serif",fontSize:"var(--fs-2xl)",fontWeight:700,color:C.bright,letterSpacing:"-1px",lineHeight:1.1,marginBottom:4}}>
+                RadReport<span style={{color:C.accent}}>.</span>
+              </h1>
+              <p style={{color:C.dim,fontSize:"var(--fs-sm)"}}>AI-powered radiology report generator — powered by Gemini</p>
             </div>
-            <h1 style={{fontFamily:"'Sora',sans-serif",fontSize:"var(--fs-2xl)",fontWeight:700,color:C.bright,letterSpacing:"-1px",lineHeight:1.1,marginBottom:4}}>
-              RadReport<span style={{color:C.accent}}>.</span>
-            </h1>
-            <p style={{color:C.dim,fontSize:"var(--fs-sm)"}}>AI-powered radiology report generator — powered by Gemini</p>
           </div>
 
-          {/* API Key */}
-          <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-            <div style={{position:"relative"}}>
+          {/* API Key — 모바일에서 전체 폭 */}
+          <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",width:"100%"}}>
+            <div style={{position:"relative",flex:"1 1 180px",minWidth:0}}>
               <input type="password" name="gemini-api-key" autoComplete="off" spellCheck={false} placeholder="AIza… (Gemini API Key)"
                 value={apiKey} onChange={e=>setApiKey(e.target.value)}
                 className="field-input"
-                style={{width:"clamp(200px,20vw,300px)",fontSize:"var(--fs-xs)",fontFamily:mono,paddingRight:36,borderColor:apiOk?C.green:undefined}}/>
+                style={{width:"100%",fontSize:"var(--fs-xs)",fontFamily:mono,paddingRight:36,borderColor:apiOk?C.green:undefined}}/>
               <span style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",fontSize:10}}>{apiOk?"🟢":"🔴"}</span>
             </div>
+            <StatusBadge ok={apiOk}/>
             {apiOk&&(
               <select id="select-model" name="model" value={selectedModel} onChange={e=>setSelectedModel(e.target.value)} style={{
                 background:"#f8fafc",border:`1px solid ${C.border}`,color:C.bright,
-                fontFamily:mono,fontSize:10,padding:"7px 10px",borderRadius:8,outline:"none",cursor:"pointer",
+                fontFamily:mono,fontSize:10,padding:"7px 10px",borderRadius:8,outline:"none",cursor:"pointer",flex:"1 1 auto",minWidth:0,
               }}>
                 {KNOWN_MODELS.map(m=><option key={m} value={m}>{m}</option>)}
               </select>
             )}
-            <StatusBadge ok={apiOk}/>
           </div>
         </div>
 
@@ -965,22 +975,19 @@ Generate a professional radiology report as JSON.`;
                 <div className="panel" style={{padding:"var(--sp-md)"}}>
                   <Divider label="STUDY INFORMATION"/>
                   <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                    <Field label="EXAM DATE">
-                      <div className="field-input" style={{display:"flex",alignItems:"center",gap:8,cursor:"default",userSelect:"none"}}>
-                        <span style={{opacity:0.4,fontSize:11}}>📅</span>
-                        <span style={{fontFamily:mono,fontSize:12,fontWeight:700,color:C.bright}}>{examDate}</span>
-                        <span style={{fontFamily:mono,fontSize:9,color:C.accent,marginLeft:"auto",letterSpacing:1}}>AUTO</span>
-                      </div>
-                    </Field>
-                    <Field label="MODALITY" htmlFor="select-modality">
-                      <select id="select-modality" name="modality" className="field-input" style={{cursor:"pointer"}} value={modality} onChange={e=>handleModalityChange(e.target.value)}>
-                        {MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}
-                      </select>
-                    </Field>
-                    {contrastOptions&&(
-                      <Field label={modality==="MRI"?"CONTRAST AGENT":"CONTRAST"} style={{gridColumn:"1/-1"}}>
-                        <SegBtn options={contrastOptions} value={contrast} onChange={setContrast}/>
+                    <div style={{gridColumn:"1/-1"}}>
+                      <Field label="MODALITY" htmlFor="select-modality">
+                        <select id="select-modality" name="modality" className="field-input" style={{cursor:"pointer"}} value={modality} onChange={e=>handleModalityChange(e.target.value)}>
+                          {MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}
+                        </select>
                       </Field>
+                    </div>
+                    {contrastOptions&&(
+                      <div style={{gridColumn:"1/-1"}}>
+                        <Field label={modality==="MRI"?"CONTRAST AGENT":"CONTRAST"}>
+                          <SegBtn options={contrastOptions} value={contrast} onChange={setContrast}/>
+                        </Field>
+                      </div>
                     )}
 
                     <div style={{gridColumn:"1/-1"}}>
@@ -1007,15 +1014,6 @@ Generate a professional radiology report as JSON.`;
                           </div>
                         </Field>
                       )}
-                    </div>
-                    <div style={{gridColumn:"1/-1"}}>
-                      <Field label="URGENCY">
-                        <div style={{display:"flex",gap:8,marginTop:2}}>
-                          {URGENCY_OPTIONS.map(u=>(
-                            <Tag key={u.value} active={urgency===u.value} color={u.color} onClick={()=>setUrgency(u.value)}>{u.label}</Tag>
-                          ))}
-                        </div>
-                      </Field>
                     </div>
                   </div>
                 </div>
@@ -1083,23 +1081,29 @@ Generate a professional radiology report as JSON.`;
                       <SegBtn options={TONE_OPTIONS} value={tone} onChange={setTone} small/>
                     </Field>
 
-                    <div style={{gridColumn:"1/-1"}}>
-                      <Field label="LANGUAGE">
-                        <div style={{display:"flex",alignItems:"center",gap:12,marginTop:2}}>
-                          <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="en"?C.accent:C.dim,transition:"color 0.2s"}}>ENG</span>
-                          <div onClick={()=>setLang(l=>l==="en"?"ko":"en")} style={{
-                            width:52,height:28,borderRadius:14,cursor:"pointer",position:"relative",
-                            background:lang==="ko"?C.accent:"#cbd5e1",
-                            border:`1px solid ${lang==="ko"?C.accent:"#cbd5e1"}`,
-                            transition:"background 0.25s,border-color 0.25s",
-                            boxShadow:lang==="ko"?`0 2px 8px ${C.accentGlow}`:"none",
-                          }}>
-                            <div style={{position:"absolute",top:3,left:lang==="ko"?26:3,width:20,height:20,borderRadius:"50%",background:"#ffffff",transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.2)"}}/>
-                          </div>
-                          <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="ko"?C.accent:C.dim,transition:"color 0.2s"}}>한국어</span>
+                    <Field label="URGENCY">
+                      <div style={{display:"flex",gap:8,marginTop:2,flexWrap:"wrap"}}>
+                        {URGENCY_OPTIONS.map(u=>(
+                          <Tag key={u.value} active={urgency===u.value} color={u.color} onClick={()=>setUrgency(u.value)}>{u.label}</Tag>
+                        ))}
+                      </div>
+                    </Field>
+
+                    <Field label="LANGUAGE">
+                      <div style={{display:"flex",alignItems:"center",gap:12,marginTop:2}}>
+                        <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="en"?C.accent:C.dim,transition:"color 0.2s"}}>ENG</span>
+                        <div onClick={()=>setLang(l=>l==="en"?"ko":"en")} style={{
+                          width:52,height:28,borderRadius:14,cursor:"pointer",position:"relative",
+                          background:lang==="ko"?C.accent:"#cbd5e1",
+                          border:`1px solid ${lang==="ko"?C.accent:"#cbd5e1"}`,
+                          transition:"background 0.25s,border-color 0.25s",
+                          boxShadow:lang==="ko"?`0 2px 8px ${C.accentGlow}`:"none",
+                        }}>
+                          <div style={{position:"absolute",top:3,left:lang==="ko"?26:3,width:20,height:20,borderRadius:"50%",background:"#ffffff",transition:"left 0.25s",boxShadow:"0 1px 4px rgba(0,0,0,0.2)"}}/>
                         </div>
-                      </Field>
-                    </div>
+                        <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="ko"?C.accent:C.dim,transition:"color 0.2s"}}>한국어</span>
+                      </div>
+                    </Field>
                   </div>
                 </div>
 
