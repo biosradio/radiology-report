@@ -35,7 +35,7 @@
     --tr-btn:transform 0.08s ease,box-shadow 0.08s ease,background 0.08s ease,color 0.08s ease;
     --tr-ui:background 0.08s ease,color 0.08s ease,border-color 0.08s ease;
   }
-  body{background:#f0f4f8;color:#1e293b;font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:var(--fs-md);min-height:100vh;overflow-x:hidden;width:100%;max-width:100vw;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  body{background:linear-gradient(135deg,#e8f4fd 0%,#f0f4f8 40%,#eef2ff 100%);color:#1e293b;font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:var(--fs-md);min-height:100vh;overflow-x:hidden;width:100%;max-width:100vw;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
   #root{width:100%;max-width:100vw;overflow-x:hidden;}
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
@@ -255,20 +255,16 @@ function breakSentences(text){
 /* ── SMALL UI COMPONENTS ─────────────────── */
 function GridBg(){
   return(
-    <svg aria-hidden="true" style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0,opacity:1}} xmlns="http://www.w3.org/2000/svg">
+    <svg aria-hidden="true" style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}} xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(3,105,161,0.06)" strokeWidth="0.5"/>
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(3,105,161,0.1)" strokeWidth="0.7"/>
         </pattern>
-        <radialGradient id="fade" cx="50%" cy="30%" r="70%">
-          <stop offset="0%" stopColor="white" stopOpacity="1"/>
-          <stop offset="100%" stopColor="white" stopOpacity="0"/>
-        </radialGradient>
-        <mask id="mask"><rect width="100%" height="100%" fill="url(#fade)"/></mask>
       </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" mask="url(#mask)"/>
-      <ellipse cx="10%" cy="15%" rx="300" ry="200" fill="rgba(3,105,161,0.03)"/>
-      <ellipse cx="90%" cy="80%" rx="350" ry="250" fill="rgba(99,102,241,0.03)"/>
+      <rect width="100%" height="100%" fill="url(#grid)"/>
+      <ellipse cx="10%" cy="10%" rx="400" ry="300" fill="rgba(3,105,161,0.06)"/>
+      <ellipse cx="90%" cy="85%" rx="450" ry="300" fill="rgba(99,102,241,0.06)"/>
+      <ellipse cx="50%" cy="50%" rx="500" ry="400" fill="rgba(14,165,233,0.03)"/>
     </svg>
   );
 }
@@ -545,6 +541,7 @@ function App(){
   const [urgency,setUrgency]=useState("routine");
   const [lang,setLang]=useState("ko");
   const [showClinicalExtra,setShowClinicalExtra]=useState(false);
+  const [historySearch,setHistorySearch]=useState("");
 
   // NEW fields
 
@@ -813,6 +810,7 @@ Generate a professional radiology report as JSON.`;
       setHistory(h=>[{
         id:Date.now(),date:examDate,modality,bodypart:effectiveBodypart,
         urgency,lang,report:parsed,
+        impression:Array.isArray(parsed.impression)?parsed.impression[0]:parsed.impression||"",
       },...h.slice(0,49)]);
     }catch(e){
       setError("오류: "+e.message);
@@ -993,16 +991,52 @@ Generate a professional radiology report as JSON.`;
                     }}>전체 삭제</button>
                   )}
                 </div>
-                {history.length===0?(
-                  <div style={{textAlign:"center",padding:"28px 0"}}>
-                    <p style={{fontFamily:mono,fontSize:11,color:C.dim,marginBottom:6}}>생성된 리포트가 없습니다</p>
-                    <p style={{fontFamily:mono,fontSize:9,color:C.dim,opacity:0.6}}>리포트 생성 시 자동으로 저장됩니다</p>
+
+                {/* 검색창 */}
+                {history.length>0&&(
+                  <div style={{position:"relative",marginBottom:10}}>
+                    <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:12,color:C.dim,pointerEvents:"none"}}>🔍</span>
+                    <input
+                      className="field-input"
+                      placeholder="modality, impression, 날짜로 검색…"
+                      value={historySearch}
+                      onChange={e=>setHistorySearch(e.target.value)}
+                      style={{paddingLeft:30,fontSize:"var(--fs-sm)"}}
+                    />
+                    {historySearch&&(
+                      <button onClick={()=>setHistorySearch("")} style={{
+                        position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",
+                        background:"none",border:"none",cursor:"pointer",color:C.dim,fontSize:14,lineHeight:1,
+                      }}>✕</button>
+                    )}
                   </div>
-                ):(
-                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {history.map(h=>{
-                      const uc=URGENCY_OPTIONS.find(u=>u.value===h.urgency);
-                      return(
+                )}
+
+                {(()=>{
+                  const q=historySearch.toLowerCase().trim();
+                  const filtered=q?history.filter(h=>
+                    h.modality?.toLowerCase().includes(q)||
+                    h.bodypart?.toLowerCase().includes(q)||
+                    h.date?.includes(q)||
+                    h.impression?.toLowerCase().includes(q)||
+                    h.urgency?.toLowerCase().includes(q)
+                  ):history;
+                  if(history.length===0) return(
+                    <div style={{textAlign:"center",padding:"28px 0"}}>
+                      <p style={{fontFamily:mono,fontSize:11,color:C.dim,marginBottom:6}}>생성된 리포트가 없습니다</p>
+                      <p style={{fontFamily:mono,fontSize:9,color:C.dim,opacity:0.6}}>리포트 생성 시 자동으로 저장됩니다</p>
+                    </div>
+                  );
+                  if(filtered.length===0) return(
+                    <div style={{textAlign:"center",padding:"20px 0"}}>
+                      <p style={{fontFamily:mono,fontSize:11,color:C.dim}}>"<strong>{historySearch}</strong>" 검색 결과 없음</p>
+                    </div>
+                  );
+                  return(
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      {filtered.map(h=>{
+                        const uc=URGENCY_OPTIONS.find(u=>u.value===h.urgency);
+                        return(
                         <div key={h.id} style={{position:"relative",borderRadius:10,border:`1px solid ${C.border}`,background:"#f8fafc",overflow:"hidden",transition:"border-color 0.08s"}}
                           onMouseEnter={e=>e.currentTarget.style.borderColor=C.borderHover}
                           onMouseLeave={e=>e.currentTarget.style.borderColor=C.border}>
@@ -1012,6 +1046,12 @@ Generate a professional radiology report as JSON.`;
                               <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:C.bright}}>{h.modality} · {h.bodypart}</span>
                               <span style={{fontFamily:mono,fontSize:9,color:uc?.color||C.dim,border:`1px solid ${uc?.color||C.dim}40`,padding:"1px 7px",borderRadius:10}}>{h.urgency.toUpperCase()}</span>
                             </div>
+                            {h.impression&&(
+                              <p style={{fontSize:"var(--fs-sm)",color:C.text,lineHeight:1.5,marginBottom:5,
+                                overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",
+                                fontFamily:"'Sora','IBM Plex Sans KR',system-ui,sans-serif",
+                              }}>{h.impression}</p>
+                            )}
                             <div style={{display:"flex",gap:12}}>
                               <span style={{fontFamily:mono,fontSize:9,color:C.dim}}>{h.date}</span>
                               <span style={{fontFamily:mono,fontSize:9,color:C.dim,marginLeft:"auto",opacity:0.5}}>{h.lang==="ko"?"KO":"EN"}</span>
@@ -1026,10 +1066,11 @@ Generate a professional radiology report as JSON.`;
                           onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(248,113,113,0.4)";e.currentTarget.style.color=C.red;}}
                           onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.color=C.dim;}}>✕</button>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             ):(
               <>
