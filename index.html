@@ -223,11 +223,11 @@ const MAMMO_PARTS={
   "Breast":["Both Breasts","Right Breast","Left Breast","Right Breast (Targeted)","Left Breast (Targeted)"],
 };
 const MAMMO_PARENCHYMA=[
-  {value:"A","label":"① 25% 미만"},
-  {value:"B","label":"② 25-50%"},
-  {value:"C","label":"③ 51-75%"},
-  {value:"D","label":"④ 76-100%"},
-  {value:"E","label":"⑤ 유방실질내 인공물질 주입"},
+  {value:"A", label:"① 25% 미만",       desc:"Almost entirely fatty breast (지방성 유방, 25% 미만)"},
+  {value:"B", label:"② 25-50%",         desc:"Scattered areas of fibroglandular density (산재성 섬유선조직 유방, 25-50%)"},
+  {value:"C", label:"③ 51-75%",         desc:"Heterogeneously dense breast (불균질 농축 유방, 51-75%)"},
+  {value:"D", label:"④ 76-100%",        desc:"Extremely dense breast (극도 농축 유방, 76-100%)"},
+  {value:"E", label:"⑤ 인공물질 주입",  desc:"Breast with implant (유방실질내 인공물질 주입)"},
 ];
 const MAMMO_FINDINGS_OPTIONS=[
   {value:"1","label":"이상소견 없음"},
@@ -524,9 +524,14 @@ function MammoPanel({
         <Field label="가. 유방실질분포량">
           <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
             {MAMMO_PARENCHYMA.map(p=>(
-              <button key={p.value} onClick={()=>setParenchyma(p.value)} style={selBtn(parenchyma===p.value,"#f472b6")}>{p.label}</button>
+              <button key={p.value} title={p.desc} onClick={()=>setParenchyma(p.value)} style={selBtn(parenchyma===p.value,"#f472b6")}>{p.label}</button>
             ))}
           </div>
+          {parenchyma&&(
+            <p style={{fontFamily:"'Sora',sans-serif",fontSize:"var(--fs-xs)",color:"#be185d",marginTop:4,fontStyle:"italic"}}>
+              → {MAMMO_PARENCHYMA.find(p=>p.value===parenchyma)?.desc}
+            </p>
+          )}
         </Field>
 
         {/* 나. 판독소견 */}
@@ -781,31 +786,41 @@ Return ONLY raw JSON:
 {"technique":"string","comparison":"string or null","findings":${format==="structured"?`[{"organ":"...","finding":"..."}]`:'"string"'},"impression":["..."],"urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`;
 
     const isMammoModality=modality==="Mammography";
-    const parenchymaLabel=mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma)?.label:"미입력";
+    const parenchymaEntry=mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma):null;
+    const parenchymaLabel=parenchymaEntry?.label||"미입력";
+    const parenchymaDesc=parenchymaEntry?.desc||"미입력";
     const mammoCtx=isMammoModality?`
 [유방검진 정보]
-유방실질분포량: ${parenchymaLabel}
+유방실질분포량: ${parenchymaDesc}
 판독소견: ${mammoFindings.length?mammoFindings.map(v=>{const f=MAMMO_FINDINGS_OPTIONS.find(o=>o.value===v);return v==="10"?`직접기입(${mammoFindingCustom||"미입력"})`:f?.label;}).join(", "):"미입력"}
 병변위치 오른쪽: ${mammoLocationR.length?mammoLocationR.join(", "):"없음"}
 병변위치 왼쪽: ${mammoLocationL.length?mammoLocationL.join(", "):"없음"}
 판정구분: ${mammoAssessment?MAMMO_ASSESSMENT.find(a=>a.value===mammoAssessment)?.label:"미입력"}
 추가검사 권고: ${mammoAddlTest?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다.":"해당없음"}`:"";
 
-    const mammoSystem=isMammoModality?`You are an expert breast radiologist. Generate a Korean mammography screening report in JSON.
-Language: Korean. Write ALL content in Korean.
+    const mammoLang=isKo
+      ? "Language: Korean. Write ALL text fields (technique, findings[].finding, impression[]) in Korean."
+      : "Language: English. Write ALL text fields (technique, findings[].finding, impression[]) in English only. Do NOT use Korean anywhere.";
+    const mammoTechniqueEx=isKo?"양측 유방 촬영술 (MLO, CC view)":"Bilateral mammography (MLO, CC view)";
+
+    const parenchymaOrgan=isKo?"유방실질분포량":"Breast Composition";
+
+    const mammoSystem=isMammoModality?`You are an expert breast radiologist. Generate a mammography screening report in JSON.
+${mammoLang}
 Tone: ${tone} | Urgency: ${urgency}
 
-CRITICAL RULES FOR MAMMOGRAPHY REPORT:
+CRITICAL RULES:
 1. "findings" MUST be a JSON array in this EXACT order:
-   - First entry: {"organ":"유방실질분포량","finding":"${parenchymaLabel||"기재 필요"}"}  ← ALWAYS include this as the FIRST item, using the exact value provided.
-   - Then entries for each breast region with findings.
-2. "technique": write as "양측 유방 촬영술 (MLO, CC view)" or appropriate view description.
-3. "impression": array of strings summarizing overall assessment and BI-RADS category if applicable.
+   - FIRST entry MUST be exactly: {"organ":"${parenchymaOrgan}","finding":"${parenchymaDesc}"} — NEVER omit or change this value.
+   - Then add entries for each breast region based on the clinical input provided.
+2. "technique": "${mammoTechniqueEx}" or appropriate view.
+3. "impression": array of strings with overall assessment.
 4. "comparison": null unless prior study mentioned.
-5. urgency_note: ${urgency!=="routine"?'"string — key finding only"':"null"}
+5. urgency_note: ${urgency!=="routine"?'"string"':"null"}
 6. recommendation: ${urgency!=="routine"?'"string"':"null"}
-Return ONLY raw JSON:
-{"technique":"string","comparison":null,"findings":[{"organ":"...","finding":"..."}],"impression":["..."],"urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`:"";
+Return ONLY raw JSON (no markdown, no explanation):
+{"technique":"...","comparison":null,"findings":[{"organ":"${parenchymaOrgan}","finding":"${parenchymaDesc}"},{"organ":"...","finding":"..."}],"impression":["..."],"urgency_note":${urgency!=="routine"?'"..."':"null"},"recommendation":${urgency!=="routine"?'"..."':"null"}}`:"";
+
     const userMsg=`Modality: ${modality}
 Body Part: ${effectiveBodypart}
 Exam Date: ${examDate}
@@ -818,7 +833,7 @@ ${measCtx}${ddxCtx}${mammoCtx}
 
 
 Raw Findings:
-${finding}
+${finding||(isMammoModality?"(위 유방검진 정보를 기반으로 판독 생성)":"(none)")}
 
 Generate a professional radiology report as JSON.`;
 
