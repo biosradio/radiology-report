@@ -544,6 +544,7 @@ function App(){
   const [tone,setTone]=useState("clinical");
   const [urgency,setUrgency]=useState("routine");
   const [lang,setLang]=useState("ko");
+  const [showClinicalExtra,setShowClinicalExtra]=useState(false);
 
   // NEW fields
 
@@ -1087,29 +1088,50 @@ Generate a professional radiology report as JSON.`;
                   <div style={{display:"flex",flexDirection:"column",gap:14}}>
                 {/* Clinical Input */}
                 <div className="panel" style={{padding:"var(--sp-md)"}}>
-                  <Divider label="CLINICAL INPUT"/>
-                  <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                    <Field label="CLINICAL INDICATION" hint="optional">
-                      <input className="field-input" name="indication" autoComplete="off" value={indication} onChange={e=>setIndication(e.target.value)} placeholder="R/O pneumonia, f/u after surgery…"/>
-                    </Field>
-                    <Field label="CLINICAL INFORMATION" hint="optional">
-                      <input className="field-input" name="clinical-info" autoComplete="off" value={clinicalInfo} onChange={e=>setClinicalInfo(e.target.value)} placeholder="증상, 병력, 검사실 소견…"/>
-                    </Field>
-                    <Field label="KEY MEASUREMENTS" hint="optional">
-                      <input className="field-input" name="measurements" autoComplete="off" value={keyMeasurements} onChange={e=>setKeyMeasurements(e.target.value)} placeholder="우폐 결절 1.2 cm, 간 좌엽 3.4 cm 병변…"/>
-                    </Field>
-                    <Field label="CLINICIAN'S DDx" hint="optional" accent>
-                      <input className="field-input" name="ddx" autoComplete="off" value={differentialDx} onChange={e=>setDifferentialDx(e.target.value)} placeholder="폐암 vs 전이 vs 염증성 병변…" style={{borderColor:differentialDx?`${C.accent}50`:undefined}}/>
-                    </Field>
-                    <div style={{gridColumn:"1/-1"}}>
-                      <Field label="FINDINGS / OBSERVATIONS" accent>
-                        <textarea className="field-input" name="findings" autoComplete="off"
-                          style={{height:"clamp(100px,12vh,180px)"}}
-                          placeholder={"소견을 자유롭게 입력하세요…\n\nExample:\n- RLL consolidation with air bronchogram\n- No pleural effusion\n- Heart size normal"}
-                          value={finding} onChange={e=>setFinding(e.target.value)}/>
+                  {/* 헤더 — 항상 표시 */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
+                      <div style={{flex:1,height:"1px",background:`linear-gradient(to right,${C.dim}30,transparent)`}}/>
+                      <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,fontWeight:700}}>CLINICAL INPUT</span>
+                      <div style={{flex:1,height:"1px",background:`linear-gradient(to left,${C.dim}30,transparent)`}}/>
+                    </div>
+                    <button onClick={()=>setShowClinicalExtra(v=>!v)} style={{
+                      marginLeft:10,padding:"2px 10px",borderRadius:20,border:`1px solid ${C.border}`,
+                      background:showClinicalExtra?C.accentDim:"transparent",
+                      color:showClinicalExtra?C.accent:C.dim,
+                      fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1,cursor:"pointer",
+                      transition:"background 0.08s,color 0.08s,border-color 0.08s",
+                      flexShrink:0,
+                    }}>
+                      {showClinicalExtra?"▲ 접기":"▼ 추가입력"}
+                    </button>
+                  </div>
+
+                  {/* 접히는 영역 — INDICATION / INFO / MEASUREMENTS / DDx */}
+                  {showClinicalExtra&&(
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10,paddingBottom:10,borderBottom:`1px solid ${C.border}`}}>
+                      <Field label="CLINICAL INDICATION" hint="optional">
+                        <input className="field-input" name="indication" autoComplete="off" value={indication} onChange={e=>setIndication(e.target.value)} placeholder="R/O pneumonia, f/u after surgery…"/>
+                      </Field>
+                      <Field label="CLINICAL INFORMATION" hint="optional">
+                        <input className="field-input" name="clinical-info" autoComplete="off" value={clinicalInfo} onChange={e=>setClinicalInfo(e.target.value)} placeholder="증상, 병력, 검사실 소견…"/>
+                      </Field>
+                      <Field label="KEY MEASUREMENTS" hint="optional">
+                        <input className="field-input" name="measurements" autoComplete="off" value={keyMeasurements} onChange={e=>setKeyMeasurements(e.target.value)} placeholder="우폐 결절 1.2 cm, 간 좌엽 3.4 cm 병변…"/>
+                      </Field>
+                      <Field label="CLINICIAN'S DDx" hint="optional" accent>
+                        <input className="field-input" name="ddx" autoComplete="off" value={differentialDx} onChange={e=>setDifferentialDx(e.target.value)} placeholder="폐암 vs 전이 vs 염증성 병변…" style={{borderColor:differentialDx?`${C.accent}50`:undefined}}/>
                       </Field>
                     </div>
-                  </div>
+                  )}
+
+                  {/* 항상 표시 — FINDINGS */}
+                  <Field label="FINDINGS / OBSERVATIONS" accent>
+                    <textarea className="field-input" name="findings" autoComplete="off"
+                      style={{height:"clamp(100px,12vh,180px)"}}
+                      placeholder={"소견을 자유롭게 입력하세요…\n\nExample:\n- RLL consolidation with air bronchogram\n- No pleural effusion\n- Heart size normal"}
+                      value={finding} onChange={e=>setFinding(e.target.value)}/>
+                  </Field>
                 </div>
 
                   </div>{/* /COL 2 */}
