@@ -97,6 +97,33 @@
   .seg-btn.seg-active{background:var(--accent);color:#ffffff;}
   .seg-btn.seg-inactive{background:transparent;color:#94a3b8;}
   .seg-btn.seg-inactive:hover{background:rgba(3,105,161,0.08);color:#1e293b;}
+  /* 커스텀 드롭다운 */
+  .custom-select-wrapper{position:relative;width:100%;}
+  .custom-select-btn{
+    width:100%;padding:var(--sp-xs) var(--sp-sm);padding-right:32px;
+    background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;
+    color:#0f172a;font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;
+    font-size:var(--fs-md);cursor:pointer;text-align:left;
+    box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    transition:border-color 0.08s ease,box-shadow 0.08s ease;
+    outline:none;display:flex;align-items:center;justify-content:space-between;
+  }
+  .custom-select-btn:hover{border-color:#94a3b8;}
+  .custom-select-btn:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(3,105,161,0.12);}
+  .custom-select-dropdown{
+    position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:999;
+    background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;
+    box-shadow:0 8px 24px rgba(0,0,0,0.12);overflow:hidden;
+    animation:fadeIn 0.1s ease;
+  }
+  .custom-select-option{
+    padding:10px 14px;cursor:pointer;font-size:var(--fs-md);
+    color:#1e293b;font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;
+    transition:background 0.05s ease;border:none;background:transparent;
+    width:100%;text-align:left;
+  }
+  .custom-select-option:hover{background:#f1f5f9;}
+  .custom-select-option.selected{background:rgba(3,105,161,0.08);color:var(--accent);font-weight:600;}
   @media(max-width:600px){
     .field-input{font-size:16px !important;}
   }
@@ -305,6 +332,34 @@ function SegBtn({options,value,onChange,small}){
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function CustomSelect({options,value,onChange,id}){
+  const [open,setOpen]=React.useState(false);
+  const ref=React.useRef(null);
+  React.useEffect(()=>{
+    const handler=(e)=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};
+    document.addEventListener("mousedown",handler);
+    return()=>document.removeEventListener("mousedown",handler);
+  },[]);
+  return(
+    <div className="custom-select-wrapper" ref={ref}>
+      <button id={id} className="custom-select-btn" onClick={()=>setOpen(o=>!o)} type="button">
+        <span>{value}</span>
+        <span style={{fontSize:10,color:"#94a3b8",transition:"transform 0.1s",display:"inline-block",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▼</span>
+      </button>
+      {open&&(
+        <div className="custom-select-dropdown">
+          {options.map(opt=>(
+            <button key={opt} className={`custom-select-option${value===opt?" selected":""}`}
+              onClick={()=>{onChange(opt);setOpen(false);}} type="button">
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -991,9 +1046,7 @@ Generate a professional radiology report as JSON.`;
                   <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                     <div style={{gridColumn:"1/-1"}}>
                       <Field label="MODALITY" htmlFor="select-modality">
-                        <select id="select-modality" name="modality" className="field-input" style={{cursor:"pointer"}} value={modality} onChange={e=>handleModalityChange(e.target.value)}>
-                          {MODALITIES.map(m=><option key={m} value={m}>{m}</option>)}
-                        </select>
+                        <CustomSelect id="select-modality" options={MODALITIES} value={modality} onChange={handleModalityChange}/>
                       </Field>
                     </div>
                     {contrastOptions&&(
