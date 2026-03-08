@@ -943,12 +943,9 @@ Generate a professional radiology report as JSON.`;
             </div>
             <StatusBadge ok={apiOk}/>
             {apiOk&&(
-              <select id="select-model" name="model" value={selectedModel} onChange={e=>setSelectedModel(e.target.value)} style={{
-                background:"#f8fafc",border:`1px solid ${C.border}`,color:C.bright,
-                fontFamily:mono,fontSize:10,padding:"7px 10px",borderRadius:8,outline:"none",cursor:"pointer",flex:"1 1 auto",minWidth:0,
-              }}>
-                {KNOWN_MODELS.map(m=><option key={m} value={m}>{m}</option>)}
-              </select>
+              <div style={{flex:"1 1 auto",minWidth:0}}>
+                <CustomSelect id="select-model" options={KNOWN_MODELS} value={selectedModel} onChange={setSelectedModel}/>
+              </div>
             )}
           </div>
         </div>
