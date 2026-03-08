@@ -84,8 +84,21 @@
   .icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   textarea.field-input{resize:vertical;line-height:1.7;}
   .panel{overflow:hidden;}
+  .seg-btn{
+    flex:1;min-width:0;border:none;cursor:pointer;border-radius:6px;
+    font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:0.5px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    transition:color 0.08s ease,background 0.08s ease,box-shadow 0.08s ease;
+    -webkit-user-select:none;user-select:none;
+    outline:none;
+  }
+  .seg-btn:focus{outline:none;}
+  .seg-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .seg-btn.seg-active{background:var(--accent);color:#ffffff;}
+  .seg-btn.seg-inactive{background:transparent;color:#94a3b8;}
+  .seg-btn.seg-inactive:hover{background:rgba(3,105,161,0.08);color:#1e293b;}
   @media(max-width:600px){
-    .field-input{font-size:16px !important;} /* iOS zoom 방지 */
+    .field-input{font-size:16px !important;}
   }
 </style>
 </head>
@@ -278,15 +291,16 @@ function SegBtn({options,value,onChange,small}){
       {options.map(opt=>{
         const active=value===opt.value;
         return(
-          <button key={opt.value} onClick={()=>onChange(opt.value)} style={{
-            flex:1,minWidth:0,padding:small?"5px 4px":"7px 6px",borderRadius:6,border:"none",cursor:"pointer",
-            fontFamily:mono,fontSize:small?9:10,fontWeight:700,letterSpacing:0.5,
-            transition:"color 0.08s ease,background 0.08s ease,box-shadow 0.08s ease",
-            background:active?C.accent:"transparent",
-            color:active?"#ffffff":C.dim,
-            boxShadow:active?`0 2px 8px ${C.accentGlow}`:"none",
-            overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",
-          }}>
+          <button
+            key={opt.value}
+            onClick={()=>onChange(opt.value)}
+            className={`seg-btn ${active?"seg-active":"seg-inactive"}`}
+            style={{
+              padding:small?"5px 4px":"7px 6px",
+              fontSize:small?9:10,
+              boxShadow:active?`0 2px 8px ${C.accentGlow}`:"none",
+            }}
+          >
             {opt.icon&&<span style={{marginRight:3}}>{opt.icon}</span>}{opt.label}
           </button>
         );
