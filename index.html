@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
   :root{
     --fs-xs:clamp(10px,0.85vw,12px);
@@ -20,12 +20,25 @@
     --fs-lg:clamp(16px,1.3vw,18px);
     --fs-xl:clamp(22px,2.2vw,30px);
     --fs-2xl:clamp(26px,2.7vw,38px);
+    /* 8px 배수 spacing 시스템 */
+    --sp-1:4px;
+    --sp-2:8px;
+    --sp-3:12px;
+    --sp-4:16px;
+    --sp-5:20px;
+    --sp-6:24px;
+    --sp-8:32px;
     --sp-xs:clamp(4px,0.4vw,6px);
     --sp-sm:clamp(8px,0.7vw,12px);
-    --sp-md:clamp(12px,1vw,18px);
-    --sp-lg:clamp(16px,1.4vw,24px);
-    --sp-xl:clamp(20px,1.8vw,32px);
-    --radius:clamp(8px,0.8vw,14px);
+    --sp-md:clamp(16px,1.2vw,20px);
+    --sp-lg:clamp(20px,1.6vw,28px);
+    --sp-xl:clamp(24px,2vw,36px);
+    /* 통일된 radius 시스템: 4/8/12/16 */
+    --r-sm:6px;
+    --r-md:10px;
+    --r-lg:14px;
+    --r-xl:18px;
+    --radius:var(--r-lg);
     --accent:#0369a1;
     --accent2:#6366f1;
     --green:#16a34a;
@@ -35,7 +48,18 @@
     --tr-btn:transform 0.08s ease,box-shadow 0.08s ease,background 0.08s ease,color 0.08s ease;
     --tr-ui:background 0.08s ease,color 0.08s ease,border-color 0.08s ease;
   }
-  body{background:linear-gradient(135deg,#e8f4fd 0%,#f0f4f8 40%,#eef2ff 100%);color:#1e293b;font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-size:var(--fs-md);min-height:100vh;overflow-x:hidden;width:100%;max-width:100vw;touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+  body{
+    background:#edf2f7;
+    color:#1e293b;
+    font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    font-size:var(--fs-md);
+    min-height:100vh;
+    overflow-x:hidden;
+    width:100%;max-width:100vw;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
   #root{width:100%;max-width:100vw;overflow-x:hidden;}
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
@@ -56,35 +80,50 @@
     color:#1e293b;
     font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;
     font-size:var(--fs-md);
-    padding:var(--sp-xs) var(--sp-sm);
-    border-radius:8px;
+    padding:8px 12px;
+    border-radius:var(--r-md);
     outline:none;
     transition:var(--tr-border);
     width:100%;
-    box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.04);
   }
-  .field-input:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(3,105,161,0.12);}
+  .field-input:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(3,105,161,0.12),inset 0 1px 2px rgba(0,0,0,0.04);}
   .field-input::placeholder{color:#94a3b8;}
   .btn-primary{
     background:linear-gradient(135deg,#0369a1 0%,#0284c7 100%);
     color:#ffffff;border:none;
     font-family:'JetBrains Mono',monospace;
     font-weight:800;letter-spacing:2px;cursor:pointer;
-    transition:var(--tr-btn);border-radius:var(--radius);
+    transition:var(--tr-btn);border-radius:var(--r-md);
     box-shadow:0 2px 8px rgba(3,105,161,0.25);
   }
   .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(3,105,161,0.35);}
   .btn-primary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
   .btn-primary:disabled{background:#e2e8f0;color:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none;border:1px solid #e2e8f0;}
-  .panel{background:#ffffff;border:1px solid #e2e8f0;border-radius:var(--radius);box-shadow:0 1px 4px rgba(0,0,0,0.06);width:100%;box-sizing:border-box;}
+  /* 패널: 층위(depth) 시스템 */
+  .panel{
+    background:#ffffff;
+    border:1px solid #e2e8f0;
+    border-radius:var(--r-lg);
+    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+    width:100%;box-sizing:border-box;
+  }
+  .panel-elevated{
+    background:#ffffff;
+    border:1px solid #dde3ec;
+    border-radius:var(--r-lg);
+    box-shadow:0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
+  }
   *{min-width:0;}
-  .tab-btn{padding:6px 14px;border-radius:6px;border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;transition:var(--tr-ui);}
+  /* 탭 버튼 - radius 통일 */
+  .tab-btn{padding:6px 16px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;transition:var(--tr-ui);}
   .tab-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .icon-btn{display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.08s ease,color 0.08s ease,background 0.08s ease;}
   .icon-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   textarea.field-input{resize:vertical;line-height:1.7;}
+  /* SegBtn - radius 통일 */
   .seg-btn{
-    flex:1;min-width:0;border:none;cursor:pointer;border-radius:6px;
+    flex:1;min-width:0;border:none;cursor:pointer;border-radius:var(--r-sm);
     font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:0.5px;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
     transition:color 0.08s ease,background 0.08s ease,box-shadow 0.08s ease;
@@ -93,17 +132,17 @@
   }
   .seg-btn:focus{outline:none;}
   .seg-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
-  .seg-btn.seg-active{background:var(--accent);color:#ffffff;}
+  .seg-btn.seg-active{background:var(--accent);color:#ffffff;box-shadow:0 1px 4px rgba(3,105,161,0.3);}
   .seg-btn.seg-inactive{background:transparent;color:#94a3b8;}
   .seg-btn.seg-inactive:hover{background:rgba(3,105,161,0.08);color:#1e293b;}
-  /* 커스텀 드롭다운 */
+  /* 커스텀 드롭다운 - radius 통일 */
   .custom-select-wrapper{position:relative;width:100%;}
   .custom-select-btn{
-    width:100%;padding:var(--sp-xs) var(--sp-sm);padding-right:32px;
-    background:#ffffff;border:1px solid #cbd5e1;border-radius:8px;
+    width:100%;padding:8px 12px;padding-right:32px;
+    background:#ffffff;border:1px solid #cbd5e1;border-radius:var(--r-md);
     color:#0f172a;font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;
     font-size:var(--fs-md);cursor:pointer;text-align:left;
-    box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.04);
     transition:border-color 0.08s ease,box-shadow 0.08s ease;
     outline:none;display:flex;align-items:center;justify-content:space-between;
   }
@@ -111,8 +150,9 @@
   .custom-select-btn:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(3,105,161,0.12);}
   .custom-select-dropdown{
     position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:999;
-    background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;
-    box-shadow:0 8px 24px rgba(0,0,0,0.12);overflow:hidden;
+    background:#ffffff;border:1px solid #e2e8f0;border-radius:var(--r-md);
+    box-shadow:0 8px 32px rgba(0,0,0,0.12),0 2px 8px rgba(0,0,0,0.06);
+    overflow:hidden;
     animation:fadeIn 0.1s ease;
   }
   .custom-select-option{
@@ -123,6 +163,42 @@
   }
   .custom-select-option:hover{background:#f1f5f9;}
   .custom-select-option.selected{background:rgba(3,105,161,0.08);color:var(--accent);font-weight:600;}
+  /* 섹션 레이블 - mono 사용 범위 제한, sans로 전환 */
+  .section-label{
+    font-family:'Sora',sans-serif;font-size:var(--fs-xs);
+    font-weight:600;letter-spacing:2px;color:#94a3b8;text-transform:uppercase;
+  }
+  /* 필드 레이블 - mono 유지하되 크기 조정 */
+  .field-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:1.5px;font-weight:700;
+    color:#64748b;text-transform:uppercase;
+  }
+  /* FINDINGS 패널 강조 - 주요 입력 */
+  .panel-findings{
+    background:#ffffff;
+    border:2px solid rgba(3,105,161,0.2);
+    border-radius:var(--r-lg);
+    box-shadow:0 2px 8px rgba(3,105,161,0.08),0 8px 24px rgba(3,105,161,0.05);
+    width:100%;box-sizing:border-box;
+  }
+  /* 히스토리 empty state */
+  .empty-state{
+    display:flex;flex-direction:column;align-items:center;
+    gap:12px;padding:40px 20px;text-align:center;
+  }
+  .empty-state-icon{
+    width:48px;height:48px;border-radius:var(--r-md);
+    background:rgba(3,105,161,0.06);border:1px solid rgba(3,105,161,0.1);
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+  @keyframes glow{0%,100%{box-shadow:0 0 12px rgba(3,105,161,0.15);}50%{box-shadow:0 0 24px rgba(3,105,161,0.3);}}
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;}
+  }
   @media(max-width:600px){
     .field-input{font-size:16px !important;}
   }
@@ -232,8 +308,8 @@ const CONTRAST_OPTIONS={
 };
 
 const C={
-  bg:"#f0f4f8",surface:"#ffffff",surface2:"#f8fafc",
-  border:"#e2e8f0",borderHover:"rgba(3,105,161,0.4)",
+  bg:"transparent",surface:"#ffffff",surface2:"#f8fafc",
+  border:"#dde3ec",borderHover:"rgba(3,105,161,0.4)",
   accent:"#0369a1",accent2:"#6366f1",
   accentDim:"rgba(3,105,161,0.08)",accentGlow:"rgba(3,105,161,0.2)",
   text:"#475569",dim:"#94a3b8",bright:"#0f172a",
@@ -257,14 +333,19 @@ function GridBg(){
   return(
     <svg aria-hidden="true" style={{position:"fixed",inset:0,width:"100%",height:"100%",pointerEvents:"none",zIndex:0}} xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(3,105,161,0.1)" strokeWidth="0.7"/>
+        <pattern id="grid-sm" width="24" height="24" patternUnits="userSpaceOnUse">
+          <path d="M 24 0 L 0 0 0 24" fill="none" stroke="rgba(3,105,161,0.06)" strokeWidth="0.5"/>
+        </pattern>
+        <pattern id="grid-lg" width="96" height="96" patternUnits="userSpaceOnUse">
+          <path d="M 96 0 L 0 0 0 96" fill="none" stroke="rgba(3,105,161,0.1)" strokeWidth="1"/>
         </pattern>
       </defs>
-      <rect width="100%" height="100%" fill="url(#grid)"/>
-      <ellipse cx="10%" cy="10%" rx="400" ry="300" fill="rgba(3,105,161,0.06)"/>
-      <ellipse cx="90%" cy="85%" rx="450" ry="300" fill="rgba(99,102,241,0.06)"/>
-      <ellipse cx="50%" cy="50%" rx="500" ry="400" fill="rgba(14,165,233,0.03)"/>
+      <rect width="100%" height="100%" fill="#e8f0f8"/>
+      <rect width="100%" height="100%" fill="url(#grid-sm)"/>
+      <rect width="100%" height="100%" fill="url(#grid-lg)"/>
+      <ellipse cx="15%" cy="10%" rx="500" ry="350" fill="rgba(3,105,161,0.07)"/>
+      <ellipse cx="85%" cy="90%" rx="600" ry="400" fill="rgba(99,102,241,0.06)"/>
+      <ellipse cx="60%" cy="40%" rx="400" ry="280" fill="rgba(14,165,233,0.04)"/>
     </svg>
   );
 }
@@ -273,19 +354,19 @@ function Divider({label,color}){
   const c=color||C.dim;
   return(
     <div style={{display:"flex",alignItems:"center",gap:10,margin:"4px 0"}}>
-      <div style={{flex:1,height:"1px",background:`linear-gradient(to right,${c}30,transparent)`}}/>
-      <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:c,letterSpacing:2,fontWeight:700}}>{label}</span>
-      <div style={{flex:1,height:"1px",background:`linear-gradient(to left,${c}30,transparent)`}}/>
+      <div style={{flex:1,height:"1px",background:`linear-gradient(to right,${c}25,transparent)`}}/>
+      <span className="section-label" style={{color:c}}>{label}</span>
+      <div style={{flex:1,height:"1px",background:`linear-gradient(to left,${c}25,transparent)`}}/>
     </div>
   );
 }
 
 function Field({label,children,hint,accent,htmlFor}){
   return(
-    <div style={{display:"flex",flexDirection:"column",gap:5}}>
+    <div style={{display:"flex",flexDirection:"column",gap:6}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <label htmlFor={htmlFor||undefined} style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:accent?C.accent:C.dim,letterSpacing:1.5,fontWeight:700}}>{label}</label>
-        {hint&&<span style={{fontFamily:mono,fontSize:9,color:C.dim,opacity:0.6}}>{hint}</span>}
+        <label htmlFor={htmlFor||undefined} className="field-label" style={{color:accent?C.accent:undefined}}>{label}</label>
+        {hint&&<span style={{fontFamily:mono,fontSize:9,color:C.dim,opacity:0.6,letterSpacing:0.5}}>{hint}</span>}
       </div>
       {children}
     </div>
@@ -875,7 +956,7 @@ Generate a professional radiology report as JSON.`;
 
   /* ── RENDER ── */
   return(
-    <div style={{minHeight:"100vh",background:C.bg,color:C.text,fontFamily:sans,position:"relative"}}>
+    <div style={{minHeight:"100vh",background:"transparent",color:C.text,fontFamily:sans,position:"relative"}}>
       <GridBg/>
 
       {/* Copy Modal */}
@@ -924,8 +1005,8 @@ Generate a professional radiology report as JSON.`;
                 <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.accent,letterSpacing:3,fontWeight:700}}>RADIOLOGY AI</span>
                 <span style={{fontFamily:mono,fontSize:9,background:"rgba(99,102,241,0.1)",border:`1px solid ${C.accent2}40`,padding:"2px 8px",borderRadius:20,letterSpacing:1,color:C.accent2}}>PRO</span>
               </div>
-              <h1 style={{fontFamily:"'Sora',sans-serif",fontSize:"var(--fs-2xl)",fontWeight:700,color:C.bright,letterSpacing:"-1px",lineHeight:1.1,marginBottom:4}}>
-                RadReport<span style={{color:C.accent}}>.</span>
+              <h1 style={{fontFamily:"'DM Serif Display',Georgia,serif",fontSize:"var(--fs-2xl)",fontWeight:400,color:C.bright,letterSpacing:"-0.5px",lineHeight:1.1,marginBottom:4}}>
+                RadReport<span style={{color:C.accent,fontStyle:"italic"}}>.</span>
               </h1>
               <p style={{color:C.dim,fontSize:"var(--fs-sm)"}}>AI-powered radiology report generator — powered by Gemini</p>
             </div>
@@ -950,10 +1031,10 @@ Generate a professional radiology report as JSON.`;
         </div>
 
         {/* ── MAIN GRID ── */}
-        <div style={{display:"flex",flexDirection:"column",gap:18}}>
+        <div style={{display:"flex",flexDirection:"column",gap:16}}>
 
           {/* TOP — INPUT + TABS */}
-          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          <div style={{display:"flex",flexDirection:"column",gap:16}}>
 
             {/* Tab Nav */}
             <div style={{display:"flex",gap:6,background:"#f8fafc",padding:4,borderRadius:10,border:`1px solid ${C.border}`}}>
@@ -1022,14 +1103,21 @@ Generate a professional radiology report as JSON.`;
                     h.urgency?.toLowerCase().includes(q)
                   ):history;
                   if(history.length===0) return(
-                    <div style={{textAlign:"center",padding:"28px 0"}}>
-                      <p style={{fontFamily:mono,fontSize:11,color:C.dim,marginBottom:6}}>생성된 리포트가 없습니다</p>
-                      <p style={{fontFamily:mono,fontSize:9,color:C.dim,opacity:0.6}}>리포트 생성 시 자동으로 저장됩니다</p>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">📋</div>
+                      <div>
+                        <p style={{fontFamily:sans,fontSize:"var(--fs-sm)",fontWeight:600,color:C.bright,marginBottom:4}}>저장된 리포트가 없습니다</p>
+                        <p style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim}}>리포트 생성 시 자동으로 저장됩니다</p>
+                      </div>
                     </div>
                   );
                   if(filtered.length===0) return(
-                    <div style={{textAlign:"center",padding:"20px 0"}}>
-                      <p style={{fontFamily:mono,fontSize:11,color:C.dim}}>"<strong>{historySearch}</strong>" 검색 결과 없음</p>
+                    <div className="empty-state">
+                      <div className="empty-state-icon">🔍</div>
+                      <div>
+                        <p style={{fontFamily:sans,fontSize:"var(--fs-sm)",fontWeight:600,color:C.bright,marginBottom:4}}>"<strong>{historySearch}</strong>" 검색 결과 없음</p>
+                        <p style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim}}>modality, impression, 날짜로 검색하세요</p>
+                      </div>
                     </div>
                   );
                   return(
@@ -1075,10 +1163,10 @@ Generate a professional radiology report as JSON.`;
             ):(
               <>
                 {/* ── 가로 3열 입력 그리드 ── */}
-                <div className="input-grid" style={{display:"grid",gridTemplateColumns:"1fr",gap:14,alignItems:"start"}}>
+                <div className="input-grid" style={{display:"grid",gridTemplateColumns:"1fr",gap:16,alignItems:"start"}}>
 
                   {/* COL 1 — Study + Patient */}
-                  <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                  <div style={{display:"flex",flexDirection:"column",gap:16}}>
                 <div className="panel" style={{padding:"var(--sp-md)"}}>
                   <Divider label="STUDY INFORMATION"/>
                   <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -1126,11 +1214,11 @@ Generate a professional radiology report as JSON.`;
                   </div>{/* /COL 1 */}
 
                   {/* COL 2 — Clinical Input */}
-                  <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                  <div style={{display:"flex",flexDirection:"column",gap:16}}>
                 {/* Clinical Input */}
-                <div className="panel" style={{padding:"var(--sp-md)"}}>
+                <div className="panel-findings" style={{padding:"var(--sp-md)"}}>
                   {/* 헤더 — 항상 표시 */}
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
                     <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
                       <div style={{flex:1,height:"1px",background:`linear-gradient(to right,${C.dim}30,transparent)`}}/>
                       <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,fontWeight:700}}>CLINICAL INPUT</span>
@@ -1178,7 +1266,7 @@ Generate a professional radiology report as JSON.`;
                   </div>{/* /COL 2 */}
 
                   {/* COL 3 — Output Options + Mammography */}
-                  <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                  <div style={{display:"flex",flexDirection:"column",gap:16}}>
 
                 {/* Mammography 전용 패널 */}
                 {isMammo&&(
