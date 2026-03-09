@@ -178,6 +178,57 @@
     background:rgba(3,105,161,0.06);border:1px solid rgba(3,105,161,0.1);
     display:flex;align-items:center;justify-content:center;font-size:22px;
   }
+  /* ── 반응형 레이아웃 ─────────────────────────────── */
+
+  /* 공통: 모든 패널·입력창 width 제한 */
+  .panel, .panel-findings {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+  .field-input {
+    width: 100%;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  /* 1단 → 2단 → 3단 */
+  .input-grid {
+    grid-template-columns: 1fr !important;
+  }
+  @media (min-width: 768px) {
+    .input-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+  }
+  @media (min-width: 1200px) {
+    .input-grid {
+      grid-template-columns: 1fr 1fr 1fr !important;
+    }
+  }
+
+  /* 태블릿 이하: 내부 2열 그리드 → 1열 */
+  @media (max-width: 767px) {
+    .seg-btn { font-size: 9px !important; padding: 5px 3px !important; }
+    .tab-btn { font-size: 9px !important; padding: 5px 8px !important; }
+    .btn-primary { font-size: 13px !important; }
+  }
+
+  /* 좁은 화면: 헤더 wrap */
+  @media (max-width: 600px) {
+    .field-input { font-size: 16px !important; }
+  }
+
+  /* 구조화 보고서 findings 테이블 좁은 화면 대응 */
+  @media (max-width: 640px) {
+    [style*="gridTemplateColumns:\"160px"] {
+      grid-template-columns: 90px 1fr !important;
+    }
+    [style*="gridTemplateColumns:\"130px"] {
+      grid-template-columns: 80px 1fr !important;
+    }
+  }
+
   @media print{
     body{background:#ffffff;color:#000000;}
     .panel,.panel-findings{box-shadow:none;border:1px solid #cbd5e1;}
@@ -1271,7 +1322,7 @@ Generate a professional radiology report as JSON.`;
             ):(
               <>
                 {/* ── 가로 3열 입력 그리드 ── */}
-                <div className="input-grid" style={{display:"grid",gridTemplateColumns:"1fr",gap:16,alignItems:"start"}}>
+                <div className="input-grid" style={{display:"grid",gap:16,alignItems:"start"}}>
 
                   {/* COL 1 — Study + Patient */}
                   <div style={{display:"flex",flexDirection:"column",gap:16}}>
@@ -1474,7 +1525,7 @@ Generate a professional radiology report as JSON.`;
           </div>{/* /TOP INPUT */}
 
           {/* BOTTOM — REPORT OUTPUT */}
-          <div className="panel" style={{overflow:"hidden",minHeight:"clamp(420px,55vh,800px)"}}>
+          <div className="panel" style={{overflow:"hidden",minHeight:"clamp(280px,45vh,800px)"}}>
             {/* Report Header */}
             <div style={{padding:"18px 24px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",background:"#f1f5f9"}}>
               <div>
