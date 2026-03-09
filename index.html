@@ -261,7 +261,7 @@ const AUTO_DETECT_MODALITIES=["CT","MRI","Ultrasound","X-ray"];
 
 /* ── BODY REGION AUTO-DETECT ── */
 const REGION_KEYWORDS={
-  "Brain":        /\bbrain\b|\bcerebr|\binfarct|\bhemorrhag|\bbleed\b|\bedema\b|\bmidline\b|\bsulc|\bgyri\b|\bventricle\b|\bcistern\b|\bsubdural\b|\bepidural\b|\bsubarachnoid\b|corpus callosum|basal ganglia|\bthalamus\b|뇌경색|뇌출혈|뇌부종|뇌실|뇌간|소뇌|뇌압|지주막하|경막하|기저핵|시상|두개내/i,
+  "Brain":        /\bbrain\b|\bcerebr|\binfarct|\bischemi|\bhemorrhag|\bbleed\b|\bedema\b|\bmidline\b|\bsulc|\bgyri\b|\bventricle\b|\bcistern\b|\bsubdural\b|\bepidural\b|\bsubarachnoid\b|corpus callosum|basal ganglia|\bthalamus\b|\bhippocamp|\bamygdala\b|\bcerebellum\b|\bbrainstem\b|\bpons\b|\bmedulla\b|\bmidbrain\b|\bwhite matter\b|\bgray matter\b|\bcortex\b|\bDWI\b|\bADC\b|\bFLAIR\b|\bT2\b|\bT1\b|\bGRE\b|\bSWI\b|\bSWS\b|\bperfusion\b|\bDTI\b|\bleukoaraiosis\b|\bdemyelinat|\bgliosis\b|\bencephal|\bmeningi|\btumor\b|\bglioma\b|\bmeningioma\b|\bmetastas|\blymph.*brain\b|\bhydrocephal|\batrophy\b|\bcontusion\b|\bdiffusion\b|\brestrict.*diffusion\b|뇌경색|뇌졸중|뇌출혈|뇌부종|뇌실|뇌간|소뇌|교뇌|연수|중뇌|뇌압|지주막하|경막하|경막외|기저핵|시상|두개내|해마|편도체|백질|회백질|피질|확산제한|뇌위축|뇌염|뇌수막|뇌종양|신경교종|수막종|전이성|수두증|탈수초|교종|뇌전이|뇌병변|뇌혈관|뇌졸중|뇌허혈|뇌피질|뇌백질|미세출혈|두개강내/i,
   "MRA":          /\bMRA\b|\baneurysm\b|stenosis.*arteri|arteri.*stenosis|\bICA\b|\bMCA\b|\bACA\b|\bPCA\b|basilar artery|vertebral artery|circle of Willis|동맥류|내경동맥|중대뇌동맥|전대뇌동맥|후대뇌동맥|추골동맥|기저동맥/i,
   "Neck":         /\bthyroid\b|\bparathyroid\b|thyroiditis|\blymph node\b|neck mass|\bparotid\b|\bsubmandib|\bcarotid\b|\bjugular\b|갑상선|부갑상선|갑상선염|림프절|경부종괴|이하선|악하선|경동맥|경정맥/i,
   "Paranasal Sinus":/\bsinus\b|mucosal thickening|air.fluid level|부비동|점막비후|상악동|사골동|접형동|전두동/i,
