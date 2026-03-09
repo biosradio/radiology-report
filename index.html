@@ -951,8 +951,7 @@ Generate a professional radiology report as JSON.`;
       const imp=Array.isArray(report.impression)
         ?report.impression.length===1?report.impression[0]:report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
         :(report.impression||"");
-      const datePattern=/(\d{4}[-./년]\s*\d{1,2}[-./월]?\s*\d{0,2}일?|\d{4}-\d{2}-\d{2})/;
-      const comparisonText=report.comparison&&report.comparison!=="null"&&!/^(none|없음|no prior|not available|unavailable)\.?$/i.test(report.comparison.trim())&&datePattern.test(report.comparison)
+      const comparisonText=report.comparison&&report.comparison!=="null"&&!/^(none|없음|no prior|not available|unavailable)\.?$/i.test(report.comparison.trim())
         ?`${isKo?"비교":"COMPARISON"}:\n${report.comparison}\n\n`:"";
       text+=`${comparisonText}${findingsText}\n\n${isKo?"결론":"IMPRESSION"}:\n${imp}`;
     }
