@@ -1259,29 +1259,10 @@ Generate a professional radiology report as JSON.`;
                 {/* Clinical Input */}
                 <div className="panel-findings" style={{padding:"var(--sp-md)"}}>
                   {/* 헤더 — 항상 표시 */}
-                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-                    <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
-                      {(indication||clinicalInfo||keyMeasurements||differentialDx||finding)&&(
-                        <button onClick={()=>{setIndication("");setClinicalInfo("");setKeyMeasurements("");setDifferentialDx("");setFinding("");}} style={{
-                          padding:"2px 10px",borderRadius:20,border:`1px solid rgba(220,38,38,0.3)`,
-                          background:"rgba(220,38,38,0.06)",color:C.red,
-                          fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1,cursor:"pointer",
-                          transition:"background 0.08s,color 0.08s",flexShrink:0,
-                        }} title="입력 내용 전체 삭제">✕ 초기화</button>
-                      )}
-                      <div style={{flex:1,height:"1px",background:`linear-gradient(to right,${C.dim}30,transparent)`}}/>
-                      <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,fontWeight:700}}>CLINICAL INPUT</span>
-                      <div style={{flex:1,height:"1px",background:`linear-gradient(to left,${C.dim}30,transparent)`}}/>
-                    </div>
-                    <button onClick={()=>setShowClinicalExtra(v=>!v)} style={{
-                      marginLeft:10,padding:"2px 10px",borderRadius:20,border:`1px solid ${C.border}`,
-                      background:showClinicalExtra?C.accentDim:"transparent",
-                      color:showClinicalExtra?C.accent:C.dim,
-                      fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1,cursor:"pointer",
-                      transition:"background 0.08s,color 0.08s,border-color 0.08s",flexShrink:0,
-                    }}>
-                      {showClinicalExtra?"▲ 접기":"▼ 추가입력"}
-                    </button>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
+                    <div style={{flex:1,height:"1px",background:`linear-gradient(to right,${C.dim}30,transparent)`}}/>
+                    <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,fontWeight:700}}>CLINICAL INPUT</span>
+                    <div style={{flex:1,height:"1px",background:`linear-gradient(to left,${C.dim}30,transparent)`}}/>
                   </div>
 
                   {/* 접히는 영역 — INDICATION / INFO / MEASUREMENTS / DDx */}
@@ -1303,12 +1284,39 @@ Generate a professional radiology report as JSON.`;
                   )}
 
                   {/* 항상 표시 — FINDINGS */}
-                  <Field label="FINDINGS / OBSERVATIONS" accent>
+                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <label className="field-label" style={{color:C.accent}}>FINDINGS / OBSERVATIONS</label>
+                      {(indication||clinicalInfo||keyMeasurements||differentialDx||finding)&&(
+                        <button
+                          onClick={()=>{setIndication("");setClinicalInfo("");setKeyMeasurements("");setDifferentialDx("");setFinding("");}}
+                          title="입력 내용 전체 삭제"
+                          className="field-label"
+                          style={{color:C.red,background:"none",border:"none",cursor:"pointer",padding:0}}>
+                          CLEAR</button>
+                      )}
+                    </div>
                     <textarea className="field-input" name="findings" autoComplete="off"
                       style={{height:"clamp(148px,18vh,260px)"}}
                       placeholder={"소견을 자유롭게 입력하세요…\n\nExample:\n- RLL consolidation with air bronchogram\n- No pleural effusion\n- Heart size normal"}
                       value={finding} onChange={e=>setFinding(e.target.value)}/>
-                  </Field>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"center",marginTop:10}}>
+                    <div role="switch" aria-checked={showClinicalExtra} aria-label="추가 입력 필드 펼치기"
+                      tabIndex={0}
+                      onClick={()=>setShowClinicalExtra(v=>!v)}
+                      onKeyDown={(e)=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();setShowClinicalExtra(v=>!v);}}}
+                      style={{
+                        width:44,height:20,borderRadius:10,cursor:"pointer",position:"relative",
+                        background:showClinicalExtra?C.accent:"#cbd5e1",
+                        border:`1px solid ${showClinicalExtra?C.accent:"#cbd5e1"}`,
+                        transition:"background 0.08s,border-color 0.08s",
+                        boxShadow:showClinicalExtra?`0 1px 6px ${C.accentGlow}`:"none",
+                        flexShrink:0,
+                      }}>
+                      <div style={{position:"absolute",top:2,left:showClinicalExtra?22:2,width:14,height:14,borderRadius:"50%",background:"#ffffff",transition:"left 0.1s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
+                    </div>
+                  </div>
                 </div>
 
                   </div>{/* /COL 2 */}
