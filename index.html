@@ -642,7 +642,7 @@ function App(){
   const [mammoLocationL,setMammoLocationL]=useState([]);   // 좌측 병변위치
   const [mammoAssessment,setMammoAssessment]=useState(""); // 판정구분
   const [mammoAddlTest,setMammoAddlTest]=useState(false);  // 추가검사 필요
-  const [activeTab,setActiveTab]=useState("input");
+  const [activeTab,setActiveTab]=useState(()=>localStorage.getItem("rad_apikey")?"input":"settings");
   const [history,setHistory]=useState(()=>{
     try{const s=localStorage.getItem("radreport_history");return s?JSON.parse(s):[];}
     catch{return[];}
@@ -1011,7 +1011,7 @@ Generate a professional radiology report as JSON.`;
       <div style={{position:"relative",zIndex:1,maxWidth:"min(1440px,100vw)",width:"100%",margin:"0 auto",padding:"var(--sp-lg) clamp(8px,3vw,24px) var(--sp-xl)",boxSizing:"border-box"}}>
 
         {/* ── HEADER ── */}
-        <div style={{marginBottom:24,display:"flex",flexDirection:"column",gap:12}}>
+        <div style={{marginBottom:24,display:"flex",flexDirection:"column",gap:8}}>
           <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
             <div>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
@@ -1024,23 +1024,17 @@ Generate a professional radiology report as JSON.`;
               </h1>
               <p style={{color:C.dim,fontSize:"var(--fs-sm)"}}>AI-powered radiology report generator — powered by Gemini</p>
             </div>
-          </div>
-
-          {/* API Key — 모바일에서 전체 폭 */}
-          <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",width:"100%"}}>
-            <div style={{position:"relative",flex:"1 1 180px",minWidth:0}}>
-              <input type="password" name="gemini-api-key" autoComplete="off" spellCheck={false} placeholder="AIza… (Gemini API Key)"
-                value={apiKey} onChange={e=>setApiKey(e.target.value)}
-                className="field-input"
-                style={{width:"100%",fontSize:"var(--fs-xs)",fontFamily:mono,paddingRight:36,borderColor:apiOk?C.green:undefined}}/>
-              <span style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",fontSize:10}}>{apiOk?"🟢":"🔴"}</span>
+            {/* API 상태 인디케이터 — 헤더 우측 */}
+            <div style={{display:"flex",alignItems:"center",gap:8,marginTop:4}}>
+              <StatusBadge ok={apiOk}/>
+              {!apiOk&&(
+                <button onClick={()=>setActiveTab("settings")} style={{
+                  fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1,
+                  padding:"4px 12px",borderRadius:20,cursor:"pointer",
+                  background:"rgba(220,38,38,0.08)",border:`1px solid rgba(220,38,38,0.25)`,color:C.red,
+                }}>API 키 설정 →</button>
+              )}
             </div>
-            <StatusBadge ok={apiOk}/>
-            {apiOk&&(
-              <div style={{flex:"1 1 auto",minWidth:0}}>
-                <CustomSelect id="select-model" options={KNOWN_MODELS} value={selectedModel} onChange={setSelectedModel}/>
-              </div>
-            )}
           </div>
         </div>
 
@@ -1052,18 +1046,22 @@ Generate a professional radiology report as JSON.`;
 
             {/* Tab Nav */}
             <div style={{display:"flex",gap:6,background:"#f8fafc",padding:4,borderRadius:10,border:`1px solid ${C.border}`}}>
-              {[["input","✎  입력"],["history","⏱  히스토리"]].map(([id,label])=>(
+              {[["input","✎  입력"],["history","⏱  히스토리"],["settings","⚙  설정"]].map(([id,label])=>(
                 <button key={id} onClick={()=>setActiveTab(id)} className="tab-btn" style={{
                   flex:1,background:activeTab===id?C.accentDim:"transparent",
                   color:activeTab===id?C.accent:C.dim,
                   border:activeTab===id?`1px solid ${C.borderHover}`:"1px solid transparent",
                   display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+                  position:"relative",
                 }}>
                   {label}
                   {id==="history"&&history.length>0&&(
                     <span style={{background:C.accent,color:"#ffffff",borderRadius:10,fontFamily:mono,fontSize:8,fontWeight:800,padding:"1px 6px",minWidth:16,textAlign:"center"}}>
                       {history.length}
                     </span>
+                  )}
+                  {id==="settings"&&!apiOk&&(
+                    <span style={{width:6,height:6,borderRadius:"50%",background:C.red,position:"absolute",top:4,right:4}}/>
                   )}
                 </button>
               ))}
@@ -1173,6 +1171,70 @@ Generate a professional radiology report as JSON.`;
                     </div>
                   );
                 })()}
+              </div>
+            ):(activeTab==="settings"?(
+              /* ── 설정 탭 ── */
+              <div className="panel" style={{padding:"var(--sp-md)"}}>
+                <Divider label="API SETTINGS"/>
+                <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:20}}>
+
+                  {/* API Key */}
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                      <label className="field-label">GEMINI API KEY</label>
+                      <StatusBadge ok={apiOk}/>
+                    </div>
+                    <div style={{position:"relative"}}>
+                      <input type="password" name="gemini-api-key" autoComplete="off" spellCheck={false}
+                        placeholder="AIza… (Google AI Studio에서 발급)"
+                        value={apiKey} onChange={e=>setApiKey(e.target.value)}
+                        className="field-input"
+                        style={{fontFamily:mono,fontSize:"var(--fs-sm)",paddingRight:40,borderColor:apiOk?C.green:apiKey?C.red:undefined}}/>
+                      <span style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:12}}>{apiOk?"🟢":apiKey?"🔴":"⚪"}</span>
+                    </div>
+                    {apiOk?(
+                      <p style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.green,display:"flex",alignItems:"center",gap:5}}>
+                        <span style={{width:6,height:6,borderRadius:"50%",background:C.green,display:"inline-block"}}/>
+                        API 연결 확인됨 — 리포트 생성 가능
+                      </p>
+                    ):(
+                      <p style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim}}>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer"
+                          style={{color:C.accent,textDecoration:"none",fontWeight:600}}>Google AI Studio →</a>
+                        {" "}에서 무료로 API 키를 발급받을 수 있습니다.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* 모델 선택 */}
+                  {apiOk&&(
+                    <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                      <label className="field-label">AI MODEL</label>
+                      <CustomSelect id="select-model" options={KNOWN_MODELS} value={selectedModel} onChange={setSelectedModel}/>
+                      <p style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim}}>
+                        기본값: <span style={{color:C.accent,fontFamily:mono}}>gemini-3-flash-preview</span> — 속도와 품질의 균형
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 구분선 */}
+                  <div style={{height:1,background:C.border}}/>
+
+                  {/* 안내 */}
+                  <div style={{background:"rgba(3,105,161,0.04)",border:`1px solid rgba(3,105,161,0.12)`,borderRadius:10,padding:"14px 16px"}}>
+                    <p style={{fontFamily:mono,fontSize:10,color:C.accent,letterSpacing:1,fontWeight:700,marginBottom:8}}>🔒 보안 안내</p>
+                    <p style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.text,lineHeight:1.7}}>
+                      API 키는 브라우저 localStorage에만 저장되며 서버로 전송되지 않습니다.<br/>
+                      모든 요청은 브라우저에서 Google API로 직접 전송됩니다.
+                    </p>
+                  </div>
+
+                  {apiOk&&(
+                    <button onClick={()=>setActiveTab("input")} className="btn-primary" style={{padding:"12px 0",fontSize:"var(--fs-sm)",letterSpacing:1}}>
+                      ✎ 판독 시작하기
+                    </button>
+                  )}
+                </div>
               </div>
             ):(
               <>
@@ -1358,7 +1420,7 @@ Generate a professional radiology report as JSON.`;
                   {loading?"ANALYZING…":"⟶  Generate Report"}
                 </button>
               </>
-            )}
+            ))}
           </div>{/* /TOP INPUT */}
 
           {/* BOTTOM — REPORT OUTPUT */}
