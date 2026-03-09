@@ -903,10 +903,18 @@ Generate a professional radiology report as JSON.`;
       if(effectiveBodypart!==bodypart) setBodypart(effectiveBodypart);
       setReport(parsed);
       // save to history
+      const historyImpression=(()=>{
+        if(modality==="X-ray"&&parsed.summary){
+          // summary 첫 문장 또는 앞 80자
+          const first=parsed.summary.split(/\.\s+/)[0];
+          return first.length>80?first.substring(0,80)+"…":first;
+        }
+        return Array.isArray(parsed.impression)?parsed.impression[0]:parsed.impression||"";
+      })();
       setHistory(h=>[{
         id:Date.now(),date:examDate,modality,bodypart:effectiveBodypart,
         urgency,lang,report:parsed,
-        impression:Array.isArray(parsed.impression)?parsed.impression[0]:parsed.impression||"",
+        impression:historyImpression,
       },...h.slice(0,49)]);
     }catch(e){
       setError("오류: "+e.message);
