@@ -748,7 +748,7 @@ function App(){
     const ddxCtx=differentialDx?`\nClinician's DDx: ${differentialDx}`:"";
 
     const langInstr=isKo
-      ?"Korean (한국어). Write ALL content in Korean."
+      ?"Korean (한국어). Write ALL content primarily in Korean. Medical terms and anatomical names may include English in parentheses (e.g. '폐렴 (pneumonia)'). Impression MUST be written in Korean sentences — never use English-only impression."
       :"English. Write ALL content in English.";
 
     const xraySystem=`You are an expert radiologist. Generate a concise X-ray report.
@@ -799,7 +799,7 @@ Return ONLY raw JSON:
 추가검사 권고: ${mammoAddlTest?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다.":"해당없음"}`:"";
 
     const mammoLang=isKo
-      ? "Language: Korean. Write ALL text fields (technique, findings[].finding, impression[]) in Korean."
+      ? "Language: Korean (한국어). Write ALL text fields primarily in Korean. Medical terms may include English in parentheses. Impression MUST be in Korean sentences — never English-only."
       : "Language: English. Write ALL text fields (technique, findings[].finding, impression[]) in English only. Do NOT use Korean anywhere.";
     const mammoTechniqueEx=isKo?"양측 유방 촬영술 (MLO, CC view)":"Bilateral mammography (MLO, CC view)";
 
