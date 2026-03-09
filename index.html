@@ -4,16 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0369a1">
-
-<!-- Primary SEO -->
 <title>RadReport Pro — AI 방사선 판독 보고서 생성기</title>
 <meta name="description" content="Gemini AI 기반 방사선 판독 보고서 자동 생성 도구. CT, MRI, X-ray, 초음파, 유방촬영 소견을 구조화된 영상의학 보고서로 즉시 변환합니다.">
-<meta name="keywords" content="방사선 판독, 영상의학 보고서, AI 판독, CT 보고서, MRI 보고서, radiology report, AI radiology, Gemini AI, 자동 판독, 판독문 생성">
+<meta name="keywords" content="방사선 판독, 영상의학 보고서, AI 판독, CT 보고서, MRI 보고서, radiology report, AI radiology">
 <meta name="author" content="RadReport Pro">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://radreport.pro/">
-
-<!-- Open Graph / Facebook -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://radreport.pro/">
 <meta property="og:site_name" content="RadReport Pro">
@@ -22,21 +18,12 @@
 <meta property="og:title" content="RadReport Pro — AI 방사선 판독 보고서 생성기">
 <meta property="og:description" content="Gemini AI 기반 방사선 판독 보고서 자동 생성. CT·MRI·X-ray·초음파 소견을 구조화된 보고서로 즉시 변환합니다.">
 <meta property="og:image" content="https://radreport.pro/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="RadReport Pro 방사선 판독 보고서 생성 화면">
-
-<!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="RadReport Pro — AI 방사선 판독 보고서 생성기">
-<meta name="twitter:description" content="Gemini AI 기반 방사선 판독 보고서 자동 생성. CT·MRI·X-ray·초음파 소견을 구조화된 보고서로 즉시 변환합니다.">
+<meta name="twitter:description" content="Gemini AI 기반 방사선 판독 보고서 자동 생성.">
 <meta name="twitter:image" content="https://radreport.pro/og-image.png">
-
-<!-- Apple / PWA -->
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="RadReport Pro">
-<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -96,12 +83,58 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
+  @keyframes glow{0%,100%{box-shadow:0 0 12px rgba(3,105,161,0.15);}50%{box-shadow:0 0 24px rgba(3,105,161,0.3);}}
   @media(prefers-reduced-motion:reduce){
     *{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;}
   }
-  @media(max-width:600px){
-    .field-input{font-size:16px !important;}
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:#e2e8f0;}
+  ::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:4px;}
+  input[type=date]::-webkit-calendar-picker-indicator{filter:none;cursor:pointer;opacity:0.6;}
+  select{background-color:#ffffff;color:#1e293b;border:1px solid #cbd5e1;}
+  select option{background:#ffffff;color:#1e293b;}
+  .field-input{
+    background:#ffffff;
+    border:1px solid #cbd5e1;
+    color:#1e293b;
+    font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;
+    font-size:var(--fs-md);
+    padding:8px 12px;
+    border-radius:var(--r-md);
+    outline:none;
+    transition:var(--tr-border);
+    width:100%;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,0.04);
   }
+  .field-input:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(3,105,161,0.12),inset 0 1px 2px rgba(0,0,0,0.04);}
+  .field-input::placeholder{color:#94a3b8;}
+  .btn-primary{
+    background:linear-gradient(135deg,#0369a1 0%,#0284c7 100%);
+    color:#ffffff;border:none;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;letter-spacing:2px;cursor:pointer;
+    transition:var(--tr-btn);border-radius:var(--r-md);
+    box-shadow:0 2px 8px rgba(3,105,161,0.25);
+  }
+  .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(3,105,161,0.35);}
+  .btn-primary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  .btn-primary:disabled{background:#e2e8f0;color:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none;border:1px solid #e2e8f0;}
+  /* 패널: 층위(depth) 시스템 */
+  .panel{
+    background:#ffffff;
+    border:1px solid #e2e8f0;
+    border-radius:var(--r-lg);
+    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
+    width:100%;box-sizing:border-box;
+  }
+  .panel-elevated{
+    background:#ffffff;
+    border:1px solid #dde3ec;
+    border-radius:var(--r-lg);
+    box-shadow:0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
+  }
+  *{min-width:0;}
+  /* 탭 버튼 - radius 통일 */
   .tab-btn{padding:6px 16px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;transition:var(--tr-ui);}
   .tab-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .icon-btn{display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.08s ease,color 0.08s ease,background 0.08s ease;}
@@ -149,18 +182,18 @@
   }
   .custom-select-option:hover{background:#f1f5f9;}
   .custom-select-option.selected{background:rgba(3,105,161,0.08);color:var(--accent);font-weight:600;}
-  /* 섹션 레이블 */
+  /* 섹션 레이블 - mono 사용 범위 제한, sans로 전환 */
   .section-label{
     font-family:'Sora',sans-serif;font-size:var(--fs-xs);
-    font-weight:600;letter-spacing:2px;color:#64748b;text-transform:uppercase;
+    font-weight:600;letter-spacing:2px;color:#94a3b8;text-transform:uppercase;
   }
-  /* 필드 레이블 */
+  /* 필드 레이블 - mono 유지하되 크기 조정 */
   .field-label{
     font-family:'JetBrains Mono',monospace;
     font-size:10px;letter-spacing:1.5px;font-weight:700;
     color:#64748b;text-transform:uppercase;
   }
-  /* FINDINGS 패널 강조 */
+  /* FINDINGS 패널 강조 - 주요 입력 */
   .panel-findings{
     background:#ffffff;
     border:2px solid rgba(3,105,161,0.2);
@@ -178,93 +211,31 @@
     background:rgba(3,105,161,0.06);border:1px solid rgba(3,105,161,0.1);
     display:flex;align-items:center;justify-content:center;font-size:22px;
   }
-  /* ── 반응형 레이아웃 ─────────────────────────────── */
-
-  /* 공통: 모든 패널·입력창 width 제한 */
-  .panel, .panel-findings {
-    width: 100%;
-    box-sizing: border-box;
-    min-width: 0;
+  50%{box-shadow:0 0 24px rgba(3,105,161,0.3);}}
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;}
   }
-  .field-input {
-    width: 100%;
-    box-sizing: border-box;
-    min-width: 0;
+  @media(max-width:600px){
+    .field-input{font-size:16px !important;}
   }
 
-  /* 1단 → 2단 → 3단 */
-  .input-grid {
-    grid-template-columns: 1fr !important;
+  /* ── 반응형 ── */
+  .panel,.panel-findings{width:100%;box-sizing:border-box;min-width:0;}
+  .field-input{width:100%;box-sizing:border-box;min-width:0;}
+  .input-grid>div{min-width:0;}
+  @media(max-width:600px){
+    .field-input{font-size:16px!important;}
+    .seg-btn{font-size:9px;padding:5px 3px;}
+    .tab-btn{font-size:9px;padding:5px 8px;}
   }
-  @media (min-width: 768px) {
-    .input-grid {
-      grid-template-columns: 1fr 1fr !important;
-    }
-  }
-  @media (min-width: 1200px) {
-    .input-grid {
-      grid-template-columns: 1fr 1fr 1fr !important;
-    }
-  }
-
-  /* 태블릿 이하: 내부 2열 그리드 → 1열 */
-  @media (max-width: 767px) {
-    .seg-btn { font-size: 9px !important; padding: 5px 3px !important; }
-    .tab-btn { font-size: 9px !important; padding: 5px 8px !important; }
-    .btn-primary { font-size: 13px !important; }
-  }
-
-  /* 좁은 화면: 헤더 wrap */
-  @media (max-width: 600px) {
-    .field-input { font-size: 16px !important; }
-  }
-
-  /* 구조화 보고서 findings 테이블 좁은 화면 대응 */
-  @media (max-width: 640px) {
-    [style*="gridTemplateColumns:\"160px"] {
-      grid-template-columns: 90px 1fr !important;
-    }
-    [style*="gridTemplateColumns:\"130px"] {
-      grid-template-columns: 80px 1fr !important;
-    }
-  }
-
   @media print{
-    body{background:#ffffff;color:#000000;}
+    body{background:#fff;color:#000;}
     .panel,.panel-findings{box-shadow:none;border:1px solid #cbd5e1;}
     button,.btn-primary,[role="tablist"]{display:none!important;}
-    #root>div>div:first-child{display:none!important;}
   }
 </style>
 
-<!-- JSON-LD Structured Data -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "RadReport Pro",
-  "applicationCategory": "MedicalApplication",
-  "operatingSystem": "Web",
-  "url": "https://radreport.pro/",
-  "description": "Gemini AI 기반 방사선 판독 보고서 자동 생성 도구. CT, MRI, X-ray, 초음파, 유방촬영 소견을 구조화된 영상의학 보고서로 즉시 변환합니다.",
-  "inLanguage": ["ko", "en"],
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "KRW"
-  },
-  "featureList": [
-    "CT 판독 보고서 자동 생성",
-    "MRI 판독 보고서 자동 생성",
-    "X-ray 판독 보고서 자동 생성",
-    "초음파 판독 보고서 자동 생성",
-    "유방촬영 판독 보고서 (K-BIRADS)",
-    "한국어 / 영어 이중 언어 지원",
-    "Structured / Narrative / Bullet 출력 형식"
-  ],
-  "keywords": "방사선 판독, 영상의학 보고서, AI 판독, CT, MRI, X-ray, 초음파, radiology report"
-}
-</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"RadReport Pro","applicationCategory":"MedicalApplication","operatingSystem":"Web","url":"https://radreport.pro/","inLanguage":["ko","en"]}</script>
 </head>
 <body>
 <div id="root"></div>
@@ -460,15 +431,14 @@ function SegBtn({options,value,onChange,small,"aria-label":ariaLabel}){
           <button
             key={opt.value}
             onClick={()=>onChange(opt.value)}
-            aria-pressed={active}
-            className={`seg-btn ${active?"seg-active":"seg-inactive"}`}
+            aria-pressed={active} className={`seg-btn ${active?"seg-active":"seg-inactive"}`}
             style={{
               padding:small?"5px 4px":"7px 6px",
               fontSize:small?9:10,
               boxShadow:active?`0 2px 8px ${C.accentGlow}`:"none",
             }}
           >
-            {opt.icon&&<span aria-hidden="true" style={{marginRight:3}}>{opt.icon}</span>}{opt.label}
+            {opt.icon&&<span style={{marginRight:3}}>{opt.icon}</span>}{opt.label}
           </button>
         );
       })}
@@ -481,22 +451,22 @@ function CustomSelect({options,value,onChange,id}){
   const ref=React.useRef(null);
   React.useEffect(()=>{
     const handler=(e)=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};
-    const keyHandler=(e)=>{if(e.key==="Escape")setOpen(false);};
+    const keyH=(e)=>{if(e.key==="Escape")setOpen(false);};
     document.addEventListener("mousedown",handler);
-    document.addEventListener("keydown",keyHandler);
-    return()=>{document.removeEventListener("mousedown",handler);document.removeEventListener("keydown",keyHandler);};
+    document.addEventListener("keydown",keyH);
+    return()=>{document.removeEventListener("mousedown",handler);document.removeEventListener("keydown",keyH);};
   },[]);
   return(
     <div className="custom-select-wrapper" ref={ref}>
-      <button id={id} className="custom-select-btn" onClick={()=>setOpen(o=>!o)} type="button" role="combobox" aria-expanded={open} aria-haspopup="listbox" aria-label={value}>
+      <button id={id} className="custom-select-btn" onClick={()=>setOpen(o=>!o)} type="button" role="combobox" aria-expanded={open} aria-haspopup="listbox">
         <span>{value}</span>
         <span style={{fontSize:10,color:"#94a3b8",transition:"transform 0.1s",display:"inline-block",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▼</span>
       </button>
       {open&&(
-        <div className="custom-select-dropdown" role="listbox" aria-label="옵션 목록">
+        <div className="custom-select-dropdown" role="listbox">
           {options.map(opt=>(
             <button key={opt} className={`custom-select-option${value===opt?" selected":""}`}
-              onClick={()=>{onChange(opt);setOpen(false);}} type="button" role="option" aria-selected={value===opt}>
+              onClick={()=>{onChange(opt);setOpen(false);}} type="button">
               {opt}
             </button>
           ))}
@@ -526,7 +496,7 @@ function Spinner(){
     return()=>clearInterval(t);
   },[]);
   return(
-    <div role="status" aria-live="polite" aria-label={steps[step]} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:24,minHeight:320}}>
+    <div role="status" aria-live="polite" style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:24,minHeight:320}}>
       <div style={{position:"relative",width:56,height:56}}>
         <div style={{position:"absolute",inset:0,border:`1px solid ${C.border}`,borderRadius:"50%"}}/>
         <div style={{position:"absolute",inset:0,border:"2px solid transparent",borderTopColor:C.accent,borderRadius:"50%",animation:"spin 0.9s linear infinite"}}/>
@@ -534,8 +504,8 @@ function Spinner(){
         <div style={{position:"absolute",inset:"50%",transform:"translate(-50%,-50%)",width:6,height:6,borderRadius:"50%",background:C.accent,boxShadow:`0 0 12px ${C.accentGlow}`}}/>
       </div>
       <div style={{textAlign:"center",animation:"fadeIn 0.15s ease"}}>
-        <p aria-hidden="true" style={{fontFamily:mono,fontSize:11,color:C.accent,letterSpacing:2,animation:"pulse 1.4s ease-in-out infinite"}}>{steps[step]}</p>
-        <p aria-hidden="true" style={{fontFamily:mono,fontSize:9,color:C.dim,marginTop:6,letterSpacing:1}}>Gemini AI 분석 중…</p>
+        <p style={{fontFamily:mono,fontSize:11,color:C.accent,letterSpacing:2,animation:"pulse 1.4s ease-in-out infinite"}}>{steps[step]}</p>
+        <p style={{fontFamily:mono,fontSize:9,color:C.dim,marginTop:6,letterSpacing:1}}>Gemini AI 분석 중…</p>
       </div>
     </div>
   );
@@ -677,46 +647,28 @@ function MammoPanel({
   );
 }
 
-
-/* ── KNOWN MODELS (컴포넌트 외부 — 매 렌더 재생성 방지) ── */
-const KNOWN_MODELS=[
-  "gemini-3.1-pro-preview",
-  "gemini-3-flash-preview",
-  "gemini-3.1-flash-lite-preview",
-  "gemini-2.5-pro",
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-1.5-pro",
-  "gemini-1.5-flash",
-];
-
-/* ── ORGAN MAP (컴포넌트 외부 — 매 렌더 재생성 방지) ── */
-const ORGAN_MAP={
-  "Chest":          {ko:"폐,흉막,심장,심낭,종격동,기관지,대동맥,횡격막,흉벽,뼈",en:"Lungs,Pleura,Heart,Pericardium,Mediastinum,Trachea & Bronchi,Aorta,Diaphragm,Chest Wall,Bones"},
-  "Abdomen":        {ko:"간,담낭,담도,췌장,비장,부신,신장,장,복막,혈관,뼈",en:"Liver,Gallbladder,Bile Ducts,Pancreas,Spleen,Adrenal Glands,Kidneys,Bowel,Peritoneum,Vessels,Bones"},
-  "Pelvis":         {ko:"방광,자궁/난소 또는 전립선,직장,골반혈관,뼈",en:"Bladder,Uterus/Ovaries or Prostate,Rectum,Pelvic Vessels,Bones"},
-  "Abdomen & Pelvis":{ko:"간,담낭,췌장,비장,신장,방광,장,복막,혈관,뼈",en:"Liver,Gallbladder,Pancreas,Spleen,Kidneys,Bladder,Bowel,Peritoneum,Vessels,Bones"},
-  "Brain":          {ko:"뇌실질,뇌실,뇌구/회,백질,뇌간,소뇌,두개골,부비동,안와",en:"Brain Parenchyma,Ventricles,Sulci & Gyri,White Matter,Brainstem,Cerebellum,Skull,Sinuses,Orbits"},
-  "MRA":            {ko:"우측 내경동맥,좌측 내경동맥,우측 중대뇌동맥,좌측 중대뇌동맥,우측 전대뇌동맥,좌측 전대뇌동맥,우측 후대뇌동맥,좌측 후대뇌동맥,우측 추골동맥,좌측 추골동맥,기저동맥,Willis환",en:"Rt. Internal Carotid Artery,Lt. Internal Carotid Artery,Rt. Middle Cerebral Artery,Lt. Middle Cerebral Artery,Rt. Anterior Cerebral Artery,Lt. Anterior Cerebral Artery,Rt. Posterior Cerebral Artery,Lt. Posterior Cerebral Artery,Rt. Vertebral Artery,Lt. Vertebral Artery,Basilar Artery,Circle of Willis"},
-  "Neck":           {ko:"갑상선,림프절,혈관,연부조직",en:"Thyroid,Lymph Nodes,Vessels,Soft Tissue"},
-  "C-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
-  "T-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
-  "L-spine":        {ko:"추체,추간판,척수원뿔,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
-  "Knee":           {ko:"골구조물,관절강,연골,반월판,인대,연부조직",en:"Bones,Joint Space,Cartilage,Menisci,Ligaments,Soft Tissue"},
-  "Shoulder":       {ko:"골구조물,회전근개,관절순,관절강,점액낭",en:"Bones,Rotator Cuff,Labrum,Joint Space,Bursa"},
-  "Hip":            {ko:"골구조물,관절연골,관절강,연부조직",en:"Bones,Articular Cartilage,Joint Space,Soft Tissue"},
-  // Mammography
-  "Both Breasts":              {ko:"우측 유방,좌측 유방,피부/유두,액와부 림프절",en:"Right Breast,Left Breast,Skin/Nipple,Axillary Lymph Nodes"},
-  "Right Breast":              {ko:"유방실질,유두/유륜,피부,액와부 림프절",en:"Breast Parenchyma,Nipple/Areola,Skin,Axillary Lymph Nodes"},
-  "Left Breast":               {ko:"유방실질,유두/유륜,피부,액와부 림프절",en:"Breast Parenchyma,Nipple/Areola,Skin,Axillary Lymph Nodes"},
-  "Right Breast (Targeted)":   {ko:"목표 병변,주변 실질,피부,액와부 림프절",en:"Target Lesion,Surrounding Parenchyma,Skin,Axillary Lymph Nodes"},
-  "Left Breast (Targeted)":    {ko:"목표 병변,주변 실질,피부,액와부 림프절",en:"Target Lesion,Surrounding Parenchyma,Skin,Axillary Lymph Nodes"},
-};
-
 /* ── MAIN APP ─────────────────────────────── */
+const KNOWN_MODELS=[
+    "gemini-3.1-pro-preview",
+    "gemini-3-flash-preview",
+    "gemini-3.1-flash-lite-preview",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
+  ];
 function App(){
+  const [winW,setWinW]=React.useState(()=>window.innerWidth);
+  React.useEffect(()=>{
+    const onResize=()=>setWinW(window.innerWidth);
+    window.addEventListener("resize",onResize);
+    return()=>window.removeEventListener("resize",onResize);
+  },[]);
+  const gridCols="1fr";
+
   const examDate=new Date().toISOString().split("T")[0];
   const [apiKey,setApiKey]=useState("");
   const [modality,setModality]=useState("CT");
@@ -796,7 +748,28 @@ function App(){
   };
   const getContrastLabel=()=>contrastOptions?.find(o=>o.value===contrast)?.label||"";
 
-  /* ── ORGAN MAP (외부 상수 참조) ── */
+  /* ── ORGAN MAP ── */
+  const organMap={
+    "Chest":          {ko:"폐,흉막,심장,심낭,종격동,기관지,대동맥,횡격막,흉벽,뼈",en:"Lungs,Pleura,Heart,Pericardium,Mediastinum,Trachea & Bronchi,Aorta,Diaphragm,Chest Wall,Bones"},
+    "Abdomen":        {ko:"간,담낭,담도,췌장,비장,부신,신장,장,복막,혈관,뼈",en:"Liver,Gallbladder,Bile Ducts,Pancreas,Spleen,Adrenal Glands,Kidneys,Bowel,Peritoneum,Vessels,Bones"},
+    "Pelvis":         {ko:"방광,자궁/난소 또는 전립선,직장,골반혈관,뼈",en:"Bladder,Uterus/Ovaries or Prostate,Rectum,Pelvic Vessels,Bones"},
+    "Abdomen & Pelvis":{ko:"간,담낭,췌장,비장,신장,방광,장,복막,혈관,뼈",en:"Liver,Gallbladder,Pancreas,Spleen,Kidneys,Bladder,Bowel,Peritoneum,Vessels,Bones"},
+    "Brain":          {ko:"뇌실질,뇌실,뇌구/회,백질,뇌간,소뇌,두개골,부비동,안와",en:"Brain Parenchyma,Ventricles,Sulci & Gyri,White Matter,Brainstem,Cerebellum,Skull,Sinuses,Orbits"},
+    "MRA":            {ko:"우측 내경동맥,좌측 내경동맥,우측 중대뇌동맥,좌측 중대뇌동맥,우측 전대뇌동맥,좌측 전대뇌동맥,우측 후대뇌동맥,좌측 후대뇌동맥,우측 추골동맥,좌측 추골동맥,기저동맥,Willis환",en:"Rt. Internal Carotid Artery,Lt. Internal Carotid Artery,Rt. Middle Cerebral Artery,Lt. Middle Cerebral Artery,Rt. Anterior Cerebral Artery,Lt. Anterior Cerebral Artery,Rt. Posterior Cerebral Artery,Lt. Posterior Cerebral Artery,Rt. Vertebral Artery,Lt. Vertebral Artery,Basilar Artery,Circle of Willis"},
+    "Neck":           {ko:"갑상선,림프절,혈관,연부조직",en:"Thyroid,Lymph Nodes,Vessels,Soft Tissue"},
+    "C-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
+    "T-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
+    "L-spine":        {ko:"추체,추간판,척수원뿔,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
+    "Knee":           {ko:"골구조물,관절강,연골,반월판,인대,연부조직",en:"Bones,Joint Space,Cartilage,Menisci,Ligaments,Soft Tissue"},
+    "Shoulder":       {ko:"골구조물,회전근개,관절순,관절강,점액낭",en:"Bones,Rotator Cuff,Labrum,Joint Space,Bursa"},
+    "Hip":            {ko:"골구조물,관절연골,관절강,연부조직",en:"Bones,Articular Cartilage,Joint Space,Soft Tissue"},
+    // Mammography
+    "Both Breasts":              {ko:"우측 유방,좌측 유방,피부/유두,액와부 림프절",en:"Right Breast,Left Breast,Skin/Nipple,Axillary Lymph Nodes"},
+    "Right Breast":              {ko:"유방실질,유두/유륜,피부,액와부 림프절",en:"Breast Parenchyma,Nipple/Areola,Skin,Axillary Lymph Nodes"},
+    "Left Breast":               {ko:"유방실질,유두/유륜,피부,액와부 림프절",en:"Breast Parenchyma,Nipple/Areola,Skin,Axillary Lymph Nodes"},
+    "Right Breast (Targeted)":   {ko:"목표 병변,주변 실질,피부,액와부 림프절",en:"Target Lesion,Surrounding Parenchyma,Skin,Axillary Lymph Nodes"},
+    "Left Breast (Targeted)":    {ko:"목표 병변,주변 실질,피부,액와부 림프절",en:"Target Lesion,Surrounding Parenchyma,Skin,Axillary Lymph Nodes"},
+  };
 
   /* ── GENERATE ── */
   const generate=useCallback(async()=>{
@@ -815,7 +788,7 @@ function App(){
     const autoRegion=!isMammo?detectBodyRegion(fullCtx,bodypart,isAutoDetect):null;
     const effectiveBodypart=autoRegion||bodypart;
 
-    const organs=ORGAN_MAP[effectiveBodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
+    const organs=organMap[effectiveBodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
     const contrastStr=contrastOptions?getContrastLabel():"N/A";
     const patientCtx=[].filter(Boolean).join(" | ");
     const measCtx=keyMeasurements?`\nKey Measurements: ${keyMeasurements}`:"";
@@ -998,7 +971,7 @@ Generate a professional radiology report as JSON.`;
   },[apiKey,apiOk,selectedModel,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,urgency,lang,differentialDx,keyMeasurements]);
 
   /* ── COPY ── */
-  const getCopyText=useCallback(()=>{
+  const getCopyText=()=>{
     if(!report)return"";
     let text="";
     const isKo=lang==="ko";
@@ -1042,7 +1015,7 @@ Generate a professional radiology report as JSON.`;
       if(report.recommendation&&report.recommendation!=="null") text+=`\n\nRECOMMENDATION:\n${report.recommendation}`;
     }
     return text;
-  },[report,modality,lang,mammoParenchyma,mammoFindings,mammoFindingCustom,mammoLocationR,mammoLocationL,mammoAssessment,mammoAddlTest,urgency]);
+  };
 
   const copyReport=()=>{
     if(!report)return;
@@ -1120,7 +1093,7 @@ Generate a professional radiology report as JSON.`;
         </div>
 
         {/* ── MAIN GRID ── */}
-        <div style={{display:"flex",flexDirection:"column",gap:16}}>
+        <div style={{display:"flex",flexDirection:"column",gap:16,maxWidth:800,margin:"0 auto",width:"100%",boxSizing:"border-box"}}>
 
           {/* TOP — INPUT + TABS */}
           <div style={{display:"flex",flexDirection:"column",gap:16}}>
@@ -1128,9 +1101,7 @@ Generate a professional radiology report as JSON.`;
             {/* Tab Nav */}
             <div role="tablist" aria-label="메인 네비게이션" style={{display:"flex",gap:6,background:"#f8fafc",padding:4,borderRadius:10,border:`1px solid ${C.border}`}}>
               {[["input","✎  입력"],["history","⏱  히스토리"],["settings","⚙  설정"]].map(([id,label])=>(
-                <button key={id} onClick={()=>setActiveTab(id)} className="tab-btn"
-                  role="tab" aria-selected={activeTab===id} aria-controls={`tabpanel-${id}`}
-                  style={{
+                <button key={id} onClick={()=>setActiveTab(id)} className="tab-btn" style={{
                   flex:1,background:activeTab===id?C.accentDim:"transparent",
                   color:activeTab===id?C.accent:C.dim,
                   border:activeTab===id?`1px solid ${C.borderHover}`:"1px solid transparent",
@@ -1208,7 +1179,7 @@ Generate a professional radiology report as JSON.`;
                   );
                   if(filtered.length===0) return(
                     <div className="empty-state">
-                      <div className="empty-state-icon" aria-hidden="true">🔍</div>
+                      <div className="empty-state-icon">🔍</div>
                       <div>
                         <p style={{fontFamily:sans,fontSize:"var(--fs-sm)",fontWeight:600,color:C.bright,marginBottom:4}}>"<strong>{historySearch}</strong>" 검색 결과 없음</p>
                         <p style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim}}>modality, impression, 날짜로 검색하세요</p>
@@ -1322,194 +1293,197 @@ Generate a professional radiology report as JSON.`;
             ):(
               <>
                 {/* ── 가로 3열 입력 그리드 ── */}
-                <div className="input-grid" style={{display:"grid",gap:16,alignItems:"start"}}>
+                <div className="input-grid" style={{display:"grid",gridTemplateColumns:gridCols,gap:16,alignItems:"start",width:"100%",boxSizing:"border-box"}}>
 
-                  {/* COL 1 — Study + Patient */}
-                  <div style={{display:"flex",flexDirection:"column",gap:16}}>
-                <div className="panel" style={{padding:"10px 16px"}}>
-                  <Divider label="STUDY INFORMATION"/>
-                  <div style={{marginTop:8,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                    <div style={{gridColumn:"1/-1"}}>
-                      <Field label="MODALITY" htmlFor="select-modality">
-                        <CustomSelect id="select-modality" options={MODALITIES} value={modality} onChange={handleModalityChange}/>
-                      </Field>
-                    </div>
-                    {contrastOptions&&(
-                      <div style={{gridColumn:"1/-1"}}>
-                        <Field label={modality==="MRI"?"CONTRAST AGENT":"CONTRAST"}>
-                          <SegBtn options={contrastOptions} value={contrast} onChange={setContrast} aria-label="조영제 선택"/>
-                        </Field>
+                  {/* COL 1 — Study Information */}
+                  <div style={{display:"flex",flexDirection:"column",gap:16,minWidth:0}}>
+                    <div className="panel" style={{padding:"10px 16px"}}>
+                      <Divider label="STUDY INFORMATION"/>
+                      <div style={{marginTop:8,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                        <div style={{gridColumn:"1/-1"}}>
+                          <Field label="MODALITY" htmlFor="select-modality">
+                            <CustomSelect id="select-modality" options={MODALITIES} value={modality} onChange={handleModalityChange}/>
+                          </Field>
+                        </div>
+                        {contrastOptions&&(
+                          <div style={{gridColumn:"1/-1"}}>
+                            <Field label={modality==="MRI"?"CONTRAST AGENT":"CONTRAST"}>
+                              <SegBtn options={contrastOptions} value={contrast} onChange={setContrast}/>
+                            </Field>
+                          </div>
+                        )}
+
+                        <div style={{gridColumn:"1/-1"}}>
+                          {["CT","MRI","Ultrasound"].includes(modality)?(
+                            <Field label="BODY REGION">
+                              <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:8,background:"rgba(3,105,161,0.05)",border:`1px solid rgba(3,105,161,0.2)`}}>
+                                <span style={{fontSize:11}}>🔍</span>
+                                <span style={{fontFamily:mono,fontSize:10,color:C.dim,letterSpacing:0.5}}>findings 입력 후 자동 감지</span>
+                              </div>
+                            </Field>
+                          ):(
+                            <Field label="BODY REGION">
+                              <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:2}}>
+                                <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                                  {Object.keys(activeBodyParts).map(cat=>(
+                                    <Tag key={cat} active={selCat===cat} onClick={()=>{setSelCat(cat);setBodypart(activeBodyParts[cat][0]);}}>{cat}</Tag>
+                                  ))}
+                                </div>
+                                <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                                  {(activeBodyParts[selCat]||[]).map(bp=>(
+                                    <Tag key={bp} active={bodypart===bp} color={C.accent2} onClick={()=>setBodypart(bp)}>{bp}</Tag>
+                                  ))}
+                                </div>
+                              </div>
+                            </Field>
+                          )}
+                        </div>
                       </div>
-                    )}
-
-                    <div style={{gridColumn:"1/-1"}}>
-                      {["CT","MRI","Ultrasound"].includes(modality)?(
-                        <Field label="BODY REGION">
-                          <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:8,background:"rgba(3,105,161,0.05)",border:`1px solid rgba(3,105,161,0.2)`}}>
-                            <span aria-hidden="true" style={{fontSize:11}}>🔍</span>
-                            <span style={{fontFamily:mono,fontSize:10,color:C.dim,letterSpacing:0.5}}>findings 입력 후 자동 감지</span>
-                          </div>
-                        </Field>
-                      ):(
-                        <Field label="BODY REGION">
-                          <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:2}}>
-                            <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                              {Object.keys(activeBodyParts).map(cat=>(
-                                <Tag key={cat} active={selCat===cat} onClick={()=>{setSelCat(cat);setBodypart(activeBodyParts[cat][0]);}}>{cat}</Tag>
-                              ))}
-                            </div>
-                            <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                              {(activeBodyParts[selCat]||[]).map(bp=>(
-                                <Tag key={bp} active={bodypart===bp} color={C.accent2} onClick={()=>setBodypart(bp)}>{bp}</Tag>
-                              ))}
-                            </div>
-                          </div>
-                        </Field>
-                      )}
                     </div>
                   </div>
-                </div>
-
-                  </div>{/* /COL 1 */}
 
                   {/* COL 2 — Clinical Input */}
-                  <div style={{display:"flex",flexDirection:"column",gap:16}}>
-                {/* Clinical Input */}
-                <div className="panel-findings" style={{padding:"var(--sp-md)"}}>
-                  {/* 헤더 — 항상 표시 */}
-                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
-                    <div style={{flex:1,height:"1px",background:`linear-gradient(to right,${C.dim}30,transparent)`}}/>
-                    <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,fontWeight:700}}>CLINICAL INPUT</span>
-                    <div style={{flex:1,height:"1px",background:`linear-gradient(to left,${C.dim}30,transparent)`}}/>
-                  </div>
-
-                  {/* 접히는 영역 — INDICATION / INFO / MEASUREMENTS / DDx */}
-                  {showClinicalExtra&&(
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10,paddingBottom:10,borderBottom:`1px solid ${C.border}`}}>
-                      <Field label="CLINICAL INDICATION" hint="optional">
-                        <input className="field-input" name="indication" autoComplete="off" value={indication} onChange={e=>setIndication(e.target.value)} placeholder="R/O pneumonia, f/u after surgery…"/>
-                      </Field>
-                      <Field label="CLINICAL INFORMATION" hint="optional">
-                        <input className="field-input" name="clinical-info" autoComplete="off" value={clinicalInfo} onChange={e=>setClinicalInfo(e.target.value)} placeholder="증상, 병력, 검사실 소견…"/>
-                      </Field>
-                      <Field label="KEY MEASUREMENTS" hint="optional">
-                        <input className="field-input" name="measurements" autoComplete="off" value={keyMeasurements} onChange={e=>setKeyMeasurements(e.target.value)} placeholder="우폐 결절 1.2 cm, 간 좌엽 3.4 cm 병변…"/>
-                      </Field>
-                      <Field label="CLINICIAN'S DDx" hint="optional" accent>
-                        <input className="field-input" name="ddx" autoComplete="off" value={differentialDx} onChange={e=>setDifferentialDx(e.target.value)} placeholder="폐암 vs 전이 vs 염증성 병변…" style={{borderColor:differentialDx?`${C.accent}50`:undefined}}/>
-                      </Field>
-                    </div>
-                  )}
-
-                  {/* 항상 표시 — FINDINGS */}
-                  <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <label className="field-label" style={{color:C.accent}}>FINDINGS / OBSERVATIONS</label>
-                      {(indication||clinicalInfo||keyMeasurements||differentialDx||finding)&&(
-                        <button
-                          onClick={()=>{setIndication("");setClinicalInfo("");setKeyMeasurements("");setDifferentialDx("");setFinding("");}}
-                          title="입력 내용 전체 삭제"
-                          className="field-label"
-                          style={{color:C.red,background:"none",border:"none",cursor:"pointer",padding:0}}>
-                          CLEAR</button>
-                      )}
-                    </div>
-                    <textarea className="field-input" name="findings" autoComplete="off"
-                      style={{height:"clamp(148px,18vh,260px)"}}
-                      placeholder={"소견을 자유롭게 입력하세요…\n\nExample:\n- RLL consolidation with air bronchogram\n- No pleural effusion\n- Heart size normal"}
-                      value={finding} onChange={e=>setFinding(e.target.value)}/>
-                  </div>
-                  <div style={{display:"flex",justifyContent:"center",marginTop:10}}>
-                    <div role="switch" aria-checked={showClinicalExtra} aria-label="추가 입력 필드 펼치기"
-                      tabIndex={0}
-                      onClick={()=>setShowClinicalExtra(v=>!v)}
-                      onKeyDown={(e)=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();setShowClinicalExtra(v=>!v);}}}
-                      style={{
-                        width:44,height:20,borderRadius:10,cursor:"pointer",position:"relative",
-                        background:showClinicalExtra?C.accent:"#cbd5e1",
-                        border:`1px solid ${showClinicalExtra?C.accent:"#cbd5e1"}`,
-                        transition:"background 0.08s,border-color 0.08s",
-                        boxShadow:showClinicalExtra?`0 1px 6px ${C.accentGlow}`:"none",
-                        flexShrink:0,
-                      }}>
-                      <div style={{position:"absolute",top:2,left:showClinicalExtra?22:2,width:14,height:14,borderRadius:"50%",background:"#ffffff",transition:"left 0.1s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
-                    </div>
-                  </div>
-                </div>
-
-                  </div>{/* /COL 2 */}
-
-                  {/* COL 3 — Output Options + Mammography */}
-                  <div style={{display:"flex",flexDirection:"column",gap:16}}>
-
-                {/* Mammography 전용 패널 */}
-                {isMammo&&(
-                  <MammoPanel
-                    parenchyma={mammoParenchyma} setParenchyma={setMammoParenchyma}
-                    findings={mammoFindings} setFindings={setMammoFindings}
-                    findingCustom={mammoFindingCustom} setFindingCustom={setMammoFindingCustom}
-                    locationR={mammoLocationR} setLocationR={setMammoLocationR}
-                    locationL={mammoLocationL} setLocationL={setMammoLocationL}
-                    assessment={mammoAssessment} setAssessment={setMammoAssessment}
-                    addlTest={mammoAddlTest} setAddlTest={setMammoAddlTest}
-                  />
-                )}
-
-                {/* Output Options */}
-                <div className="panel" style={{padding:"var(--sp-md)"}}>
-                  <Divider label="OUTPUT OPTIONS"/>
-                  <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                    <Field label="FORMAT">
-                      {modality==="X-ray"
-                        ?<div className="field-input" style={{opacity:0.4,cursor:"default",userSelect:"none"}}><span style={{fontFamily:mono,fontSize:11,color:C.dim}}>N/A for X-ray</span></div>
-                        :<SegBtn options={FORMAT_OPTIONS} value={format} onChange={setFormat} aria-label="출력 형식 선택"/>
-                      }
-                    </Field>
-                    <Field label="TONE">
-                      <SegBtn options={TONE_OPTIONS} value={tone} onChange={setTone} small aria-label="문체 선택"/>
-                    </Field>
-
-                    <Field label="URGENCY">
-                      <div style={{display:"flex",gap:8,marginTop:2,flexWrap:"wrap"}}>
-                        {URGENCY_OPTIONS.map(u=>(
-                          <Tag key={u.value} active={urgency===u.value} color={u.color} onClick={()=>setUrgency(u.value)}>{u.label}</Tag>
-                        ))}
-                      </div>
-                    </Field>
-
-                    <Field label="LANGUAGE">
-                      <div style={{display:"flex",alignItems:"center",gap:12,marginTop:2}}>
-                        <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="en"?C.accent:C.dim,transition:"color 0.08s"}}>ENG</span>
-                        <div role="switch" aria-checked={lang==="ko"} aria-label="언어 전환: 영어/한국어" tabIndex={0}
-                          onClick={()=>setLang(l=>l==="en"?"ko":"en")}
-                          onKeyDown={(e)=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();setLang(l=>l==="en"?"ko":"en");}}}
-                          style={{
-                          width:52,height:28,borderRadius:14,cursor:"pointer",position:"relative",
-                          background:lang==="ko"?C.accent:"#cbd5e1",
-                          border:`1px solid ${lang==="ko"?C.accent:"#cbd5e1"}`,
-                          transition:"background 0.08s,border-color 0.08s",
-                          boxShadow:lang==="ko"?`0 2px 8px ${C.accentGlow}`:"none",
-                        }}>
-                          <div style={{position:"absolute",top:3,left:lang==="ko"?26:3,width:20,height:20,borderRadius:"50%",background:"#ffffff",transition:"left 0.1s",boxShadow:"0 1px 4px rgba(0,0,0,0.2)"}}/>
+                  <div style={{display:"flex",flexDirection:"column",gap:16,minWidth:0}}>
+                    <div className="panel-findings" style={{padding:"var(--sp-md)"}}>
+                      {/* 헤더 — 항상 표시 */}
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                        <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
+                          {(indication||clinicalInfo||keyMeasurements||differentialDx||finding)&&(
+                            <button onClick={()=>{setIndication("");setClinicalInfo("");setKeyMeasurements("");setDifferentialDx("");setFinding("");}} style={{
+                              padding:"2px 10px",borderRadius:20,border:`1px solid rgba(220,38,38,0.3)`,
+                              background:"rgba(220,38,38,0.06)",color:C.red,
+                              fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1,cursor:"pointer",
+                              transition:"background 0.08s,color 0.08s",flexShrink:0,
+                            }} title="입력 내용 전체 삭제">✕ 초기화</button>
+                          )}
+                          <div style={{flex:1,height:"1px",background:`linear-gradient(to right,${C.dim}30,transparent)`}}/>
+                          <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,fontWeight:700}}>CLINICAL INPUT</span>
+                          <div style={{flex:1,height:"1px",background:`linear-gradient(to left,${C.dim}30,transparent)`}}/>
                         </div>
-                        <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="ko"?C.accent:C.dim,transition:"color 0.08s"}}>한국어</span>
+                        <button onClick={()=>setShowClinicalExtra(v=>!v)} style={{
+                          marginLeft:10,padding:"2px 10px",borderRadius:20,border:`1px solid ${C.border}`,
+                          background:showClinicalExtra?C.accentDim:"transparent",
+                          color:showClinicalExtra?C.accent:C.dim,
+                          fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1,cursor:"pointer",
+                          transition:"background 0.08s,color 0.08s,border-color 0.08s",flexShrink:0,
+                        }}>
+                          {showClinicalExtra?"▲ 접기":"▼ 추가입력"}
+                        </button>
                       </div>
-                    </Field>
-                  </div>
-                </div>
 
-                {error&&(
-                  <div role="alert" aria-live="assertive" style={{padding:"12px 16px",borderRadius:10,background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",color:C.red,fontFamily:mono,fontSize:11,lineHeight:1.7,whiteSpace:"pre-wrap"}}>
-                    ⚠ {error}
-                  </div>
-                )}
+                      {/* 접히는 영역 — INDICATION / INFO / MEASUREMENTS / DDx */}
+                      {showClinicalExtra&&(
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:10,paddingBottom:10,borderBottom:`1px solid ${C.border}`}}>
+                          <Field label="CLINICAL INDICATION" hint="optional">
+                            <input className="field-input" name="indication" autoComplete="off" value={indication} onChange={e=>setIndication(e.target.value)} placeholder="R/O pneumonia, f/u after surgery…"/>
+                          </Field>
+                          <Field label="CLINICAL INFORMATION" hint="optional">
+                            <input className="field-input" name="clinical-info" autoComplete="off" value={clinicalInfo} onChange={e=>setClinicalInfo(e.target.value)} placeholder="증상, 병력, 검사실 소견…"/>
+                          </Field>
+                          <Field label="KEY MEASUREMENTS" hint="optional">
+                            <input className="field-input" name="measurements" autoComplete="off" value={keyMeasurements} onChange={e=>setKeyMeasurements(e.target.value)} placeholder="우폐 결절 1.2 cm, 간 좌엽 3.4 cm 병변…"/>
+                          </Field>
+                          <Field label="CLINICIAN'S DDx" hint="optional" accent>
+                            <input className="field-input" name="ddx" autoComplete="off" value={differentialDx} onChange={e=>setDifferentialDx(e.target.value)} placeholder="폐암 vs 전이 vs 염증성 병변…" style={{borderColor:differentialDx?`${C.accent}50`:undefined}}/>
+                          </Field>
+                        </div>
+                      )}
 
-                  </div>{/* /COL 3 */}
+                      {/* 항상 표시 — FINDINGS */}
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                          <label className="field-label" style={{color:C.accent}}>FINDINGS / OBSERVATIONS</label>
+                          {(indication||clinicalInfo||keyMeasurements||differentialDx||finding)&&(
+                            <button onClick={()=>{setIndication("");setClinicalInfo("");setKeyMeasurements("");setDifferentialDx("");setFinding("");}}
+                              className="field-label" style={{color:C.red,background:"none",border:"none",cursor:"pointer",padding:0}}>CLEAR</button>
+                          )}
+                        </div>
+                        <textarea className="field-input" name="findings" autoComplete="off"
+                          style={{height:"clamp(148px,18vh,260px)"}}
+                          placeholder={"소견을 자유롭게 입력하세요…\n\nExample:\n- RLL consolidation with air bronchogram\n- No pleural effusion\n- Heart size normal"}
+                          value={finding} onChange={e=>setFinding(e.target.value)}/>
+                      </div>
+                      <div style={{display:"flex",justifyContent:"center",marginTop:10}}>
+                        <div role="switch" aria-checked={showClinicalExtra} aria-label="추가 입력 필드 펼치기" tabIndex={0}
+                          onClick={()=>setShowClinicalExtra(v=>!v)}
+                          onKeyDown={(e)=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();setShowClinicalExtra(v=>!v);}}}
+                          style={{width:44,height:20,borderRadius:10,cursor:"pointer",position:"relative",
+                            background:showClinicalExtra?C.accent:"#cbd5e1",
+                            border:`1px solid ${showClinicalExtra?C.accent:"#cbd5e1"}`,
+                            transition:"background 0.08s,border-color 0.08s",
+                            boxShadow:showClinicalExtra?`0 1px 6px ${C.accentGlow}`:"none",flexShrink:0}}>
+                          <div style={{position:"absolute",top:2,left:showClinicalExtra?22:2,width:14,height:14,borderRadius:"50%",background:"#ffffff",transition:"left 0.1s",boxShadow:"0 1px 3px rgba(0,0,0,0.2)"}}/>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* COL 3 — Output Options */}
+                  <div style={{display:"flex",flexDirection:"column",gap:16,minWidth:0}}>
+                    {/* Mammography 전용 패널 */}
+                    {isMammo&&(
+                      <MammoPanel
+                        parenchyma={mammoParenchyma} setParenchyma={setMammoParenchyma}
+                        findings={mammoFindings} setFindings={setMammoFindings}
+                        findingCustom={mammoFindingCustom} setFindingCustom={setMammoFindingCustom}
+                        locationR={mammoLocationR} setLocationR={setMammoLocationR}
+                        locationL={mammoLocationL} setLocationL={setMammoLocationL}
+                        assessment={mammoAssessment} setAssessment={setMammoAssessment}
+                        addlTest={mammoAddlTest} setAddlTest={setMammoAddlTest}
+                      />
+                    )}
+
+                    {/* Output Options */}
+                    <div className="panel" style={{padding:"var(--sp-md)"}}>
+                      <Divider label="OUTPUT OPTIONS"/>
+                      <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                        <Field label="FORMAT">
+                          {modality==="X-ray"
+                            ?<div className="field-input" style={{opacity:0.4,cursor:"default",userSelect:"none"}}><span style={{fontFamily:mono,fontSize:11,color:C.dim}}>N/A for X-ray</span></div>
+                            :<SegBtn options={FORMAT_OPTIONS} value={format} onChange={setFormat}/>
+                          }
+                        </Field>
+                        <Field label="TONE">
+                          <SegBtn options={TONE_OPTIONS} value={tone} onChange={setTone} small/>
+                        </Field>
+
+                        <Field label="URGENCY">
+                          <div style={{display:"flex",gap:8,marginTop:2,flexWrap:"wrap"}}>
+                            {URGENCY_OPTIONS.map(u=>(
+                              <Tag key={u.value} active={urgency===u.value} color={u.color} onClick={()=>setUrgency(u.value)}>{u.label}</Tag>
+                            ))}
+                          </div>
+                        </Field>
+
+                        <Field label="LANGUAGE">
+                          <div style={{display:"flex",alignItems:"center",gap:12,marginTop:2}}>
+                            <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="en"?C.accent:C.dim,transition:"color 0.08s"}}>ENG</span>
+                            <div role="switch" aria-checked={lang==="ko"} aria-label="언어 전환" tabIndex={0} onClick={()=>setLang(l=>l==="en"?"ko":"en")} onKeyDown={(e)=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();setLang(l=>l==="en"?"ko":"en");}}} style={{
+                              width:52,height:28,borderRadius:14,cursor:"pointer",position:"relative",
+                              background:lang==="ko"?C.accent:"#cbd5e1",
+                              border:`1px solid ${lang==="ko"?C.accent:"#cbd5e1"}`,
+                              transition:"background 0.08s,border-color 0.08s",
+                              boxShadow:lang==="ko"?`0 2px 8px ${C.accentGlow}`:"none",
+                            }}>
+                              <div style={{position:"absolute",top:3,left:lang==="ko"?26:3,width:20,height:20,borderRadius:"50%",background:"#ffffff",transition:"left 0.1s",boxShadow:"0 1px 4px rgba(0,0,0,0.2)"}}/>
+                            </div>
+                            <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="ko"?C.accent:C.dim,transition:"color 0.08s"}}>한국어</span>
+                          </div>
+                        </Field>
+                      </div>
+                    </div>
+
+                    {error&&(
+                      <div style={{padding:"12px 16px",borderRadius:10,background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",color:C.red,fontFamily:mono,fontSize:11,lineHeight:1.7,whiteSpace:"pre-wrap"}}>
+                        ⚠ {error}
+                      </div>
+                    )}
+                  </div>
                 </div>{/* /3-col grid */}
 
                 {report&&report._bodypart&&report._bodypart!==bodypart&&(
                   <div style={{padding:"8px 14px",borderRadius:8,background:"rgba(3,105,161,0.06)",border:`1px solid rgba(3,105,161,0.25)`,display:"flex",alignItems:"center",gap:8}}>
-                    <span aria-hidden="true" style={{fontSize:12}}>🔍</span>
+                    <span style={{fontSize:12}}>🔍</span>
                     <span style={{fontFamily:mono,fontSize:10,color:C.accent,letterSpacing:0.5}}>
                       Body region auto-detected: <strong>{report._bodypart}</strong>
                       {!AUTO_DETECT_MODALITIES.includes(modality)&&<span style={{color:C.dim,marginLeft:6}}>(선택값 "{bodypart}" 대신 적용됨)</span>}
@@ -1525,7 +1499,7 @@ Generate a professional radiology report as JSON.`;
           </div>{/* /TOP INPUT */}
 
           {/* BOTTOM — REPORT OUTPUT */}
-          <div className="panel" style={{overflow:"hidden",minHeight:"clamp(280px,45vh,800px)"}}>
+          <div className="panel" style={{overflow:"hidden",minHeight:"clamp(420px,55vh,800px)"}}>
             {/* Report Header */}
             <div style={{padding:"18px 24px",borderBottom:`1px solid ${C.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",background:"#f1f5f9"}}>
               <div>
