@@ -1311,16 +1311,28 @@ Generate a professional radiology report as JSON.`;
                       <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.dim,letterSpacing:2,fontWeight:700}}>CLINICAL INPUT</span>
                       <div style={{flex:1,height:"1px",background:`linear-gradient(to left,${C.dim}30,transparent)`}}/>
                     </div>
-                    <button onClick={()=>setShowClinicalExtra(v=>!v)} style={{
-                      marginLeft:10,padding:"2px 10px",borderRadius:20,border:`1px solid ${C.border}`,
-                      background:showClinicalExtra?C.accentDim:"transparent",
-                      color:showClinicalExtra?C.accent:C.dim,
-                      fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1,cursor:"pointer",
-                      transition:"background 0.08s,color 0.08s,border-color 0.08s",
-                      flexShrink:0,
-                    }}>
-                      {showClinicalExtra?"▲ 접기":"▼ 추가입력"}
-                    </button>
+                    <div style={{display:"flex",gap:6,marginLeft:10,flexShrink:0}}>
+                      {(indication||clinicalInfo||keyMeasurements||differentialDx||finding)&&(
+                        <button onClick={()=>{setIndication("");setClinicalInfo("");setKeyMeasurements("");setDifferentialDx("");setFinding("");}} style={{
+                          padding:"2px 10px",borderRadius:20,border:`1px solid rgba(220,38,38,0.3)`,
+                          background:"rgba(220,38,38,0.06)",color:C.red,
+                          fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1,cursor:"pointer",
+                          transition:"background 0.08s,color 0.08s",
+                        }}
+                        title="입력 내용 전체 삭제">
+                          ✕ 초기화
+                        </button>
+                      )}
+                      <button onClick={()=>setShowClinicalExtra(v=>!v)} style={{
+                        padding:"2px 10px",borderRadius:20,border:`1px solid ${C.border}`,
+                        background:showClinicalExtra?C.accentDim:"transparent",
+                        color:showClinicalExtra?C.accent:C.dim,
+                        fontFamily:mono,fontSize:9,fontWeight:700,letterSpacing:1,cursor:"pointer",
+                        transition:"background 0.08s,color 0.08s,border-color 0.08s",
+                      }}>
+                        {showClinicalExtra?"▲ 접기":"▼ 추가입력"}
+                      </button>
+                    </div>
                   </div>
 
                   {/* 접히는 영역 — INDICATION / INFO / MEASUREMENTS / DDx */}
