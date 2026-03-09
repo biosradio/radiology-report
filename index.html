@@ -11,7 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@300;400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=DM+Serif+Display:ital@0;1&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
   :root{
     --fs-xs:clamp(10px,0.85vw,12px);
@@ -64,58 +64,12 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
-  @keyframes glow{0%,100%{box-shadow:0 0 12px rgba(3,105,161,0.15);}50%{box-shadow:0 0 24px rgba(3,105,161,0.3);}}
   @media(prefers-reduced-motion:reduce){
     *{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;}
   }
-  ::-webkit-scrollbar{width:5px;}
-  ::-webkit-scrollbar-track{background:#e2e8f0;}
-  ::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:4px;}
-  input[type=date]::-webkit-calendar-picker-indicator{filter:none;cursor:pointer;opacity:0.6;}
-  select{background-color:#ffffff;color:#1e293b;border:1px solid #cbd5e1;}
-  select option{background:#ffffff;color:#1e293b;}
-  .field-input{
-    background:#ffffff;
-    border:1px solid #cbd5e1;
-    color:#1e293b;
-    font-family:'Sora','IBM Plex Sans KR',system-ui,sans-serif;
-    font-size:var(--fs-md);
-    padding:8px 12px;
-    border-radius:var(--r-md);
-    outline:none;
-    transition:var(--tr-border);
-    width:100%;
-    box-shadow:inset 0 1px 2px rgba(0,0,0,0.04);
+  @media(max-width:600px){
+    .field-input{font-size:16px !important;}
   }
-  .field-input:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px rgba(3,105,161,0.12),inset 0 1px 2px rgba(0,0,0,0.04);}
-  .field-input::placeholder{color:#94a3b8;}
-  .btn-primary{
-    background:linear-gradient(135deg,#0369a1 0%,#0284c7 100%);
-    color:#ffffff;border:none;
-    font-family:'JetBrains Mono',monospace;
-    font-weight:800;letter-spacing:2px;cursor:pointer;
-    transition:var(--tr-btn);border-radius:var(--r-md);
-    box-shadow:0 2px 8px rgba(3,105,161,0.25);
-  }
-  .btn-primary:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 20px rgba(3,105,161,0.35);}
-  .btn-primary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
-  .btn-primary:disabled{background:#e2e8f0;color:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none;border:1px solid #e2e8f0;}
-  /* 패널: 층위(depth) 시스템 */
-  .panel{
-    background:#ffffff;
-    border:1px solid #e2e8f0;
-    border-radius:var(--r-lg);
-    box-shadow:0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.04);
-    width:100%;box-sizing:border-box;
-  }
-  .panel-elevated{
-    background:#ffffff;
-    border:1px solid #dde3ec;
-    border-radius:var(--r-lg);
-    box-shadow:0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
-  }
-  *{min-width:0;}
-  /* 탭 버튼 - radius 통일 */
   .tab-btn{padding:6px 16px;border-radius:var(--r-sm);border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;transition:var(--tr-ui);}
   .tab-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .icon-btn{display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.08s ease,color 0.08s ease,background 0.08s ease;}
@@ -133,7 +87,7 @@
   .seg-btn:focus{outline:none;}
   .seg-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
   .seg-btn.seg-active{background:var(--accent);color:#ffffff;box-shadow:0 1px 4px rgba(3,105,161,0.3);}
-  .seg-btn.seg-inactive{background:transparent;color:#94a3b8;}
+  .seg-btn.seg-inactive{background:transparent;color:#64748b;}
   .seg-btn.seg-inactive:hover{background:rgba(3,105,161,0.08);color:#1e293b;}
   /* 커스텀 드롭다운 - radius 통일 */
   .custom-select-wrapper{position:relative;width:100%;}
@@ -163,18 +117,18 @@
   }
   .custom-select-option:hover{background:#f1f5f9;}
   .custom-select-option.selected{background:rgba(3,105,161,0.08);color:var(--accent);font-weight:600;}
-  /* 섹션 레이블 - mono 사용 범위 제한, sans로 전환 */
+  /* 섹션 레이블 */
   .section-label{
     font-family:'Sora',sans-serif;font-size:var(--fs-xs);
-    font-weight:600;letter-spacing:2px;color:#94a3b8;text-transform:uppercase;
+    font-weight:600;letter-spacing:2px;color:#64748b;text-transform:uppercase;
   }
-  /* 필드 레이블 - mono 유지하되 크기 조정 */
+  /* 필드 레이블 */
   .field-label{
     font-family:'JetBrains Mono',monospace;
     font-size:10px;letter-spacing:1.5px;font-weight:700;
     color:#64748b;text-transform:uppercase;
   }
-  /* FINDINGS 패널 강조 - 주요 입력 */
+  /* FINDINGS 패널 강조 */
   .panel-findings{
     background:#ffffff;
     border:2px solid rgba(3,105,161,0.2);
@@ -191,16 +145,6 @@
     width:48px;height:48px;border-radius:var(--r-md);
     background:rgba(3,105,161,0.06);border:1px solid rgba(3,105,161,0.1);
     display:flex;align-items:center;justify-content:center;font-size:22px;
-  }
-  @keyframes spin{to{transform:rotate(360deg);}}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.5;}}
-  @keyframes glow{0%,100%{box-shadow:0 0 12px rgba(3,105,161,0.15);}50%{box-shadow:0 0 24px rgba(3,105,161,0.3);}}
-  @media(prefers-reduced-motion:reduce){
-    *{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;}
-  }
-  @media(max-width:600px){
-    .field-input{font-size:16px !important;}
   }
 </style>
 </head>
@@ -313,7 +257,7 @@ const C={
   border:"#dde3ec",borderHover:"rgba(3,105,161,0.4)",
   accent:"#0369a1",accent2:"#6366f1",
   accentDim:"rgba(3,105,161,0.08)",accentGlow:"rgba(3,105,161,0.2)",
-  text:"#475569",dim:"#94a3b8",bright:"#0f172a",
+  text:"#475569",dim:"#64748b",bright:"#0f172a",
   green:"#16a34a",greenDim:"rgba(22,163,74,0.08)",
   amber:"#d97706",red:"#dc2626",
 };
@@ -389,15 +333,16 @@ function Tag({children,color,active,onClick}){
   );
 }
 
-function SegBtn({options,value,onChange,small}){
+function SegBtn({options,value,onChange,small,"aria-label":ariaLabel}){
   return(
-    <div style={{display:"flex",background:"#f1f5f9",borderRadius:8,padding:3,border:`1px solid ${C.border}`,gap:2,minWidth:0,width:"100%"}}>
+    <div role="group" aria-label={ariaLabel} style={{display:"flex",background:"#f1f5f9",borderRadius:8,padding:3,border:`1px solid ${C.border}`,gap:2,minWidth:0,width:"100%"}}>
       {options.map(opt=>{
         const active=value===opt.value;
         return(
           <button
             key={opt.value}
             onClick={()=>onChange(opt.value)}
+            aria-pressed={active}
             className={`seg-btn ${active?"seg-active":"seg-inactive"}`}
             style={{
               padding:small?"5px 4px":"7px 6px",
@@ -405,7 +350,7 @@ function SegBtn({options,value,onChange,small}){
               boxShadow:active?`0 2px 8px ${C.accentGlow}`:"none",
             }}
           >
-            {opt.icon&&<span style={{marginRight:3}}>{opt.icon}</span>}{opt.label}
+            {opt.icon&&<span aria-hidden="true" style={{marginRight:3}}>{opt.icon}</span>}{opt.label}
           </button>
         );
       })}
@@ -418,20 +363,22 @@ function CustomSelect({options,value,onChange,id}){
   const ref=React.useRef(null);
   React.useEffect(()=>{
     const handler=(e)=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};
+    const keyHandler=(e)=>{if(e.key==="Escape")setOpen(false);};
     document.addEventListener("mousedown",handler);
-    return()=>document.removeEventListener("mousedown",handler);
+    document.addEventListener("keydown",keyHandler);
+    return()=>{document.removeEventListener("mousedown",handler);document.removeEventListener("keydown",keyHandler);};
   },[]);
   return(
     <div className="custom-select-wrapper" ref={ref}>
-      <button id={id} className="custom-select-btn" onClick={()=>setOpen(o=>!o)} type="button">
+      <button id={id} className="custom-select-btn" onClick={()=>setOpen(o=>!o)} type="button" role="combobox" aria-expanded={open} aria-haspopup="listbox" aria-label={value}>
         <span>{value}</span>
         <span style={{fontSize:10,color:"#94a3b8",transition:"transform 0.1s",display:"inline-block",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▼</span>
       </button>
       {open&&(
-        <div className="custom-select-dropdown">
+        <div className="custom-select-dropdown" role="listbox" aria-label="옵션 목록">
           {options.map(opt=>(
             <button key={opt} className={`custom-select-option${value===opt?" selected":""}`}
-              onClick={()=>{onChange(opt);setOpen(false);}} type="button">
+              onClick={()=>{onChange(opt);setOpen(false);}} type="button" role="option" aria-selected={value===opt}>
               {opt}
             </button>
           ))}
@@ -461,7 +408,7 @@ function Spinner(){
     return()=>clearInterval(t);
   },[]);
   return(
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:24,minHeight:320}}>
+    <div role="status" aria-live="polite" aria-label={steps[step]} style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:24,minHeight:320}}>
       <div style={{position:"relative",width:56,height:56}}>
         <div style={{position:"absolute",inset:0,border:`1px solid ${C.border}`,borderRadius:"50%"}}/>
         <div style={{position:"absolute",inset:0,border:"2px solid transparent",borderTopColor:C.accent,borderRadius:"50%",animation:"spin 0.9s linear infinite"}}/>
@@ -469,8 +416,8 @@ function Spinner(){
         <div style={{position:"absolute",inset:"50%",transform:"translate(-50%,-50%)",width:6,height:6,borderRadius:"50%",background:C.accent,boxShadow:`0 0 12px ${C.accentGlow}`}}/>
       </div>
       <div style={{textAlign:"center",animation:"fadeIn 0.15s ease"}}>
-        <p style={{fontFamily:mono,fontSize:11,color:C.accent,letterSpacing:2,animation:"pulse 1.4s ease-in-out infinite"}}>{steps[step]}</p>
-        <p style={{fontFamily:mono,fontSize:9,color:C.dim,marginTop:6,letterSpacing:1}}>Gemini AI 분석 중…</p>
+        <p aria-hidden="true" style={{fontFamily:mono,fontSize:11,color:C.accent,letterSpacing:2,animation:"pulse 1.4s ease-in-out infinite"}}>{steps[step]}</p>
+        <p aria-hidden="true" style={{fontFamily:mono,fontSize:9,color:C.dim,marginTop:6,letterSpacing:1}}>Gemini AI 분석 중…</p>
       </div>
     </div>
   );
@@ -612,6 +559,44 @@ function MammoPanel({
   );
 }
 
+
+/* ── KNOWN MODELS (컴포넌트 외부 — 매 렌더 재생성 방지) ── */
+const KNOWN_MODELS=[
+  "gemini-3.1-pro-preview",
+  "gemini-3-flash-preview",
+  "gemini-3.1-flash-lite-preview",
+  "gemini-2.5-pro",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-pro",
+  "gemini-1.5-flash",
+];
+
+/* ── ORGAN MAP (컴포넌트 외부 — 매 렌더 재생성 방지) ── */
+const ORGAN_MAP={
+  "Chest":          {ko:"폐,흉막,심장,심낭,종격동,기관지,대동맥,횡격막,흉벽,뼈",en:"Lungs,Pleura,Heart,Pericardium,Mediastinum,Trachea & Bronchi,Aorta,Diaphragm,Chest Wall,Bones"},
+  "Abdomen":        {ko:"간,담낭,담도,췌장,비장,부신,신장,장,복막,혈관,뼈",en:"Liver,Gallbladder,Bile Ducts,Pancreas,Spleen,Adrenal Glands,Kidneys,Bowel,Peritoneum,Vessels,Bones"},
+  "Pelvis":         {ko:"방광,자궁/난소 또는 전립선,직장,골반혈관,뼈",en:"Bladder,Uterus/Ovaries or Prostate,Rectum,Pelvic Vessels,Bones"},
+  "Abdomen & Pelvis":{ko:"간,담낭,췌장,비장,신장,방광,장,복막,혈관,뼈",en:"Liver,Gallbladder,Pancreas,Spleen,Kidneys,Bladder,Bowel,Peritoneum,Vessels,Bones"},
+  "Brain":          {ko:"뇌실질,뇌실,뇌구/회,백질,뇌간,소뇌,두개골,부비동,안와",en:"Brain Parenchyma,Ventricles,Sulci & Gyri,White Matter,Brainstem,Cerebellum,Skull,Sinuses,Orbits"},
+  "MRA":            {ko:"우측 내경동맥,좌측 내경동맥,우측 중대뇌동맥,좌측 중대뇌동맥,우측 전대뇌동맥,좌측 전대뇌동맥,우측 후대뇌동맥,좌측 후대뇌동맥,우측 추골동맥,좌측 추골동맥,기저동맥,Willis환",en:"Rt. Internal Carotid Artery,Lt. Internal Carotid Artery,Rt. Middle Cerebral Artery,Lt. Middle Cerebral Artery,Rt. Anterior Cerebral Artery,Lt. Anterior Cerebral Artery,Rt. Posterior Cerebral Artery,Lt. Posterior Cerebral Artery,Rt. Vertebral Artery,Lt. Vertebral Artery,Basilar Artery,Circle of Willis"},
+  "Neck":           {ko:"갑상선,림프절,혈관,연부조직",en:"Thyroid,Lymph Nodes,Vessels,Soft Tissue"},
+  "C-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
+  "T-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
+  "L-spine":        {ko:"추체,추간판,척수원뿔,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
+  "Knee":           {ko:"골구조물,관절강,연골,반월판,인대,연부조직",en:"Bones,Joint Space,Cartilage,Menisci,Ligaments,Soft Tissue"},
+  "Shoulder":       {ko:"골구조물,회전근개,관절순,관절강,점액낭",en:"Bones,Rotator Cuff,Labrum,Joint Space,Bursa"},
+  "Hip":            {ko:"골구조물,관절연골,관절강,연부조직",en:"Bones,Articular Cartilage,Joint Space,Soft Tissue"},
+  // Mammography
+  "Both Breasts":              {ko:"우측 유방,좌측 유방,피부/유두,액와부 림프절",en:"Right Breast,Left Breast,Skin/Nipple,Axillary Lymph Nodes"},
+  "Right Breast":              {ko:"유방실질,유두/유륜,피부,액와부 림프절",en:"Breast Parenchyma,Nipple/Areola,Skin,Axillary Lymph Nodes"},
+  "Left Breast":               {ko:"유방실질,유두/유륜,피부,액와부 림프절",en:"Breast Parenchyma,Nipple/Areola,Skin,Axillary Lymph Nodes"},
+  "Right Breast (Targeted)":   {ko:"목표 병변,주변 실질,피부,액와부 림프절",en:"Target Lesion,Surrounding Parenchyma,Skin,Axillary Lymph Nodes"},
+  "Left Breast (Targeted)":    {ko:"목표 병변,주변 실질,피부,액와부 림프절",en:"Target Lesion,Surrounding Parenchyma,Skin,Axillary Lymph Nodes"},
+};
+
 /* ── MAIN APP ─────────────────────────────── */
 function App(){
   const examDate=new Date().toISOString().split("T")[0];
@@ -667,18 +652,6 @@ function App(){
   const modalTextRef=useRef(null);
 
   const [selectedModel,setSelectedModel]=useState("gemini-3-flash-preview");
-  const KNOWN_MODELS=[
-    "gemini-3.1-pro-preview",
-    "gemini-3-flash-preview",
-    "gemini-3.1-flash-lite-preview",
-    "gemini-2.5-pro",
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-pro",
-    "gemini-1.5-flash",
-  ];
   const apiOk=apiKey.startsWith("AIza");
 
   const contrastOptions=CONTRAST_OPTIONS[modality]||null;
@@ -705,28 +678,7 @@ function App(){
   };
   const getContrastLabel=()=>contrastOptions?.find(o=>o.value===contrast)?.label||"";
 
-  /* ── ORGAN MAP ── */
-  const organMap={
-    "Chest":          {ko:"폐,흉막,심장,심낭,종격동,기관지,대동맥,횡격막,흉벽,뼈",en:"Lungs,Pleura,Heart,Pericardium,Mediastinum,Trachea & Bronchi,Aorta,Diaphragm,Chest Wall,Bones"},
-    "Abdomen":        {ko:"간,담낭,담도,췌장,비장,부신,신장,장,복막,혈관,뼈",en:"Liver,Gallbladder,Bile Ducts,Pancreas,Spleen,Adrenal Glands,Kidneys,Bowel,Peritoneum,Vessels,Bones"},
-    "Pelvis":         {ko:"방광,자궁/난소 또는 전립선,직장,골반혈관,뼈",en:"Bladder,Uterus/Ovaries or Prostate,Rectum,Pelvic Vessels,Bones"},
-    "Abdomen & Pelvis":{ko:"간,담낭,췌장,비장,신장,방광,장,복막,혈관,뼈",en:"Liver,Gallbladder,Pancreas,Spleen,Kidneys,Bladder,Bowel,Peritoneum,Vessels,Bones"},
-    "Brain":          {ko:"뇌실질,뇌실,뇌구/회,백질,뇌간,소뇌,두개골,부비동,안와",en:"Brain Parenchyma,Ventricles,Sulci & Gyri,White Matter,Brainstem,Cerebellum,Skull,Sinuses,Orbits"},
-    "MRA":            {ko:"우측 내경동맥,좌측 내경동맥,우측 중대뇌동맥,좌측 중대뇌동맥,우측 전대뇌동맥,좌측 전대뇌동맥,우측 후대뇌동맥,좌측 후대뇌동맥,우측 추골동맥,좌측 추골동맥,기저동맥,Willis환",en:"Rt. Internal Carotid Artery,Lt. Internal Carotid Artery,Rt. Middle Cerebral Artery,Lt. Middle Cerebral Artery,Rt. Anterior Cerebral Artery,Lt. Anterior Cerebral Artery,Rt. Posterior Cerebral Artery,Lt. Posterior Cerebral Artery,Rt. Vertebral Artery,Lt. Vertebral Artery,Basilar Artery,Circle of Willis"},
-    "Neck":           {ko:"갑상선,림프절,혈관,연부조직",en:"Thyroid,Lymph Nodes,Vessels,Soft Tissue"},
-    "C-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
-    "T-spine":        {ko:"추체,추간판,척수관,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
-    "L-spine":        {ko:"추체,추간판,척수원뿔,신경공,척추주변연부조직",en:"Vertebral Bodies,Disc Spaces,Spinal Canal,Neural Foramina,Paraspinal Soft Tissue"},
-    "Knee":           {ko:"골구조물,관절강,연골,반월판,인대,연부조직",en:"Bones,Joint Space,Cartilage,Menisci,Ligaments,Soft Tissue"},
-    "Shoulder":       {ko:"골구조물,회전근개,관절순,관절강,점액낭",en:"Bones,Rotator Cuff,Labrum,Joint Space,Bursa"},
-    "Hip":            {ko:"골구조물,관절연골,관절강,연부조직",en:"Bones,Articular Cartilage,Joint Space,Soft Tissue"},
-    // Mammography
-    "Both Breasts":              {ko:"우측 유방,좌측 유방,피부/유두,액와부 림프절",en:"Right Breast,Left Breast,Skin/Nipple,Axillary Lymph Nodes"},
-    "Right Breast":              {ko:"유방실질,유두/유륜,피부,액와부 림프절",en:"Breast Parenchyma,Nipple/Areola,Skin,Axillary Lymph Nodes"},
-    "Left Breast":               {ko:"유방실질,유두/유륜,피부,액와부 림프절",en:"Breast Parenchyma,Nipple/Areola,Skin,Axillary Lymph Nodes"},
-    "Right Breast (Targeted)":   {ko:"목표 병변,주변 실질,피부,액와부 림프절",en:"Target Lesion,Surrounding Parenchyma,Skin,Axillary Lymph Nodes"},
-    "Left Breast (Targeted)":    {ko:"목표 병변,주변 실질,피부,액와부 림프절",en:"Target Lesion,Surrounding Parenchyma,Skin,Axillary Lymph Nodes"},
-  };
+  /* ── ORGAN MAP (외부 상수 참조) ── */
 
   /* ── GENERATE ── */
   const generate=useCallback(async()=>{
@@ -745,7 +697,7 @@ function App(){
     const autoRegion=!isMammo?detectBodyRegion(fullCtx,bodypart,isAutoDetect):null;
     const effectiveBodypart=autoRegion||bodypart;
 
-    const organs=organMap[effectiveBodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
+    const organs=ORGAN_MAP[effectiveBodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
     const contrastStr=contrastOptions?getContrastLabel():"N/A";
     const patientCtx=[].filter(Boolean).join(" | ");
     const measCtx=keyMeasurements?`\nKey Measurements: ${keyMeasurements}`:"";
@@ -928,7 +880,7 @@ Generate a professional radiology report as JSON.`;
   },[apiKey,apiOk,selectedModel,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,urgency,lang,differentialDx,keyMeasurements]);
 
   /* ── COPY ── */
-  const getCopyText=()=>{
+  const getCopyText=useCallback(()=>{
     if(!report)return"";
     let text="";
     const isKo=lang==="ko";
@@ -972,7 +924,7 @@ Generate a professional radiology report as JSON.`;
       if(report.recommendation&&report.recommendation!=="null") text+=`\n\nRECOMMENDATION:\n${report.recommendation}`;
     }
     return text;
-  };
+  },[report,modality,lang,mammoParenchyma,mammoFindings,mammoFindingCustom,mammoLocationR,mammoLocationL,mammoAssessment,mammoAddlTest,urgency]);
 
   const copyReport=()=>{
     if(!report)return;
@@ -1056,9 +1008,11 @@ Generate a professional radiology report as JSON.`;
           <div style={{display:"flex",flexDirection:"column",gap:16}}>
 
             {/* Tab Nav */}
-            <div style={{display:"flex",gap:6,background:"#f8fafc",padding:4,borderRadius:10,border:`1px solid ${C.border}`}}>
+            <div role="tablist" aria-label="메인 네비게이션" style={{display:"flex",gap:6,background:"#f8fafc",padding:4,borderRadius:10,border:`1px solid ${C.border}`}}>
               {[["input","✎  입력"],["history","⏱  히스토리"],["settings","⚙  설정"]].map(([id,label])=>(
-                <button key={id} onClick={()=>setActiveTab(id)} className="tab-btn" style={{
+                <button key={id} onClick={()=>setActiveTab(id)} className="tab-btn"
+                  role="tab" aria-selected={activeTab===id} aria-controls={`tabpanel-${id}`}
+                  style={{
                   flex:1,background:activeTab===id?C.accentDim:"transparent",
                   color:activeTab===id?C.accent:C.dim,
                   border:activeTab===id?`1px solid ${C.borderHover}`:"1px solid transparent",
@@ -1136,7 +1090,7 @@ Generate a professional radiology report as JSON.`;
                   );
                   if(filtered.length===0) return(
                     <div className="empty-state">
-                      <div className="empty-state-icon">🔍</div>
+                      <div className="empty-state-icon" aria-hidden="true">🔍</div>
                       <div>
                         <p style={{fontFamily:sans,fontSize:"var(--fs-sm)",fontWeight:600,color:C.bright,marginBottom:4}}>"<strong>{historySearch}</strong>" 검색 결과 없음</p>
                         <p style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim}}>modality, impression, 날짜로 검색하세요</p>
@@ -1265,7 +1219,7 @@ Generate a professional radiology report as JSON.`;
                     {contrastOptions&&(
                       <div style={{gridColumn:"1/-1"}}>
                         <Field label={modality==="MRI"?"CONTRAST AGENT":"CONTRAST"}>
-                          <SegBtn options={contrastOptions} value={contrast} onChange={setContrast}/>
+                          <SegBtn options={contrastOptions} value={contrast} onChange={setContrast} aria-label="조영제 선택"/>
                         </Field>
                       </div>
                     )}
@@ -1274,7 +1228,7 @@ Generate a professional radiology report as JSON.`;
                       {["CT","MRI","Ultrasound"].includes(modality)?(
                         <Field label="BODY REGION">
                           <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderRadius:8,background:"rgba(3,105,161,0.05)",border:`1px solid rgba(3,105,161,0.2)`}}>
-                            <span style={{fontSize:11}}>🔍</span>
+                            <span aria-hidden="true" style={{fontSize:11}}>🔍</span>
                             <span style={{fontFamily:mono,fontSize:10,color:C.dim,letterSpacing:0.5}}>findings 입력 후 자동 감지</span>
                           </div>
                         </Field>
@@ -1382,11 +1336,11 @@ Generate a professional radiology report as JSON.`;
                     <Field label="FORMAT">
                       {modality==="X-ray"
                         ?<div className="field-input" style={{opacity:0.4,cursor:"default",userSelect:"none"}}><span style={{fontFamily:mono,fontSize:11,color:C.dim}}>N/A for X-ray</span></div>
-                        :<SegBtn options={FORMAT_OPTIONS} value={format} onChange={setFormat}/>
+                        :<SegBtn options={FORMAT_OPTIONS} value={format} onChange={setFormat} aria-label="출력 형식 선택"/>
                       }
                     </Field>
                     <Field label="TONE">
-                      <SegBtn options={TONE_OPTIONS} value={tone} onChange={setTone} small/>
+                      <SegBtn options={TONE_OPTIONS} value={tone} onChange={setTone} small aria-label="문체 선택"/>
                     </Field>
 
                     <Field label="URGENCY">
@@ -1400,7 +1354,10 @@ Generate a professional radiology report as JSON.`;
                     <Field label="LANGUAGE">
                       <div style={{display:"flex",alignItems:"center",gap:12,marginTop:2}}>
                         <span style={{fontFamily:mono,fontSize:11,fontWeight:700,color:lang==="en"?C.accent:C.dim,transition:"color 0.08s"}}>ENG</span>
-                        <div onClick={()=>setLang(l=>l==="en"?"ko":"en")} style={{
+                        <div role="switch" aria-checked={lang==="ko"} aria-label="언어 전환: 영어/한국어" tabIndex={0}
+                          onClick={()=>setLang(l=>l==="en"?"ko":"en")}
+                          onKeyDown={(e)=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();setLang(l=>l==="en"?"ko":"en");}}}
+                          style={{
                           width:52,height:28,borderRadius:14,cursor:"pointer",position:"relative",
                           background:lang==="ko"?C.accent:"#cbd5e1",
                           border:`1px solid ${lang==="ko"?C.accent:"#cbd5e1"}`,
@@ -1416,7 +1373,7 @@ Generate a professional radiology report as JSON.`;
                 </div>
 
                 {error&&(
-                  <div style={{padding:"12px 16px",borderRadius:10,background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",color:C.red,fontFamily:mono,fontSize:11,lineHeight:1.7,whiteSpace:"pre-wrap"}}>
+                  <div role="alert" aria-live="assertive" style={{padding:"12px 16px",borderRadius:10,background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.25)",color:C.red,fontFamily:mono,fontSize:11,lineHeight:1.7,whiteSpace:"pre-wrap"}}>
                     ⚠ {error}
                   </div>
                 )}
@@ -1426,7 +1383,7 @@ Generate a professional radiology report as JSON.`;
 
                 {report&&report._bodypart&&report._bodypart!==bodypart&&(
                   <div style={{padding:"8px 14px",borderRadius:8,background:"rgba(3,105,161,0.06)",border:`1px solid rgba(3,105,161,0.25)`,display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:12}}>🔍</span>
+                    <span aria-hidden="true" style={{fontSize:12}}>🔍</span>
                     <span style={{fontFamily:mono,fontSize:10,color:C.accent,letterSpacing:0.5}}>
                       Body region auto-detected: <strong>{report._bodypart}</strong>
                       {!AUTO_DETECT_MODALITIES.includes(modality)&&<span style={{color:C.dim,marginLeft:6}}>(선택값 "{bodypart}" 대신 적용됨)</span>}
