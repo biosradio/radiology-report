@@ -3,8 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#f0f4f8">
-<title>RadReport Pro</title>
+<meta name="theme-color" content="#0369a1">
+
+<!-- Primary SEO -->
+<title>RadReport Pro — AI 방사선 판독 보고서 생성기</title>
+<meta name="description" content="Gemini AI 기반 방사선 판독 보고서 자동 생성 도구. CT, MRI, X-ray, 초음파, 유방촬영 소견을 구조화된 영상의학 보고서로 즉시 변환합니다.">
+<meta name="keywords" content="방사선 판독, 영상의학 보고서, AI 판독, CT 보고서, MRI 보고서, radiology report, AI radiology, Gemini AI, 자동 판독, 판독문 생성">
+<meta name="author" content="RadReport Pro">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://radreport.pro/">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://radreport.pro/">
+<meta property="og:site_name" content="RadReport Pro">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:title" content="RadReport Pro — AI 방사선 판독 보고서 생성기">
+<meta property="og:description" content="Gemini AI 기반 방사선 판독 보고서 자동 생성. CT·MRI·X-ray·초음파 소견을 구조화된 보고서로 즉시 변환합니다.">
+<meta property="og:image" content="https://radreport.pro/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RadReport Pro 방사선 판독 보고서 생성 화면">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RadReport Pro — AI 방사선 판독 보고서 생성기">
+<meta name="twitter:description" content="Gemini AI 기반 방사선 판독 보고서 자동 생성. CT·MRI·X-ray·초음파 소견을 구조화된 보고서로 즉시 변환합니다.">
+<meta name="twitter:image" content="https://radreport.pro/og-image.png">
+
+<!-- Apple / PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="RadReport Pro">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -146,7 +178,42 @@
     background:rgba(3,105,161,0.06);border:1px solid rgba(3,105,161,0.1);
     display:flex;align-items:center;justify-content:center;font-size:22px;
   }
+  @media print{
+    body{background:#ffffff;color:#000000;}
+    .panel,.panel-findings{box-shadow:none;border:1px solid #cbd5e1;}
+    button,.btn-primary,[role="tablist"]{display:none!important;}
+    #root>div>div:first-child{display:none!important;}
+  }
 </style>
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "RadReport Pro",
+  "applicationCategory": "MedicalApplication",
+  "operatingSystem": "Web",
+  "url": "https://radreport.pro/",
+  "description": "Gemini AI 기반 방사선 판독 보고서 자동 생성 도구. CT, MRI, X-ray, 초음파, 유방촬영 소견을 구조화된 영상의학 보고서로 즉시 변환합니다.",
+  "inLanguage": ["ko", "en"],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "KRW"
+  },
+  "featureList": [
+    "CT 판독 보고서 자동 생성",
+    "MRI 판독 보고서 자동 생성",
+    "X-ray 판독 보고서 자동 생성",
+    "초음파 판독 보고서 자동 생성",
+    "유방촬영 판독 보고서 (K-BIRADS)",
+    "한국어 / 영어 이중 언어 지원",
+    "Structured / Narrative / Bullet 출력 형식"
+  ],
+  "keywords": "방사선 판독, 영상의학 보고서, AI 판독, CT, MRI, X-ray, 초음파, radiology report"
+}
+</script>
 </head>
 <body>
 <div id="root"></div>
