@@ -272,19 +272,21 @@ const REGION_KEYWORDS={
   "Abdomen":      /\bliver\b|\bhepat|\bgallbladder\b|\bGB\b(?!stone.*knee|\bknee)|\bbile duct\b|\bCBD\b|\bpancreas\b|\bspleen\b|\badrenal\b|\bkidney\b|\brenal\b|echogenicity|echotexture|hyperechoic|hypoechoic|isoechoic|anechoic|posterior shadowing|acoustic shadow|\bIHBD\b|portal vein|hepatic vein|\bascites\b|\bperitoneum\b|간실질|담낭|담도|췌장|비장|부신|신장|복막|복수|에코|고에코|저에코|무에코|후방음향|담관|간내담관|문맥|간정맥|하대정맥|신피질/i,
   "Pelvis":       /\bbladder\b|\buterus\b|\buterine\b|\bendometrium\b|\bmyometrium\b|\bmyoma\b|\bfibroid\b|\bovary\b|\bovarian\b|\bfollicle\b|corpus luteum|\bcervix\b|\bprostate\b|seminal vesicle|\brectum\b|\bpelvis\b|\bpelvic\b|cul.de.sac|방광|자궁|자궁내막|자궁근층|자궁근종|난소|난포|황체|전립선|정낭|직장|골반|더글라스와/i,
   "Abdomen & Pelvis":/abdomen.*pelvis|pelvis.*abdomen|복부.*골반|골반.*복부/i,
-  "Shoulder":     /\bshoulder\b|rotator cuff|\bsupraspinatus\b|\binfrasprospinatus\b|\bsubscapularis\b|\blabrum\b|\bacromion\b|biceps tendon|subacromial|어깨|회전근개|극상근|극하근|견갑하근|관절순|견봉|이두건/i,
-  "Elbow":        /\belbow\b|lateral epicondyl|medial epicondyl|common extensor|팔꿈치|외상과|내상과/i,
-  "Wrist":        /\bwrist\b|carpal tunnel|median nerve|de Quervain|손목|수근관|정중신경|건초염/i,
-  "Hand":         /\bmetacarpal\b|\bphalanx\b|\bphalanges\b|손가락|중수골|지골/i,
-  "Knee":         /\bknee\b|\bmenisci\b|\bmeniscus\b|\bACL\b|\bPCL\b|\bMCL\b|\bLCL\b|\bpatella\b|patellar tendon|Baker.s cyst|\bpopliteal\b|무릎|반월판|십자인대|슬개골|슬와낭종/i,
-  "Hip":          /\bhip\b|femoral head|\bacetabul|\bfemoral neck\b|intertrochanteric|\biliopsoas\b|\binguinal\b|고관절|대퇴골두|비구|대퇴경부|장요근|서혜부/i,
-  "Ankle":        /\bankle\b|\bachilles\b|\btalus\b|\bcalcaneus\b|\bfibula\b|\bperoneal\b|plantar fascia|발목|아킬레스|거골|종골|비골|족저근막/i,
-  "Foot":         /\bmetatarsal\b|plantar fasciitis|\bmorton\b|족저근막염|중족골/i,
+  "Shoulder":     /\bshoulder\b|rotator cuff|\bsupraspinatus\b|\binfrasprospinatus\b|\bsubscapularis\b|\bteres minor\b|\blabrum\b|\bacromion\b|\bclavicle\b|\bcoracoid\b|\bglenohumeral\b|\bAC joint\b|acromioclavicular|biceps tendon|subacromial|SLAP|impingement|어깨|회전근개|극상근|극하근|견갑하근|소원근|관절순|견봉|쇄골|오구돌기|견관절|견봉쇄골관절|이두건|충돌증후군/i,
+  "Elbow":        /\belbow\b|lateral epicondyl|medial epicondyl|common extensor|common flexor|\bolecranol\b|\bradial head\b|\bulnar\b|\btennis elbow\b|\bgolfer.s elbow\b|cubital tunnel|팔꿈치|외상과|내상과|주두|요골두|척골|테니스엘보|골프엘보|주관증후군/i,
+  "Wrist":        /\bwrist\b|carpal tunnel|\bscaphoid\b|\blunate\b|\bTFCC\b|\bECU\b|de Quervain|\bradius\b|\bulna\b|distal radius|손목|수근관|주상골|월상골|삼각섬유연골|요골|척골|원위요골/i,
+  "Hand":         /\bmetacarpal\b|\bphalanx\b|\bphalanges\b|\bMCP\b|\bPIP\b|\bDIP\b|\bthenar\b|\bhypothena\b|\btendon sheath\b|손|손가락|중수골|지골|건초|수지|무지/i,
+  "Finger":       /\bfinger\b|\bthumb\b|\bdigit\b|\bphalanx\b|\bPIP\b|\bDIP\b|\bMCP\b|mallet finger|trigger finger|손가락|무지|지절|망치손가락|방아쇠수지|수지골/i,
+  "Hip":          /\bhip\b|femoral head|\bacetabul|\bfemoral neck\b|intertrochanteric|\bgreater trochanter\b|\blesser trochanter\b|\biliopsoas\b|\binguinal\b|\bIT band\b|\bpiriformis\b|\blabrum\b|고관절|대퇴골두|비구|대퇴경부|전자간|대전자|소전자|장요근|서혜부|관절순|이상근|장경인대/i,
+  "Knee":         /\bknee\b|\bmenisci\b|\bmeniscus\b|\bACL\b|\bPCL\b|\bMCL\b|\bLCL\b|\bpatella\b|patellar tendon|\bquadriceps\b|Baker.s cyst|\bpopliteal\b|\btibia\b|\bfemur\b|\bfibula\b|\bOsgood\b|plica|무릎|반월판|십자인대|내측부인대|외측부인대|슬개골|슬개건|대퇴사두건|슬와낭종|경골|대퇴골|슬관절|추벽/i,
+  "Ankle":        /\bankle\b|\bachilles\b|\btalus\b|\bcalcaneus\b|\bfibula\b|\btibia\b|\bperoneal\b|plantar fascia|\bATFL\b|\bCFL\b|\bdeltoid ligament\b|\bspring ligament\b|\bos trigonum\b|발목|아킬레스|거골|종골|비골|경골|족저근막|전거비인대|종비인대|삼각인대/i,
+  "Foot":         /\bmetatarsal\b|plantar fasciitis|\bmorton\b|\bcalcaneus\b|\bnavicular\b|\bcuboid\b|\bcuneiform\b|\blisfranc\b|\bhallux\b|\bbunion\b|\bsesamoid\b|발|발바닥|족저근막염|중족골|종골|주상골|설상골|족근관절|무지외반|종자골/i,
+  "Toe":          /\btoe\b|\bhallux\b|\bphalanx.*toe\b|\bmetatarsophalangeal\b|\bMTP\b|\bgout\b|\bbunion\b|발가락|족지|무지|중족지절관절|통풍|무지외반/i,
   "Breast":       /\bbreast\b|\bnipple\b|\bareola\b|\baxilla\b|BI.RADS|BIRADS|유방|유두|유륜|액와|액와림프절/i,
 };
 
 function detectBodyRegion(text,currentBodypart,forceDetect=false){
-  if(!text||text.trim().length<10) return null;
+  if(!text||text.trim().length<5) return null;
   const scores={};
   for(const [region,pattern] of Object.entries(REGION_KEYWORDS)){
     const matches=text.match(new RegExp(pattern.source,"gi"));
@@ -293,10 +295,9 @@ function detectBodyRegion(text,currentBodypart,forceDetect=false){
   if(Object.keys(scores).length===0) return null;
   const sorted=Object.entries(scores).sort((a,b)=>b[1]-a[1]);
   const best=sorted[0];
-  // forceDetect: 점수 1개 이상이면 반환 (현재값 동일해도 항상 기록용으로 반환)
   if(forceDetect) return best[1]>=1?best[0]:null;
-  // 일반 모드: 점수 2 이상이고 현재값과 다를 때만
-  if(best[1]<2||best[0]===currentBodypart) return null;
+  // finding 우선: 점수 1 이상이면 감지 (기존 2→1로 완화)
+  if(best[1]<1) return null;
   return best[0];
 }
 const FORMAT_OPTIONS=[{value:"structured",icon:"⊞",label:"STRUCTURED"},{value:"narrative",icon:"≡",label:"NARRATIVE"},{value:"bullet",icon:"∷",label:"BULLET"}];
@@ -738,7 +739,10 @@ function App(){
     const isAutoDetect=AUTO_DETECT_MODALITIES.includes(modality); // CT,MRI,US,X-ray 모두 포함
 
     // body region 자동 감지 — Mammography만 제외
-    const autoRegion=!isMammo?detectBodyRegion(finding+"\n"+(clinicalInfo||"")+(indication||""),bodypart,isAutoDetect):null;
+    // finding 우선 감지: finding 단독 → finding+context 순으로 시도
+    const findingOnly=finding?finding+"\n"+finding:""; // finding 2배 가중
+    const fullCtx=findingOnly+"\n"+(clinicalInfo||"")+" "+(indication||"");
+    const autoRegion=!isMammo?detectBodyRegion(fullCtx,bodypart,isAutoDetect):null;
     const effectiveBodypart=autoRegion||bodypart;
 
     const organs=organMap[effectiveBodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
