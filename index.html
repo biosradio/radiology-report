@@ -256,7 +256,7 @@ const MAMMO_ASSESSMENT=[
   {value:"4","label":"4. 판정유보"},
   {value:"5","label":"5. 기존유방암 환자"},
 ];
-const MODALITIES=["CT","MRI","X-ray","Ultrasound","PET-CT","Mammography","Fluoroscopy"];
+const MODALITIES=["CT","MRI","X-ray","Ultrasound","Mammography"];
 const AUTO_DETECT_MODALITIES=["CT","MRI","Ultrasound","X-ray"];
 
 /* ── BODY REGION AUTO-DETECT ── */
@@ -1027,10 +1027,9 @@ Generate a professional radiology report as JSON.`;
                 <span style={{fontFamily:mono,fontSize:"var(--fs-xs)",color:C.accent,letterSpacing:3,fontWeight:700}}>RADIOLOGY AI</span>
                 <span style={{fontFamily:mono,fontSize:9,background:"rgba(99,102,241,0.1)",border:`1px solid ${C.accent2}40`,padding:"2px 8px",borderRadius:20,letterSpacing:1,color:C.accent2}}>PRO</span>
               </div>
-              <h1 style={{fontFamily:"'DM Serif Display',Georgia,serif",fontSize:"var(--fs-2xl)",fontWeight:400,color:C.bright,letterSpacing:"-0.5px",lineHeight:1.1,marginBottom:4}}>
+              <h1 style={{fontFamily:"'DM Serif Display',Georgia,serif",fontSize:"var(--fs-2xl)",fontWeight:400,color:C.bright,letterSpacing:"-0.5px",lineHeight:1.1}}>
                 RadReport<span style={{color:C.accent,fontStyle:"italic"}}>.</span>
               </h1>
-              <p style={{color:C.dim,fontSize:"var(--fs-sm)"}}>AI-powered radiology report generator — powered by Gemini</p>
             </div>
             {/* API 상태 인디케이터 — 헤더 우측 */}
             <div style={{display:"flex",alignItems:"center",gap:8,marginTop:4}}>
