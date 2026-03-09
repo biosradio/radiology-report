@@ -337,7 +337,7 @@ const FORMAT_OPTIONS=[{value:"structured",icon:"⊞",label:"STRUCTURED"},{value:
 const TONE_OPTIONS=[{value:"formal",label:"FORMAL"},{value:"concise",label:"CONCISE"},{value:"detailed",label:"DETAILED"},{value:"clinical",label:"CLINICAL"}];
 const URGENCY_OPTIONS=[{value:"routine",label:"Routine",color:"#4ade80"},{value:"urgent",label:"Urgent",color:"#fbbf24"},{value:"critical",label:"Critical",color:"#f87171"}];
 const CONTRAST_OPTIONS={
-  CT:[{value:"non-contrast",label:"Non-Contrast"},{value:"contrast",label:"+ Contrast"},{value:"both",label:"Both Phases"}],
+  CT:[{value:"non-contrast",label:"Non-Contrast"},{value:"contrast",label:"+ Contrast"}],
   MRI:[{value:"non-contrast",label:"Non-Contrast"},{value:"gadolinium",label:"+ Gadolinium"}],
 };
 
@@ -896,7 +896,7 @@ Generate a professional radiology report as JSON.`;
           body:JSON.stringify({
             systemInstruction:{parts:[{text:isMammoModality?mammoSystem:isXray?xraySystem:mainSystem}]},
             contents:[{role:"user",parts:[{text:userMsg}]}],
-            generationConfig:{maxOutputTokens:1500,temperature:0.3},
+            generationConfig:{maxOutputTokens:4096,temperature:0.3},
           }),
           signal:controller.signal,
         });
@@ -923,24 +923,56 @@ Generate a professional radiology report as JSON.`;
       let parsed;
       try{parsed=JSON.parse(clean);}
       catch{
-        parsed=isXray
-          ?{technique:`X-ray ${effectiveBodypart}`,summary:raw,recommendation:null}
-          :{technique:`${modality} of ${effectiveBodypart}`,comparison:isKo?"이전 검사 없음":"No prior studies",findings:raw,impression:[isKo?"임상 소견과 비교 검토 요망.":"Correlate clinically."],recommendation:null};
+        // 잘린 JSON 복구 시도: 배열/객체를 닫아서 재파싱
+        let recovered=false;
+        try{
+          let fix=clean;
+          // 열린 따옴표 닫기
+          const openQuotes=(fix.match(/(?<!\\)"/g)||[]).length;
+          if(openQuotes%2!==0) fix+='"';
+          // 열린 배열/객체 닫기
+          let opens=0;
+          for(const ch of fix){if(ch==="["||ch==="{")opens++;else if(ch==="]"||ch==="}")opens--;}
+          while(opens>0){fix+=fix.lastIndexOf("[")>fix.lastIndexOf("{")? "]":"}";opens--;}
+          parsed=JSON.parse(fix);
+          recovered=true;
+        }catch{}
+        if(!recovered){
+          parsed=isXray
+            ?{technique:`X-ray ${effectiveBodypart}`,summary:raw,recommendation:null}
+            :{technique:`${modality} of ${effectiveBodypart}`,comparison:isKo?"이전 검사 없음":"No prior studies",findings:[{organ:isKo?"소견":"Findings",finding:isKo?"AI 응답이 잘렸습니다. 다시 시도해주세요.":"AI response was truncated. Please try again."}],impression:[isKo?"다시 시도해주세요.":"Please try again."],recommendation:null};
+        }
       }
       if(isXray){
         if(!parsed.summary) parsed.summary=parsed.findings?(Array.isArray(parsed.findings)?parsed.findings.map(f=>f.finding||String(f)).join(" "):String(parsed.findings)):(isKo?"소견을 확인하세요.":"Please review findings.");
       } else {
-        if(format==="structured"){
+        // Mammography: 항상 structured(배열), 그 외: format에 따라
+        if(isMammoModality){
+          // Mammography는 항상 배열 보장
           if(!Array.isArray(parsed.findings)){
-            // 문자열이면 단일 항목 배열로 변환
             parsed.findings=[{organ:isKo?"소견":"Findings",finding:String(parsed.findings||"")}];
           }
+          parsed.findings=parsed.findings.map(f=>{
+            if(typeof f==="string") return {organ:isKo?"소견":"Findings",finding:f};
+            if(typeof f==="object"&&f!==null) return {organ:f.organ||f.category||f.region||(isKo?"소견":"Findings"),finding:f.finding||f.description||String(f)};
+            return {organ:isKo?"소견":"Findings",finding:String(f)};
+          });
+        } else if(format==="structured"){
+          // structured: 배열 보장
+          if(!Array.isArray(parsed.findings)){
+            parsed.findings=[{organ:isKo?"소견":"Findings",finding:String(parsed.findings||"")}];
+          }
+          parsed.findings=parsed.findings.map(f=>{
+            if(typeof f==="string") return {organ:isKo?"소견":"Findings",finding:f};
+            if(typeof f==="object"&&f!==null) return {organ:f.organ||f.category||f.region||(isKo?"소견":"Findings"),finding:f.finding||f.description||String(f)};
+            return {organ:isKo?"소견":"Findings",finding:String(f)};
+          });
         } else {
-          // bullet / narrative — 반드시 문자열로
+          // narrative / bullet / clinical — 반드시 문자열로 변환
           if(Array.isArray(parsed.findings)){
-            parsed.findings=parsed.findings.map(f=>typeof f==="object"?(f.organ?`${f.organ}: ${f.finding||""}`:f.finding||String(f)):String(f)).join("\n");
+            parsed.findings=parsed.findings.map(f=>typeof f==="object"?(f.organ?`[${f.organ}] ${f.finding||""}`:f.finding||String(f)):String(f)).join("\n\n");
           } else if(typeof parsed.findings!=="string"){
-            parsed.findings=isKo?"소견을 확인하세요.":"Please review findings.";
+            parsed.findings=String(parsed.findings||"");
           }
         }
         if(!Array.isArray(parsed.impression)) parsed.impression=parsed.impression?[String(parsed.impression)]:[isKo?"임상 소견과 비교 검토 요망.":"Correlate clinically."];
@@ -1640,8 +1672,8 @@ Generate a professional radiology report as JSON.`;
                   ):(
                     <>
                       <ReportSection title="FINDINGS">
-                        {Array.isArray(report.findings)?(
-                          /* structured: 테이블 */
+                        {(modality==="Mammography"||(format==="structured"&&Array.isArray(report.findings)))?(
+                          /* structured: 테이블 (Mammography 포함) */
                           <div style={{display:"flex",flexDirection:"column",gap:0,borderRadius:10,overflow:"hidden",border:`1px solid ${C.border}`}}>
                             {report.findings.map((f,i)=>(
                               <div key={i} style={{display:"grid",gridTemplateColumns:"130px 1fr",borderBottom:i<report.findings.length-1?`1px solid ${C.border}`:"none",background:i%2===0?"#f8fafc":"#ffffff"}}>
