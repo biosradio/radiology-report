@@ -1251,9 +1251,9 @@ Generate a professional radiology report as JSON.`;
 
                   {/* COL 1 — Study + Patient */}
                   <div style={{display:"flex",flexDirection:"column",gap:16}}>
-                <div className="panel" style={{padding:"var(--sp-md)"}}>
+                <div className="panel" style={{padding:"10px 16px"}}>
                   <Divider label="STUDY INFORMATION"/>
-                  <div style={{marginTop:14,display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  <div style={{marginTop:8,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                     <div style={{gridColumn:"1/-1"}}>
                       <Field label="MODALITY" htmlFor="select-modality">
                         <CustomSelect id="select-modality" options={MODALITIES} value={modality} onChange={handleModalityChange}/>
@@ -1341,7 +1341,7 @@ Generate a professional radiology report as JSON.`;
                   {/* 항상 표시 — FINDINGS */}
                   <Field label="FINDINGS / OBSERVATIONS" accent>
                     <textarea className="field-input" name="findings" autoComplete="off"
-                      style={{height:"clamp(100px,12vh,180px)"}}
+                      style={{height:"clamp(148px,18vh,260px)"}}
                       placeholder={"소견을 자유롭게 입력하세요…\n\nExample:\n- RLL consolidation with air bronchogram\n- No pleural effusion\n- Heart size normal"}
                       value={finding} onChange={e=>setFinding(e.target.value)}/>
                   </Field>
