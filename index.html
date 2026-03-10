@@ -2,7 +2,7 @@
 <html lang="ko" style="color-scheme:light;">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https:; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://generativelanguage.googleapis.com https://api.anthropic.com; img-src 'self' data: https:;">
+<!-- CSP는 서버 HTTP 헤더로 설정하세요 (meta CSP는 file:// 환경에서 CDN 차단 부작용 발생) -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0369a1">
 <title>RadReport Pro — AI 방사선 판독 보고서 생성기</title>
@@ -26,10 +26,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="RadReport Pro">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.28.4/babel.min.js"></script>
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Sora:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500&family=DM+Serif+Display:ital@0;1&display=swap');
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -241,8 +244,13 @@
 <body>
 <a href="#main-content" style="position:absolute;top:-40px;left:0;padding:8px 16px;background:var(--accent);color:#fff;fontFamily:monospace;fontSize:12px;zIndex:9999;borderRadius:0 0 8px 0;transition:top 0.1s ease" onFocus="this.style.top='0'" onBlur="this.style.top='-40px'">본문으로 바로가기</a>
 <div id="root"></div>
-<script type="text/babel">
+<script type="text/babel" data-presets="react" data-plugins="transform-class-properties">/* ── GLOBAL SETUP ── */
 const {useState,useCallback,useRef,useEffect}=React;
+/* ── safeStorage: localStorage 차단 환경(아티팩트/iframe 등) 대응 ── */
+const safeStorage=(()=>{
+  try{window.localStorage.setItem('__t','1');window.localStorage.removeItem('__t');return window.localStorage;}
+  catch(e){const m={};return{getItem:k=>m[k]??null,setItem:(k,v)=>{m[k]=String(v);},removeItem:k=>{delete m[k];}};}
+})();
 
 /* ── CONSTANTS ─────────────────────────────── */
 const BODY_PARTS={
@@ -449,9 +457,9 @@ function SegBtn({options,value,onChange,small,"aria-label":ariaLabel}){
 }
 
 function CustomSelect({options,value,onChange,id}){
-  const [open,setOpen]=React.useState(false);
-  const ref=React.useRef(null);
-  React.useEffect(()=>{
+  const [open,setOpen]=useState(false);
+  const ref=useRef(null);
+  useEffect(()=>{
     const handler=(e)=>{if(ref.current&&!ref.current.contains(e.target))setOpen(false);};
     const keyH=(e)=>{if(e.key==="Escape")setOpen(false);};
     document.addEventListener("mousedown",handler);
@@ -707,8 +715,10 @@ const KNOWN_MODELS=[
     "gemini-1.5-flash",
   ];
 function App(){
-  const [winW,setWinW]=React.useState(()=>window.innerWidth);
-  React.useEffect(()=>{
+
+
+  const [winW,setWinW]=useState(()=>window.innerWidth);
+  useEffect(()=>{
     const onResize=()=>setWinW(window.innerWidth);
     window.addEventListener("resize",onResize);
     return()=>window.removeEventListener("resize",onResize);
@@ -744,20 +754,20 @@ function App(){
   const [mammoLocationL,setMammoLocationL]=useState([]);   // 좌측 병변위치
   const [mammoAssessment,setMammoAssessment]=useState(""); // 판정구분
   const [mammoAddlTest,setMammoAddlTest]=useState(false);  // 추가검사 필요
-  const [activeTab,setActiveTab]=useState(()=>localStorage.getItem("rad_apikey")?"input":"settings");
+  const [activeTab,setActiveTab]=useState(()=>safeStorage.getItem("rad_apikey")?"input":"settings");
   const [history,setHistory]=useState(()=>{
-    try{const s=localStorage.getItem("radreport_history");return s?JSON.parse(s):[];}
+    try{const s=safeStorage.getItem("radreport_history");return s?JSON.parse(s):[];}
     catch{return[];}
   });
   useEffect(()=>{
     const t=setTimeout(()=>{
-      try{localStorage.setItem("radreport_history",JSON.stringify(history));}
-      catch(e){console.warn("localStorage 저장 실패:",e);}
+      try{safeStorage.setItem("radreport_history",JSON.stringify(history));}
+      catch(e){console.warn("safeStorage 저장 실패:",e);}
     },400);
     return()=>clearTimeout(t);
   },[history]);
   const deleteHistory=(id)=>setHistory(h=>h.filter(item=>item.id!==id));
-  const clearHistory=()=>{setHistory([]);localStorage.removeItem("radreport_history");};
+  const clearHistory=()=>{setHistory([]);safeStorage.removeItem("radreport_history");};
 
   const [loading,setLoading]=useState(false);
   const [report,setReport]=useState(null);
@@ -844,43 +854,65 @@ function App(){
       ?"Korean (한국어). Write ALL content primarily in Korean. Medical terms and anatomical names may include English in parentheses (e.g. '폐렴 (pneumonia)'). Impression MUST be written in Korean sentences — never use English-only impression."
       :"English. Write ALL content in English.";
 
-    const xraySystem=`You are an expert radiologist. Generate a concise X-ray report.
+    const xraySystem=`You are an expert radiologist generating a concise X-ray report. Follow evidence-based reporting principles (Hartung et al. RadioGraphics 2020).
 Language: ${langInstr}
 Tone: ${tone} | Urgency: ${urgency}
-Merge Findings and Impression into ONE concise "summary" (2–4 sentences max).
+
+SUMMARY RULES:
+- "summary" merges key findings + diagnosis/impression into 2–4 concise sentences.
+- Lead with the diagnosis or most important finding (NOT raw observations first).
+- Use plain medical language understandable to any clinician — avoid radiology jargon.
+- Omit perception verbs ("is seen", "is noted", "visualized"). State facts directly.
+- Avoid redundant phrases: no "redemonstration", "interval change", "again noted".
+- Incidental benign findings: label explicitly as benign or omit from summary.
+- State diagnosis with confidence: "consistent with", "suspected", "possible", "cannot exclude".
 ${urgency!=="routine"?`urgency_note: ONLY the key diagnosis name(s), no explanation.`:`urgency_note: null`}
-recommendation: ${urgency!=="routine"?"Brief follow-up recommendation.":"null"}
+recommendation: ${urgency!=="routine"?"Specific actionable recommendation (what, when, why).":"null"}
 Return ONLY raw JSON, no markdown:
 {"technique":"string","summary":"string","urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`;
 
-    const mainSystem=`You are an expert radiologist assistant. Generate a professional radiology report in JSON.
+    const mainSystem=`You are an expert radiologist generating a professional radiology report. Follow evidence-based reporting principles (Hartung et al. RadioGraphics 2020).
 Format: ${format} | Tone: ${tone} | Urgency: ${urgency}
 Language: ${langInstr}
-Contrast: ${contrastStr} — reflect accurately in technique.
-${tone==="concise"?"CONCISE MODE: 1 short sentence per organ. Impression: specific diagnosis per finding.":""}
-${tone==="clinical"?`CLINICAL MODE:
-- Impression MUST lead with the most likely specific diagnosis (e.g. "hepatocellular carcinoma", "pulmonary embolism", "disc herniation at L4-5").
-- If a single diagnosis cannot be confirmed, provide a ranked differential diagnosis list: "1. [Most likely] ... 2. [Less likely] ... 3. [Least likely] ...".
-- Each impression item should be a concise clinical statement combining the finding, the diagnosis, and confidence level where appropriate (e.g. "highly suggestive of", "consistent with", "cannot exclude").
-- Do NOT use vague terms like "correlate clinically" as the primary impression — always attempt a specific diagnosis first.`:""}
+Contrast: ${contrastStr} — reflect accurately in technique field.
+
+═══ FINDINGS SECTION RULES ═══
+- Use short, factual, informative phrases. Perception verbs ("is seen", "is noted", "is visualized", "there is") add no meaning — OMIT them.
+- Avoid redundant comparison terms: never use "redemonstration", "interval change", "again noted". Instead state the fact directly (e.g. "Enlarged liver mass" not "Interval increase in the previously noted liver mass").
+- Incidental benign findings: explicitly label as benign/clinically insignificant (e.g. "Small benign hepatic cyst, no workup needed" NOT just "hepatic cyst").
+- Keep interpretation OUT of findings — save diagnosis for impression.
 ${format==="structured"
-  ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${effectiveBodypart}: ${organs}. Include ALL.${effectiveBodypart==="MRA"?" CRITICAL: Every vessel listed above MUST appear as a separate organ entry — never omit any vessel even if not explicitly mentioned in raw input. For vessels with no abnormality, write normal/unremarkable.":tone==="concise"?" Omit normal organs not mentioned in raw input.":""}`
+  ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${effectiveBodypart}: ${organs}. Include ALL organs.${effectiveBodypart==="MRA"?" CRITICAL: Every vessel listed above MUST appear as a separate organ entry. For vessels with no abnormality, write normal/unremarkable.":tone==="concise"?" For normal/unremarkable organs not mentioned in raw input, write 'Unremarkable'.":" Use numbered lists within a finding string when describing multiple lesions (e.g. '1. 3cm RLL nodule. 2. 1cm LUL nodule.')."}` 
   :format==="bullet"
   ?`"findings" is a plain string. Each item on its own NEW LINE starting with •. Never combine multiple items on one line.`
   :`"findings" is a single flowing prose paragraph. Do NOT use arrays or bullet points.`}
 
-COMPARISON RULE (very important):
-- Scan the Raw Findings carefully for ANY mention of a prior/previous study, comparison imaging, or past dates.
-- This includes phrases like: "이전 CT", "prior MRI", "compared to", "previous study", "2023", "2024년", specific dates, "이전 검사", "전회", "last exam", "f/u", "follow-up", "이전 대비", "compared with", etc.
-- If any such reference is found, extract it into "comparison" as a clean, standalone sentence describing what prior study is being compared and on what date (if mentioned). Write in the report language (${isKo?"Korean":"English"}).
-- If the Comparison Study field below is also provided, incorporate that date into the comparison sentence.
-- If NO prior study is mentioned anywhere, set "comparison": null.
-- NEVER include comparison language inside "findings" — move it exclusively to "comparison".
+═══ IMPRESSION RULES (Hartung 2020) ═══
+STRUCTURE: (a) Lead with favored diagnosis → (b) key supporting findings → (c) alternative diagnoses if needed → (d) recommendation
+- ALWAYS lead the impression with the favored diagnosis or ranked DDx — NEVER start with raw findings.
+- Use universally understood medical language. Avoid radiology-only jargon in impression (e.g. "T2 hyperintense" → "suspected edema"; "hypoechoic mass" → "suspected mass").
+- State diagnosis with appropriate confidence: "definite", "suspected", "possible", or "cannot exclude".
+- Avoid vague liability language as PRIMARY statement: "correlate clinically", "findings concerning for", "cannot be excluded" — only use these AFTER stating a specific diagnosis.
+- Omit clinically insignificant incidental findings from impression (they belong in findings only).
+- Avoid redundancy: "Growth of liver metastases since [date]" NOT "Compared to prior, there is interval increase in size of multiple liver lesions consistent with metastases".
+${tone==="concise"?`CONCISE TONE: 1 crisp sentence per organ in findings. Impression: lead immediately with diagnosis, omit supporting detail unless critical.`:""}
+${tone==="clinical"?`CLINICAL TONE:
+- Impression item 1: Specific diagnosis with confidence level (e.g. "Suspected hepatocellular carcinoma" / "Pulmonary embolism" / "L4-5 disc herniation with nerve root compression").
+- If uncertain: ranked DDx — "1. [Most likely diagnosis] — [one key supporting finding]. 2. [Less likely] — [reason]. 3. [Least likely] — [reason]."
+- Phrase as you would present at MDT or speak directly to ordering provider.
+- Each impression item: finding + diagnosis + confidence. NO vague non-committal as the primary.`:""}
 
-${urgency!=="routine"?`urgency_note: ONLY key diagnosis name(s). No sentences, just terms.`:`urgency_note: null`}
-recommendation: ${urgency!=="routine"?"Clinical follow-up recommendation.":"null — set to null"}
-"impression" MUST always be a JSON array of strings.
-Return ONLY raw JSON:
+═══ COMPARISON RULE ═══
+- Scan Raw Findings for ANY prior study reference: "이전 CT", "prior MRI", "compared to", "previous study", dates like "2023", "2024년", "이전 검사", "전회", "f/u", "이전 대비", etc.
+- If found: extract into "comparison" as a clean standalone sentence with prior study type and date. Write in report language (${isKo?"Korean":"English"}).
+- If Comparison Study field is provided below, incorporate that date.
+- If NO prior study referenced: set "comparison": null.
+- NEVER include comparison language inside "findings".
+
+${urgency!=="routine"?`URGENCY: urgency_note = key diagnosis name(s) only. No full sentences.`:`urgency_note: null`}
+recommendation: ${urgency!=="routine"?"Specific actionable follow-up recommendation (what, when, why).":"null"}
+"impression" MUST be a JSON array of strings.
+Return ONLY raw JSON (no markdown, no explanation):
 {"technique":"string","comparison":"string or null","findings":${format==="structured"?`[{"organ":"...","finding":"..."}]`:'"string"'},"impression":["..."],"urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`;
 
     const isMammoModality=modality==="Mammography";
@@ -903,19 +935,30 @@ Return ONLY raw JSON:
 
     const parenchymaOrgan=isKo?"유방실질분포량":"Breast Composition";
 
-    const mammoSystem=isMammoModality?`You are an expert breast radiologist. Generate a mammography screening report in JSON.
+    const mammoSystem=isMammoModality?`You are an expert breast radiologist generating a mammography screening report. Follow evidence-based reporting principles (Hartung et al. RadioGraphics 2020).
 ${mammoLang}
 Tone: ${tone} | Urgency: ${urgency}
 
-CRITICAL RULES:
+═══ FINDINGS RULES ═══
 1. "findings" MUST be a JSON array in this EXACT order:
-   - FIRST entry MUST be exactly: {"organ":"${parenchymaOrgan}","finding":"${parenchymaDesc}"} — NEVER omit or change this value.
-   - Then add entries for each breast region based on the clinical input provided.
+   - FIRST entry MUST be exactly: {"organ":"${parenchymaOrgan}","finding":"${parenchymaDesc}"} — NEVER omit or change.
+   - Then one entry per breast region/finding based on clinical input.
+   - Use short factual phrases. No perception verbs ("is seen", "is noted"). State facts directly.
+   - Label benign findings explicitly (e.g. "Benign calcification, no workup needed").
+
+═══ IMPRESSION RULES (Hartung 2020) ═══
+- Lead with BI-RADS assessment category + diagnosis/clinical meaning.
+- State findings that drive the assessment, with appropriate confidence language.
+- Use plain clinical language — avoid technical mammography jargon in impression.
+- Avoid vague primary impressions. If BI-RADS 4/5: specify what malignant features are present.
+- Omit benign incidental findings from impression (findings section only).
+- Recommendation: specific, actionable — state what follow-up is needed and when.
+
 2. "technique": "${mammoTechniqueEx}" or appropriate view.
-3. "impression": array of strings with overall assessment.
-4. "comparison": null unless prior study mentioned.
-5. urgency_note: ${urgency!=="routine"?'"string"':"null"}
-6. recommendation: ${urgency!=="routine"?'"string"':"null"}
+3. "impression": array of strings — lead with BI-RADS category + diagnosis.
+4. "comparison": null unless prior study mentioned in input.
+5. urgency_note: ${urgency!=="routine"?'"key finding/diagnosis"':"null"}
+6. recommendation: ${urgency!=="routine"?"Specific follow-up (type, timing)":"null"}
 Return ONLY raw JSON (no markdown, no explanation):
 {"technique":"...","comparison":null,"findings":[{"organ":"${parenchymaOrgan}","finding":"${parenchymaDesc}"},{"organ":"...","finding":"..."}],"impression":["..."],"urgency_note":${urgency!=="routine"?'"..."':"null"},"recommendation":${urgency!=="routine"?'"..."':"null"}}`:"";
 
@@ -1054,7 +1097,7 @@ Generate a professional radiology report as JSON.`;
   },[apiKey,apiOk,selectedModel,finding,clinicalInfo,indication,modality,contrast,bodypart,examDate,format,tone,urgency,lang,differentialDx,keyMeasurements]);
 
   /* ── COPY ── */
-  const getCopyText=()=>{
+  const getCopyText=useCallback(()=>{
     if(!report)return"";
     let text="";
     const isKo=lang==="ko";
@@ -1098,7 +1141,7 @@ Generate a professional radiology report as JSON.`;
       if(report.recommendation&&report.recommendation!=="null") text+=`\n\nRECOMMENDATION:\n${report.recommendation}`;
     }
     return text;
-  };
+  },[modality,urgency,report,mammoParenchyma,mammoFindings,mammoFindingCustom,mammoLocationR,mammoLocationL,mammoAssessment]);
 
   const copyReport=()=>{
     if(!report)return;
@@ -1809,7 +1852,6 @@ Generate a professional radiology report as JSON.`;
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-</script>
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);</script>
 </body>
 </html>
