@@ -856,6 +856,11 @@ Format: ${format} | Tone: ${tone} | Urgency: ${urgency}
 Language: ${langInstr}
 Contrast: ${contrastStr} — reflect accurately in technique.
 ${tone==="concise"?"CONCISE MODE: 1 short sentence per organ. Impression: specific diagnosis per finding.":""}
+${tone==="clinical"?`CLINICAL MODE:
+- Impression MUST lead with the most likely specific diagnosis (e.g. "hepatocellular carcinoma", "pulmonary embolism", "disc herniation at L4-5").
+- If a single diagnosis cannot be confirmed, provide a ranked differential diagnosis list: "1. [Most likely] ... 2. [Less likely] ... 3. [Least likely] ...".
+- Each impression item should be a concise clinical statement combining the finding, the diagnosis, and confidence level where appropriate (e.g. "highly suggestive of", "consistent with", "cannot exclude").
+- Do NOT use vague terms like "correlate clinically" as the primary impression — always attempt a specific diagnosis first.`:""}
 ${format==="structured"
   ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${effectiveBodypart}: ${organs}. Include ALL.${effectiveBodypart==="MRA"?" CRITICAL: Every vessel listed above MUST appear as a separate organ entry — never omit any vessel even if not explicitly mentioned in raw input. For vessels with no abnormality, write normal/unremarkable.":tone==="concise"?" Omit normal organs not mentioned in raw input.":""}`
   :format==="bullet"
