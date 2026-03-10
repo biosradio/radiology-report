@@ -714,6 +714,7 @@ const KNOWN_MODELS=[
     "gemini-1.5-pro",
     "gemini-1.5-flash",
   ];
+
 function App(){
 
 
@@ -882,7 +883,7 @@ Contrast: ${contrastStr} — reflect accurately in technique field.
 - Incidental benign findings: explicitly label as benign/clinically insignificant (e.g. "Small benign hepatic cyst, no workup needed" NOT just "hepatic cyst").
 - Keep interpretation OUT of findings — save diagnosis for impression.
 ${format==="structured"
-  ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${effectiveBodypart}: ${organs}. Include ALL organs.${effectiveBodypart==="MRA"?" CRITICAL: Every vessel listed above MUST appear as a separate organ entry. For vessels with no abnormality, write normal/unremarkable.":tone==="concise"?" For normal/unremarkable organs not mentioned in raw input, write 'Unremarkable'.":" Use numbered lists within a finding string when describing multiple lesions (e.g. '1. 3cm RLL nodule. 2. 1cm LUL nodule.')."}` 
+  ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${effectiveBodypart}: ${organs}.${effectiveBodypart==="MRA"?" CRITICAL: Every vessel listed above MUST appear as a separate organ entry. For vessels with no abnormality, write normal/unremarkable.":tone==="concise"?" CONCISE: Include ONLY abnormal organs — completely OMIT organs that are normal/unremarkable. Do NOT include any entry with 'normal', 'unremarkable', 'no abnormality', or similar. If no abnormality detected, output a single entry: {organ:'Overall',finding:'No significant abnormality detected'}.":" Include ALL organs. Use numbered lists within a finding string when describing multiple lesions (e.g. '1. 3cm RLL nodule. 2. 1cm LUL nodule.')."}` 
   :format==="bullet"
   ?`"findings" is a plain string. Each item on its own NEW LINE starting with •. Never combine multiple items on one line.`
   :`"findings" is a single flowing prose paragraph. Do NOT use arrays or bullet points.`}
@@ -895,7 +896,12 @@ STRUCTURE: (a) Lead with favored diagnosis → (b) key supporting findings → (
 - Avoid vague liability language as PRIMARY statement: "correlate clinically", "findings concerning for", "cannot be excluded" — only use these AFTER stating a specific diagnosis.
 - Omit clinically insignificant incidental findings from impression (they belong in findings only).
 - Avoid redundancy: "Growth of liver metastases since [date]" NOT "Compared to prior, there is interval increase in size of multiple liver lesions consistent with metastases".
-${tone==="concise"?`CONCISE TONE: 1 crisp sentence per organ in findings. Impression: lead immediately with diagnosis, omit supporting detail unless critical.`:""}
+${tone==="concise"?`CONCISE TONE RULES (strictly enforce all):
+- findings: OMIT all normal/unremarkable organs entirely — abnormal findings only.
+- Each abnormal finding: max 15 words. No perception verbs. No redundant qualifiers.
+- technique: 1 line only (modality + body part + contrast). No extra detail.
+- impression: 1–5 items maximum. Lead with diagnosis. Drop all supporting detail unless it directly changes management.
+- Do NOT mention stability, prior comparison, or incidental benign findings in impression.`:""}
 ${tone==="clinical"?`CLINICAL TONE:
 - Impression item 1: Specific diagnosis with confidence level (e.g. "Suspected hepatocellular carcinoma" / "Pulmonary embolism" / "L4-5 disc herniation with nerve root compression").
 - If uncertain: ranked DDx — "1. [Most likely diagnosis] — [one key supporting finding]. 2. [Less likely] — [reason]. 3. [Least likely] — [reason]."
