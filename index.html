@@ -799,7 +799,6 @@ function App(){
       setSelCat("Breast");
       setBodypart("Both Breasts");
     } else {
-      // Mammography 포함 모든 전환 시 — selCat를 항상 안전한 기본값으로 초기화
       setSelCat("Chest / Abdomen");
       setBodypart("Chest");
     }
@@ -1515,15 +1514,8 @@ Generate a professional radiology report as JSON.`;
                             <Field label="BODY REGION">
                               <div style={{display:"flex",flexDirection:"column",gap:8,marginTop:2}}>
                                 <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
-                                  {(()=>{
-                                    // selCat이 현재 activeBodyParts에 없으면 첫 카테고리로 보정
-                                    const cats=Object.keys(activeBodyParts);
-                                    if(!cats.includes(selCat)){
-                                      setTimeout(()=>{setSelCat(cats[0]);setBodypart(activeBodyParts[cats[0]][0]);},0);
-                                    }
-                                  })()}
                                   {Object.keys(activeBodyParts).map(cat=>(
-                                    <Tag key={cat} active={selCat===cat} onClick={()=>{setSelCat(cat);setBodypart(activeBodyParts[cat][0]);}}>{cat}</Tag>
+                                    <Tag key={cat} active={selCat===cat} onClick={()=>{setSelCat(cat);setBodypart((activeBodyParts[cat]||[])[0]||"");}}>{cat}</Tag>
                                   ))}
                                 </div>
                                 <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
