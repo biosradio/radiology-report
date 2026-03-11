@@ -911,6 +911,19 @@ ${tone==="clinical"?`CLINICAL TONE:
 - If uncertain: ranked DDx — "1. [Most likely diagnosis] — [one key supporting finding]. 2. [Less likely] — [reason]. 3. [Least likely] — [reason]."
 - Phrase as you would present at MDT or speak directly to ordering provider.
 - Each impression item: finding + diagnosis + confidence. NO vague non-committal as the primary.`:""}
+${tone==="detailed"?`DETAILED TONE — FINDINGS (Hartung et al. RadioGraphics 2020):
+Each organ finding MUST include ALL applicable elements:
+1. MORPHOLOGY: Exact size with unit (cm), shape (round/lobulated/irregular/spiculated), margin (well-defined/ill-defined/spiculated), internal architecture (solid/cystic/mixed/necrotic/calcified).
+2. LOCATION: Anatomical segment/lobe/zone/quadrant + relationship to adjacent key structures (vessels, ducts, nerves, cortex, fascia).
+3. ATTENUATION/SIGNAL/ECHO: HU range (CT), T1/T2 signal (MRI), echogenicity (US). Enhancement pattern if contrast: phase (arterial/portal/delayed), character (homogeneous/heterogeneous/rim/peripheral nodular/washout).
+4. ASSOCIATED FINDINGS: Secondary signs — ductal dilatation, vascular encasement/thrombosis, lymphadenopathy (size + station), effusion (volume estimate), edema, perilesional infiltration, satellite lesions.
+5. MULTIPLICITY: Exact count or "innumerable", distribution (focal/multifocal/diffuse/miliary/clustered), dominant lesion identified.
+6. STABILITY NOTE: Only if raw input implies comparison — growth/regression/stable. Otherwise omit.
+RULES:
+- Normal organ: state "unremarkable" + ONE confirmatory detail (e.g. "Liver: unremarkable — homogeneous parenchyma, no focal lesion.").
+- Never use vague descriptors alone: NOT "a hepatic lesion" → USE "2.3 × 1.8cm hypodense segment VI hepatic lesion".
+- Quantify: dimensions (L × W × H for masses), HU, stenosis %, wall thickness mm.
+- Findings only — NO diagnosis or interpretation. Reserve all interpretation for impression.`:""}
 
 ═══ COMPARISON RULE ═══
 - Scan Raw Findings for ANY prior study reference: "이전 CT", "prior MRI", "compared to", "previous study", dates like "2023", "2024년", "이전 검사", "전회", "f/u", "이전 대비", etc.
