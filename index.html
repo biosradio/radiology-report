@@ -847,14 +847,12 @@ function App(){
 
     // body region 자동 감지 — Mammography만 제외
     // finding 우선 감지: finding 단독 → finding+context 순으로 시도
-    const findingOnly=finding?finding+"\n"+finding:""; // finding 2배 가중
-    const fullCtx=findingOnly+"\n"+(clinicalInfo||"")+" "+(indication||"");
+    const fullCtx=(finding||"")+"\n"+(clinicalInfo||"")+" "+(indication||"");
     const autoRegion=!isMammo?detectBodyRegion(fullCtx,bodypart,isAutoDetect):null;
     const effectiveBodypart=autoRegion||bodypart;
 
     const organs=organMap[effectiveBodypart]?.[isKo?"ko":"en"]||(isKo?"뼈,연부조직":"Bones,Soft Tissue");
     const contrastStr=contrastOptions?getContrastLabel():"N/A";
-    const patientCtx=[].filter(Boolean).join(" | ");
     const measCtx=keyMeasurements?`\nKey Measurements: ${keyMeasurements}`:"";
     const ddxCtx=differentialDx?`\nClinician's DDx: ${differentialDx}`:"";
 
@@ -901,7 +899,7 @@ ${format==="structured"
   ?`"findings" MUST be array: [{"organ":"...","finding":"..."}]. Use organs for ${effectiveBodypart}: ${organs}.${effectiveBodypart==="MRA"?" CRITICAL: Every vessel listed above MUST appear as a separate organ entry. For vessels with no abnormality, write normal/unremarkable.":tone==="concise"?" CONCISE: Include ONLY abnormal organs — completely OMIT organs that are normal/unremarkable. Do NOT include any entry with 'normal', 'unremarkable', 'no abnormality', or similar. If no abnormality detected, output a single entry: {organ:'Overall',finding:'No significant abnormality detected'}.":" Include ALL organs. Use numbered lists within a finding string when describing multiple lesions (e.g. '1. 3cm RLL nodule. 2. 1cm LUL nodule.')."}` 
   :format==="bullet"
   ?`"findings" is a plain string. Each item on its own NEW LINE starting with •. Never combine multiple items on one line.`
-  :`"findings" is a single flowing prose paragraph. Do NOT use arrays or bullet points.`}
+  :`"findings" is a single flowing ${format==="narrative"?"narrative prose paragraph — write continuously, no lists, no organ labels. Flowing clinical narrative style.":"prose paragraph. Do NOT use arrays or bullet points."}`}
 
 ═══ IMPRESSION RULES (Hartung 2020) ═══
 STRUCTURE: (a) Lead with favored diagnosis → (b) key supporting findings → (c) alternative diagnoses if needed → (d) recommendation
@@ -951,7 +949,6 @@ Return ONLY raw JSON (no markdown, no explanation):
 
     const isMammoModality=modality==="Mammography";
     const parenchymaEntry=mammoParenchyma?MAMMO_PARENCHYMA.find(p=>p.value===mammoParenchyma):null;
-    const parenchymaLabel=parenchymaEntry?.label||"미입력";
     const parenchymaDesc=parenchymaEntry?.desc||"미입력";
     const mammoCtx=isMammoModality?`
 [유방검진 정보]
@@ -1001,7 +998,6 @@ Body Part: ${effectiveBodypart}
 Exam Date: ${examDate}
 Contrast: ${contrastStr}
 Urgency: ${urgency}
-${patientCtx?`Patient: ${patientCtx}`:""}
 ${indication?"Clinical Indication: "+indication:""}
 Clinical Information: ${clinicalInfo||"Not provided"}
 ${measCtx}${ddxCtx}${mammoCtx}
@@ -1592,6 +1588,55 @@ CRITICAL LANGUAGE INSTRUCTION: ${isKo?"Output language MUST be Korean (한국어
                     <div style={{marginTop:4,paddingTop:8,borderTop:`1px solid ${C.border}`,fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim}}>
                       © 2026 RadReport Pro · For clinical decision support only
                     </div>
+                  </div>
+
+                  {/* ── AI 가중치 항목표 ── */}
+                  <div style={{marginTop:8}}>
+                    <div style={{fontFamily:mono,fontSize:9,fontWeight:800,color:C.dim,letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>AI 출력 가중치 항목표</div>
+                    <div style={{overflowX:"auto",borderRadius:10,border:`1px solid ${C.border}`}}>
+                      <table style={{width:"100%",borderCollapse:"collapse",fontSize:"var(--fs-xs)",fontFamily:sans}}>
+                        <thead>
+                          <tr style={{background:"rgba(3,105,161,0.07)"}}>
+                            {["항목","FORMAL","CONCISE","DETAILED","CLINICAL"].map((h,i)=>(
+                              <th key={i} style={{padding:"7px 10px",textAlign:i===0?"left":"center",fontFamily:mono,fontSize:9,fontWeight:800,color:i===0?C.dim:C.accent,letterSpacing:1,borderBottom:`1px solid ${C.border}`,whiteSpace:"nowrap"}}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            ["Findings 길이",        "표준",   "최소",   "최대",   "표준"],
+                            ["정상 장기 기재",        "전체",   "생략",   "전체+확인",  "전체"],
+                            ["병변 크기/수치",        "기재",   "생략가능","필수",   "기재"],
+                            ["형태/변연/구조",        "기재",   "생략",   "필수6항목","기재"],
+                            ["동반소견(림프절 등)",   "선택",   "생략",   "필수",   "선택"],
+                            ["Impression 항목 수",    "제한없음","1–5개",  "제한없음","DDx 포함"],
+                            ["진단 확신도 표현",      "선택",   "생략",   "선택",   "필수"],
+                            ["DDx 서술",              "선택",   "생략",   "선택",   "MDT 형식"],
+                            ["임상 전문 용어",        "방사선", "최소화", "방사선", "임상의 언어"],
+                            ["Hallucination 방지",    "✓",      "✓",      "✓",      "✓"],
+                          ].map((row,ri)=>(
+                            <tr key={ri} style={{background:ri%2===0?"#f8fafc":"#fff",borderBottom:`1px solid ${C.border}88`}}>
+                              {row.map((cell,ci)=>(
+                                <td key={ci} style={{
+                                  padding:"6px 10px",
+                                  textAlign:ci===0?"left":"center",
+                                  color:ci===0?C.text:cell==="필수"?C.accent:cell==="생략"?C.dim:cell==="✓"?"#16a34a":C.bright,
+                                  fontWeight:cell==="필수"||cell==="✓"?700:400,
+                                  fontFamily:ci===0?sans:mono,
+                                  fontSize:ci===0?"var(--fs-xs)":10,
+                                  whiteSpace:"nowrap",
+                                }}>
+                                  {cell}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <p style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim,marginTop:6,lineHeight:1.5}}>
+                      * Hartung et al. RadioGraphics 2020 기반 / FORMAL = 기본값
+                    </p>
                   </div>
                 </div>
               </div>
