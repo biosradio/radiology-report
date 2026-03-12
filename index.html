@@ -859,8 +859,8 @@ function App(){
     const ddxCtx=differentialDx?`\nClinician's DDx: ${differentialDx}`:"";
 
     const langInstr=isKo
-      ?"Korean (한국어). Write ALL content primarily in Korean. Medical terms and anatomical names may include English in parentheses (e.g. '폐렴 (pneumonia)'). Impression MUST be written in Korean sentences — never use English-only impression."
-      :"English. Write ALL content in English.";
+      ?"KOREAN (한국어) — MANDATORY. You MUST write ALL output fields in Korean. This includes technique, findings, impression, comparison, recommendation. English is ONLY allowed inside parentheses for medical terms (e.g. '폐렴 (pneumonia)'). NEVER write full sentences or impression items in English. If you write English sentences anywhere outside parentheses, that is a critical error."
+      :"ENGLISH — MANDATORY. Write ALL output fields in English only. Do not use Korean anywhere.";
 
     const xraySystem=`You are an expert radiologist generating a concise X-ray report. Follow evidence-based reporting principles (Hartung et al. RadioGraphics 2020).
 Language: ${langInstr}
@@ -963,8 +963,8 @@ Return ONLY raw JSON (no markdown, no explanation):
 추가검사 권고: ${mammoAddlTest?"초음파 검사나 유방확대촬영 등의 추가 검사가 필요할 것으로 보입니다.":"해당없음"}`:"";
 
     const mammoLang=isKo
-      ? "Language: Korean (한국어). Write ALL text fields primarily in Korean. Medical terms may include English in parentheses. Impression MUST be in Korean sentences — never English-only."
-      : "Language: English. Write ALL text fields (technique, findings[].finding, impression[]) in English only. Do NOT use Korean anywhere.";
+      ? "Language: KOREAN (한국어) — MANDATORY. ALL output fields MUST be in Korean. English only allowed in parentheses for medical terms. Impression MUST be Korean sentences — never English-only."
+      : "Language: ENGLISH — MANDATORY. Write ALL text fields in English only. Do NOT use Korean anywhere.";
     const mammoTechniqueEx=isKo?"양측 유방 촬영술 (MLO, CC view)":"Bilateral mammography (MLO, CC view)";
 
     const parenchymaOrgan=isKo?"유방실질분포량":"Breast Composition";
@@ -1010,7 +1010,8 @@ ${measCtx}${ddxCtx}${mammoCtx}
 Raw Findings:
 ${finding||(isMammoModality?"(위 유방검진 정보를 기반으로 판독 생성)":"(none)")}
 
-Generate a professional radiology report as JSON.`;
+Generate a professional radiology report as JSON.
+CRITICAL LANGUAGE INSTRUCTION: ${isKo?"Output language MUST be Korean (한국어). Every field — technique, findings, impression — MUST be written in Korean. Do NOT use English sentences. Medical terms may appear in parentheses only.":"Output language MUST be English. Write all fields in English only."}`;
 
     try{
       const url=`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
