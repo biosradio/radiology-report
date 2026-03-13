@@ -314,7 +314,7 @@ const REGION_KEYWORDS={
   "T-spine":      /thoracic spine|\bt.spine\b|\bT[1-9]\b|\bT1[0-2]\b|흉추/i,
   "L-spine":      /lumbar spine|\bl.spine\b|\bL[1-5]\b|요추|추간판탈출|요추간판|spondylosis|spondylolisthesis|spinal stenosis|척추관협착/i,
   "Chest":        /\blung\b|\blobe\b|consolidat|pneumonia|\bpleural\b|\bmediastin|\bpericardi|\btrachea\b|\bpulmonary\b|pericardial|cardiomegaly|pneumothorax|atelectasis|interstitial|ejection fraction|wall motion|폐렴|폐결절|폐부종|흉수|흉막삼출|종격동|심낭삼출|심비대|기흉|무기폐|박출률|심벽운동/i,
-  "Abdomen":      /\bliver\b|\bhepat|\bgallbladder\b|\bGB\b(?!stone.*knee|\bknee)|\bbile duct\b|\bCBD\b|\bpancreas\b|\bspleen\b|\badrenal\b|\bkidney\b|\brenal\b|echogenicity|echotexture|hyperechoic|hypoechoic|isoechoic|anechoic|posterior shadowing|acoustic shadow|\bIHBD\b|portal vein|hepatic vein|\bascites\b|\bperitoneum\b|간실질|담낭|담도|췌장|비장|부신|신장|복막|복수|에코|고에코|저에코|무에코|후방음향|담관|간내담관|문맥|간정맥|하대정맥|신피질/i,
+  "Abdomen":      /\bliver\b|\bhepat|\bgallbladder\b|\bGB\b(?!stone.*knee|\bknee)|\bbile duct\b|\bCBD\b|\bpancreas\b|\bspleen\b|\badrenal\b|\bkidney\b|\brenal\b|echogenicity|echotexture|hyperechoic|hypoechoic|isoechoic|anechoic|posterior shadowing|acoustic shadow|\bIHBD\b|portal vein|hepatic vein|\bascites\b|\bperitoneum\b|hepatomegaly|splenomegaly|\bhydronephrosis\b|\bnephrolithiasis\b|\bureter\b|\bappendix\b|\baorta\b|\bIVC\b|\bbowel\b|\bintestin|\bcolon\b|\bmesentery\b|\bretroperitoneum\b|\blymph.node\b|\bcholecystitis\b|\bpancreatitis\b|\bcirrhosis\b|\bfatty.liver\b|\bhepatic.cyst\b|\brenal.cyst\b|간실질|담낭|담도|췌장|비장|부신|신장|복막|복수|에코|고에코|저에코|무에코|후방음향|담관|간내담관|문맥|간정맥|하대정맥|신피질|수신증|충수|복부대동맥|장관|소장|대장|결장|장간막|후복막|림프절|간비대|비장비대|지방간|간경화|담낭염|췌장염|간낭종|신낭종|요관|신결석|간종양|간전이|복강내|복부.대동맥/i,
   "Pelvis":       /\bbladder\b|\buterus\b|\buterine\b|\bendometrium\b|\bmyometrium\b|\bmyoma\b|\bfibroid\b|\bovary\b|\bovarian\b|\bfollicle\b|corpus luteum|\bcervix\b|\bprostate\b|seminal vesicle|\brectum\b|\bpelvis\b|\bpelvic\b|cul.de.sac|방광|자궁|자궁내막|자궁근층|자궁근종|난소|난포|황체|전립선|정낭|직장|골반|더글라스와/i,
   "Abdomen & Pelvis":/abdomen.*pelvis|pelvis.*abdomen|복부.*골반|골반.*복부/i,
   "Shoulder":     /\bshoulder\b|rotator cuff|\bsupraspinatus\b|\binfrasprospinatus\b|\bsubscapularis\b|\bteres minor\b|\blabrum\b|\bacromion\b|\bclavicle\b|\bcoracoid\b|\bglenohumeral\b|\bAC joint\b|acromioclavicular|biceps tendon|subacromial|SLAP|impingement|어깨|회전근개|극상근|극하근|견갑하근|소원근|관절순|견봉|쇄골|오구돌기|견관절|견봉쇄골관절|이두건|충돌증후군/i,
@@ -705,7 +705,7 @@ function MammoPanel({
 
 /* ── MAIN APP ─────────────────────────────── */
 const APP_VERSION="2.1.0";
-const BUILD_DATE="2026-03-12 09:00";
+const BUILD_DATE="2026-03-13 07:57";
 const APP_DESCRIPTION="AI 방사선 판독 보고서 생성기";
 const KNOWN_MODELS=[
     "gemini-3.1-pro-preview",
@@ -1218,7 +1218,7 @@ CRITICAL LANGUAGE INSTRUCTION: ${isKo?"Output language MUST be Korean (한국어
         findingsText=report.findings.map(f=>`${f.organ}: ${f.finding}`).join("\n");
       } else { findingsText=breakSentences(report.findings||""); }
       const imp=Array.isArray(report.impression)
-        ?report.impression.length===1?report.impression[0]:report.impression.map((l,i)=>`${i+1}. ${l}`).join("\n")
+        ?report.impression.length===1?report.impression[0].replace(/^\s*\d+[\.)\]]\s*/,""):report.impression.map((l,i)=>`${i+1}. ${l.replace(/^\s*\d+[\.)\]]\s*/,"")}`).join("\n")
         :(report.impression||"");
       const comparisonText=report.comparison&&report.comparison!=="null"&&!/^(none|없음|no prior|not available|unavailable)\.?$/i.test(report.comparison.trim())
         ?`${isKo?"비교":"COMPARISON"}:\n${report.comparison}\n\n`:"";
@@ -2051,7 +2051,7 @@ CRITICAL LANGUAGE INSTRUCTION: ${isKo?"Output language MUST be Korean (한국어
                                 <div style={{width:22,height:22,borderRadius:6,background:"rgba(129,140,248,0.15)",border:`1px solid ${C.accent2}50`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                                   <span style={{fontFamily:mono,fontSize:10,fontWeight:800,color:C.accent2}}>{i+1}</span>
                                 </div>
-                                <p style={{lineHeight:1.7,color:C.bright,fontSize:"var(--fs-md)",paddingTop:1}}>{line.replace(/^\s*\d+[\.\)]\s*/,'')}</p>
+                                <p style={{lineHeight:1.7,color:C.bright,fontSize:"var(--fs-md)",paddingTop:1}}>{line.replace(/^\s*\d+[\.\)\]]\s*/,'')}</p>
                               </div>
                             ));
                           })()}
