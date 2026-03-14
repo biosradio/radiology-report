@@ -760,9 +760,33 @@ function MammoPanel({
 }
 
 /* ── MAIN APP ─────────────────────────────── */
-const APP_VERSION="2.1.0";
-const BUILD_DATE="2026-03-13 07:57";
+const APP_VERSION="2.2.0";
+const BUILD_DATE="2026-03-14 00:22";
 const APP_DESCRIPTION="AI 방사선 판독 보고서 생성기";
+const CHANGELOG=[
+  {version:"2.2.0", date:"2026-03-13", changes:[
+    "MRI 부위별 Technique 프로토콜 추가 (11개 부위)",
+    "Brain MRI: T1 → 3D T1W (MPRAGE/SPGR) 변경",
+    "Brain MRI: DWI Only 단독 촬영 옵션 추가",
+    "X-ray CONCISE: 불필요한 정상 구조물 나열 제거",
+    "X-ray: persistent/no change 등 비교 판독 자동 감지",
+    "RECOMMENDATION: 영상 검사 위주로 제한",
+  ]},
+  {version:"2.1.0", date:"2026-03-13", changes:[
+    "OUTPUT OPTIONS 패널 위치 변경 (STUDY INFO 아래)",
+    "Body Region 자동 감지 UI 숨김 (내부 동작 유지)",
+    "복부 Body Region 키워드 대폭 보강 (+30개)",
+    "불필요 조건 정리 (patientCtx, parenchymaLabel 등)",
+    "Impression 번호 중복 제거 강화",
+  ]},
+  {version:"2.0.0", date:"2026-03-12", changes:[
+    "Hallucination 방지 2중 방어 (프롬프트 + 후처리)",
+    "DETAILED tone: Hartung 2020 기반 6항목 필수 기술",
+    "한국어 출력 3중 강제 적용",
+    "보안/웹 가이드라인 100/100 달성",
+    "히스토리 페이지네이션 (200개/20개씩)",
+  ]},
+];
 const KNOWN_MODELS=[
     "gemini-3.1-pro-preview",
     "gemini-3-flash-preview",
@@ -780,6 +804,61 @@ function App(){
 
 
   const [winW,setWinW]=useState(()=>window.innerWidth);
+  /* ── URL PARAMETER INTAKE (PACSPLUS Bridge) ── */
+  // Qt WebEngineView에서 runJavaScript로 주입된 파라미터 처리
+  useEffect(()=>{
+    function applyParams(params){
+      const m=params.modality;
+      if(m){
+        const match=MODALITIES.find(mo=>mo.toLowerCase()===m.toLowerCase());
+        if(match) handleModalityChange(match);
+      }
+      const bp=params.bodypart;
+      if(bp) setBodypart(decodeURIComponent(bp));
+      const ct=params.contrast;
+      if(ct) setContrast(ct);
+      const ind=params.indication;
+      if(ind) setIndication(decodeURIComponent(ind));
+      const ci=params.info;
+      if(ci) setClinicalInfo(decodeURIComponent(ci));
+      const fi=params.findings;
+      if(fi) setFinding(decodeURIComponent(fi));
+      const lg=params.lang;
+      if(lg==="ko"||lg==="en") setLang(lg);
+      setActiveTab("input");
+    }
+
+    // ── 경로 1: window.__pacsParams (Qt runJavaScript 주입) ──
+    if(window.__pacsParams){
+      applyParams(window.__pacsParams);
+      delete window.__pacsParams;
+      return;
+    }
+
+    // ── 경로 1b: pacsParams 이벤트 (Qt가 로드 후 주입 시) ──
+    const onPacsEvent=()=>{
+      if(window.__pacsParams){
+        applyParams(window.__pacsParams);
+        delete window.__pacsParams;
+        window.removeEventListener("pacsParams",onPacsEvent);
+      }
+    };
+    window.addEventListener("pacsParams",onPacsEvent);
+    return ()=>window.removeEventListener("pacsParams",onPacsEvent);
+
+    // ── 경로 2: URL 파라미터 (웹 브라우저 / file:// 모두 지원) ──
+    const href=window.location.href;
+    const qIdx=href.indexOf("?");
+    if(qIdx===-1) return;
+    const qs=href.substring(qIdx+1);
+    const p=new URLSearchParams(qs);
+    if(!p.toString()) return;
+    applyParams(Object.fromEntries(p.entries()));
+    // URL 정리 (http/https 환경만 — file://에서는 replaceState 오류 방지)
+    try{window.history.replaceState({},"",window.location.pathname);}catch(e){}
+  },[]);
+
+
   useEffect(()=>{
     const onResize=()=>setWinW(window.innerWidth);
     window.addEventListener("resize",onResize);
@@ -928,10 +1007,22 @@ SUMMARY RULES:
 - Avoid redundant phrases: no "redemonstration", "interval change", "again noted".
 - Incidental benign findings: label explicitly as benign or omit from summary.
 - State diagnosis with confidence: "consistent with", "suspected", "possible", "cannot exclude".
+${tone==="concise"?`
+CONCISE TONE — STRICT RULES FOR X-RAY:
+- If ALL findings are NORMAL/UNREMARKABLE: output ONLY one sentence stating the study is unremarkable (e.g. "Unremarkable chest X-ray." or "No acute cardiopulmonary abnormality."). Do NOT list every normal structure.
+- If ABNORMAL findings exist: state ONLY the abnormal finding(s) + diagnosis. 1–2 sentences maximum. Completely omit all normal structures.
+- NEVER list "heart size is normal", "lung fields are clear", "no pleural effusion", "bony structures are intact" when there is NOTHING wrong. These add NO clinical value in CONCISE mode.
+- Zero tolerance for normal finding enumeration. If it is normal and there is no abnormality in that structure, do not mention it.`:""}
+COMPARISON RULE:
+- Scan Raw Findings for ANY prior study reference: "persistent", "no change", "unchanged", "stable", "improved", "worsened", "increased", "decreased", "compared to", "prior", "previous", "f/u", "follow-up", "이전", "전회", "비교", "변화없음", "지속", "호전", "악화", or dates like "2023", "2024", "2025".
+- If found: set "comparison" to a clean standalone sentence (e.g. "Compared to prior study, findings are unchanged." / "Persistent RLL consolidation compared to previous examination.").
+- If found: "summary" MUST reflect the comparison — state the change or stability explicitly (e.g. "Persistent RLL consolidation, unchanged." NOT just "RLL consolidation noted.").
+- If NO prior reference: set "comparison": null.
+- NEVER use "redemonstration", "interval change", "again noted".
 ${urgency!=="routine"?`urgency_note: ONLY the key diagnosis name(s), no explanation.`:`urgency_note: null`}
-recommendation: ${urgency!=="routine"?"Specific actionable recommendation (what, when, why).":"null"}
+recommendation: ${urgency!=="routine"?"Imaging follow-up recommendation ONLY — specify modality, body part, and timing (e.g. 'Follow-up chest X-ray in 4-6 weeks', 'CT chest with contrast for further evaluation'). Do NOT include surgical consultation, clinical referral, or non-imaging management.":"null"}
 Return ONLY raw JSON, no markdown:
-{"technique":"string","summary":"string","urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`;
+{"technique":"string","comparison":"string or null","summary":"string","urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`;
 
     const mainSystem=`You are an expert radiologist generating a professional radiology report. Follow evidence-based reporting principles (Hartung et al. RadioGraphics 2020).
 Format: ${format} | Tone: ${tone} | Urgency: ${urgency}
@@ -1005,7 +1096,7 @@ RULES:
 - NEVER include comparison language inside "findings".
 
 ${urgency!=="routine"?`URGENCY: urgency_note = key diagnosis name(s) only. No full sentences.`:`urgency_note: null`}
-recommendation: ${urgency!=="routine"?"Specific actionable follow-up recommendation (what, when, why).":"null"}
+recommendation: ${urgency!=="routine"?"Imaging follow-up recommendation ONLY — specify modality, body part, and timing (e.g. 'Follow-up CT abdomen with IV contrast in 3 months', 'MRI pelvis with gadolinium for further characterization'). Do NOT include surgical consultation, biopsy referral, or non-imaging clinical management.":"null"}
 "impression" MUST be a JSON array of strings.
 Return ONLY raw JSON (no markdown, no explanation):
 {"technique":"string","comparison":"string or null","findings":${format==="structured"?`[{"organ":"...","finding":"..."}]`:'"string"'},"impression":["..."],"urgency_note":${urgency!=="routine"?'"string"':"null"},"recommendation":${urgency!=="routine"?'"string"':"null"}}`;
@@ -1276,7 +1367,9 @@ CRITICAL LANGUAGE INSTRUCTION: ${isKo?"Output language MUST be Korean (한국어
     }
 
     if(modality==="X-ray"){
-      text+=breakSentences(report.summary||"");
+      const xrayComp=report.comparison&&report.comparison!=="null"&&!/^(none|없음|no prior|not available|unavailable)\.?$/i.test(report.comparison.trim())
+        ?`${isKo?"비교":"COMPARISON"}:\n${report.comparison}\n\n`:"";
+      text+=xrayComp+breakSentences(report.summary||"");
     } else {
       let findingsText="";
       if(Array.isArray(report.findings)){
@@ -1301,6 +1394,19 @@ CRITICAL LANGUAGE INSTRUCTION: ${isKo?"Output language MUST be Korean (한국어
   const copyReport=()=>{
     if(!report)return;
     const text=getCopyText();
+
+    // ── PACS 자동 전송 (RadiologyReportHelper.exe 환경) ──
+    const sendToPACS=(t)=>{
+      fetch("http://127.0.0.1:19470/report",{
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:t,
+        signal:AbortSignal.timeout(800),
+      }).catch(()=>{}); // exe 미실행 시 조용히 무시
+    };
+    sendToPACS(text);
+
+    // 클립보드 복사 (브라우저 환경 + 수동 복사용)
     navigator.clipboard?.writeText(text).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);}).catch(()=>setShowModal(true));
   };
 
@@ -1652,7 +1758,28 @@ CRITICAL LANGUAGE INSTRUCTION: ${isKo?"Output language MUST be Korean (한국어
                         <span style={{fontFamily:mono,fontSize:11,fontWeight:600,color:C.text}}>Hartung 2020</span>
                       </div>
                     </div>
-                    <div style={{marginTop:4,paddingTop:8,borderTop:`1px solid ${C.border}`,fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim}}>
+                    {/* Changelog */}
+                    <div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${C.border}`}}>
+                      <div style={{fontFamily:mono,fontSize:9,fontWeight:800,color:C.dim,letterSpacing:2,marginBottom:6}}>CHANGELOG</div>
+                      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                        {CHANGELOG.map(log=>(
+                          <div key={log.version}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:3}}>
+                              <span style={{fontFamily:mono,fontSize:9,fontWeight:700,color:C.accent,
+                                background:"rgba(3,105,161,0.08)",border:`1px solid ${C.accent}30`,
+                                padding:"1px 7px",borderRadius:4}}>v{log.version}</span>
+                              <span style={{fontFamily:mono,fontSize:9,color:C.dim}}>{log.date}</span>
+                            </div>
+                            <ul style={{margin:0,padding:"0 0 0 14px",listStyle:"disc"}}>
+                              {log.changes.map((c,i)=>(
+                                <li key={i} style={{fontFamily:sans,fontSize:"var(--fs-xs)",color:C.text,lineHeight:1.6}}>{c}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${C.border}`,fontFamily:sans,fontSize:"var(--fs-xs)",color:C.dim}}>
                       © 2026 RadReport Pro · For clinical decision support only
                     </div>
                   </div>
@@ -2044,11 +2171,18 @@ CRITICAL LANGUAGE INSTRUCTION: ${isKo?"Output language MUST be Korean (한국어
                   )}
 
                   {modality==="X-ray"?(
-                    <ReportSection title={lang==="ko"?"판독 소견":"REPORT SUMMARY"} highlight={C.accent}>
-                      <div style={{padding:"16px 18px",borderRadius:10,background:"rgba(3,105,161,0.04)",border:`1px solid ${C.border}`}}>
-                        <p style={{lineHeight:1.9,color:C.bright,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{breakSentences(report.summary||"")}</p>
-                      </div>
-                    </ReportSection>
+                    <>
+                      {report.comparison&&report.comparison!=="null"&&!/^(none|없음|no prior|not available|unavailable)\.?$/i.test(report.comparison.trim())&&(
+                        <ReportSection title={lang==="ko"?"비교":"COMPARISON"}>
+                          <p style={{lineHeight:1.8,color:C.text,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{report.comparison}</p>
+                        </ReportSection>
+                      )}
+                      <ReportSection title={lang==="ko"?"판독 소견":"REPORT SUMMARY"} highlight={C.accent}>
+                        <div style={{padding:"16px 18px",borderRadius:10,background:"rgba(3,105,161,0.04)",border:`1px solid ${C.border}`}}>
+                          <p style={{lineHeight:1.9,color:C.bright,fontSize:"var(--fs-md)",whiteSpace:"pre-wrap"}}>{breakSentences(report.summary||"")}</p>
+                        </div>
+                      </ReportSection>
+                    </>
                   ):(
                     <>
                       <ReportSection title="FINDINGS">
